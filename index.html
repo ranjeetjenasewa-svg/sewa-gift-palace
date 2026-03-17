@@ -162,7 +162,33 @@ const DEF=[
 ].map(r=>({...r,...Object.fromEntries(COLS.map(c=>[c.k,'']))}));
 
 let rows=[],em=false;
-function load(){try{const s=localStorage.getItem(STORE);rows=s?JSON.parse(s):JSON.parse(JSON.stringify(DEF));}catch(e){rows=JSON.parse(JSON.stringify(DEF));}}
+function load() {
+    try {
+        const s = localStorage.getItem(STORE);
+        rows = s ? JSON.parse(s) : [];
+
+        if (!rows || rows.length === 0) {
+            rows = [
+                {
+                    proc: "Demo Process",
+                    pc: "Ranjeet",
+                    solver: "Team",
+                    exec: ""
+                }
+            ];
+        }
+    } catch (e) {
+        // This ensures the demo data loads even if there's a storage error
+        rows = [
+            {
+                proc: "Demo Process",
+                pc: "Ranjeet",
+                solver: "Team",
+                exec: ""
+            }
+        ];
+    }
+}
 function save(){try{localStorage.setItem(STORE,JSON.stringify(rows));}catch(e){}}
 function addRow(){rows.push({proc:'New Process',pc:'',solver:'',exec:'',...Object.fromEntries(COLS.map(c=>[c.k,'']))});save();render();}
 function delRow(i){if(confirm('Delete?')){rows.splice(i,1);save();render();}}
