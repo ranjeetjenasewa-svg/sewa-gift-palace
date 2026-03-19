@@ -1,223 +1,201 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@400;600&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --gold:#f5c518;--red:#e63946;--blue:#0ea5e9;--green:#22c55e;
-  --purple:#a855f7;--orange:#f97316;--teal:#14b8a6;--pink:#ec4899;
-  --bg:#09090f;--card:#0f0f1a;--border:#ffffff10;
-}
-body{background:var(--bg);font-family:'Exo 2',sans-serif;color:#e2e8f0}
-.wrap{padding:16px;min-height:100vh}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sewa Gift Palace - Premium Dashboard</title>
 
-/* HEADER */
-.header{display:flex;align-items:center;justify-content:center;margin-bottom:20px}
-.header-inner{
-  display:flex;align-items:center;gap:18px;
-  background:linear-gradient(135deg,#0d0d1f 0%,#13132a 100%);
-  border:1px solid #f5c51830;
-  border-radius:16px;padding:14px 28px;
-  box-shadow:0 0 40px rgba(245,197,24,.08);
-  position:relative;overflow:hidden;
-}
-.header-inner::before{
-  content:'';position:absolute;top:-40px;right:-40px;
-  width:120px;height:120px;
-  background:radial-gradient(circle,rgba(245,197,24,.12),transparent 70%);
-  pointer-events:none;
-}
-.logo-img{height:56px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
-.divider-v{width:1px;height:50px;background:linear-gradient(180deg,transparent,#f5c51850,transparent)}
-.brand-text{text-align:left}
-.brand-name{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:var(--gold);letter-spacing:2px;line-height:1.1}
-.brand-tagline{font-size:10px;color:#64748b;letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
-.badge{background:linear-gradient(135deg,#f5c518,#f59e0b);color:#000;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:1px;display:inline-block;margin-top:4px;font-family:'Rajdhani',sans-serif}
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
 
-/* TOOLBAR */
-.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-.edit-btn{background:linear-gradient(135deg,#1e293b,#0f172a);color:var(--gold);border:1px solid #f5c51840;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:all .2s;font-family:'Rajdhani',sans-serif}
-.edit-btn:hover{background:var(--gold);color:#000}
-.edit-btn.on{background:var(--red);color:#fff;border-color:var(--red);animation:pulsered 1.5s infinite}
-@keyframes pulsered{0%,100%{box-shadow:0 0 0 0 rgba(230,57,70,.4)}50%{box-shadow:0 0 0 6px rgba(230,57,70,0)}}
-.search-wrap{flex:1;position:relative;min-width:180px}
-.search-wrap::before{content:'⌕';position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#475569;font-size:16px}
-.search-input{width:100%;background:#0f0f1a;border:1px solid #1e293b;border-radius:8px;color:#e2e8f0;padding:8px 12px 8px 30px;font-size:12px;outline:none;transition:border .2s;font-family:'Exo 2',sans-serif}
-.search-input:focus{border-color:var(--gold)}
-.add-btn{background:linear-gradient(135deg,#052e16,#14532d);color:var(--green);border:1px solid #16a34a40;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif}
-.add-btn:hover{background:var(--green);color:#000}
-.stats{display:flex;gap:8px}
-.stat-chip{background:#0f0f1a;border:1px solid #1e293b;border-radius:6px;padding:4px 10px;font-size:11px;color:#64748b}
-.stat-chip span{color:var(--gold);font-weight:700}
+    body {
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      color: #fff;
+    }
 
-/* GRID */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+    header {
+      padding: 20px;
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
 
-/* CARD */
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .2s,box-shadow .2s}
-.card:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(0,0,0,.6)}
-.card-accent{height:3px}
-.card-body{padding:14px}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
-.proc-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;color:#f1f5f9;flex:1;line-height:1.2}
-.proc-input{background:#0a0a14;border:1px solid #334155;border-radius:6px;color:#f5c518;font-size:13px;font-weight:700;padding:4px 8px;width:100%;outline:none;font-family:'Rajdhani',sans-serif}
-.del-btn{background:none;border:none;color:#1e293b;cursor:pointer;font-size:15px;padding:2px 4px;transition:color .2s}
-.del-btn:hover{color:var(--red)}
-.people-row{display:flex;gap:5px;margin-bottom:11px;flex-wrap:wrap}
-.ptag{background:#0a0a14;border:1px solid #1e293b;border-radius:20px;padding:3px 9px;font-size:10px;display:flex;align-items:center;gap:4px;color:#94a3b8}
-.pdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.pedit{background:#0a0a14;border:1px solid #334155;border-radius:5px;color:#94a3b8;font-size:10px;padding:3px 6px;width:100%;outline:none;margin-bottom:4px;font-family:'Exo 2',sans-serif}
+    header h1 {
+      color: #facc15;
+      font-size: 26px;
+      letter-spacing: 1px;
+    }
 
-/* BUTTONS */
-.btns-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.abtn{border:none;border-radius:9px;padding:10px 4px;font-size:10px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;letter-spacing:.4px;position:relative;overflow:hidden;font-family:'Rajdhani',sans-serif}
-.abtn:hover{transform:scale(1.05);filter:brightness(1.15)}
-.abtn:active{transform:scale(.96)}
-.abtn .bi{font-size:15px;display:block;margin-bottom:3px}
-.abtn .bl{display:block;font-size:9px;opacity:.85}
-.bfc{background:linear-gradient(135deg,#7c2d12,#c2410c);color:#fed7aa;box-shadow:0 2px 10px rgba(249,115,22,.25)}
-.bfms{background:linear-gradient(135deg,#1e3a5f,#1d4ed8);color:#bfdbfe;box-shadow:0 2px 10px rgba(14,165,233,.25)}
-.bpms{background:linear-gradient(135deg,#3b0764,#7e22ce);color:#e9d5ff;box-shadow:0 2px 10px rgba(168,85,247,.25)}
-.bcl{background:linear-gradient(135deg,#042f2e,#0f766e);color:#99f6e4;box-shadow:0 2px 10px rgba(20,184,166,.25)}
-.bform{background:linear-gradient(135deg,#052e16,#15803d);color:#bbf7d0;box-shadow:0 2px 10px rgba(34,197,94,.25)}
-.bvid{background:linear-gradient(135deg,#450a0a,#b91c1c);color:#fecaca;box-shadow:0 2px 10px rgba(230,57,70,.25)}
-.bempty{background:#0f0f1a;color:#2d3748;cursor:default}
-.bempty:hover{transform:none;filter:none}
+    .top-bar {
+      display: flex;
+      gap: 10px;
+      padding: 15px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
 
-.url-sec{display:none;margin-top:10px}
-.url-sec.show{display:block}
-.uf{margin-bottom:5px}
-.ufl{font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
-.ufi{width:100%;background:#060610;border:1px solid #1e293b;border-radius:5px;color:#94a3b8;font-size:10px;padding:4px 8px;outline:none;font-family:'Exo 2',sans-serif}
-.ufi:focus{border-color:var(--blue)}
-.no-res{text-align:center;padding:50px;color:#334155;font-size:14px;grid-column:1/-1}
-</style>
+    input {
+      flex:1;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      background: #1e293b;
+      color: white;
+    }
 
-<div class="wrap">
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #22c55e;
+      color: black;
+      font-weight: bold;
+    }
 
-<!-- HEADER WITH REAL LOGO -->
-<div class="header">
-  <div class="header-inner">
-    <img class="logo-img" src="/mnt/user-data/uploads/1773483139014_image.png" alt="SEWA Logo" onerror="this.style.display='none'">
-    <div class="divider-v"></div>
-    <div class="brand-text">
-      <div class="brand-name">SEWA GIFT PALACE</div>
-      <div class="brand-tagline">System Master Dashboard</div>
-      <div class="badge">⚡ OPERATIONS HUB</div>
-    </div>
-  </div>
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 15px;
+      padding: 15px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 18px;
+      padding: 15px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+      color: #38bdf8;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      flex:1 1 45%;
+      padding: 10px;
+      border-radius: 10px;
+      text-align:center;
+      text-decoration:none;
+      color:white;
+      font-size:14px;
+      transition:0.2s;
+    }
+
+    .btn:hover { transform: scale(1.05); }
+
+    .blue { background:#2563eb; }
+    .green { background:#16a34a; }
+    .purple { background:#7c3aed; }
+    .orange { background:#f97316; }
+
+    .stats {
+      display:flex;
+      gap:10px;
+      padding: 0 15px;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      flex:1;
+      background:#020617;
+      padding:10px;
+      border-radius:10px;
+      text-align:center;
+      border:1px solid rgba(255,255,255,0.1);
+    }
+
+    @media(max-width:600px){
+      header h1{ font-size:18px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🚀 SEWA GIFT PALACE</h1>
+</header>
+
+<div class="top-bar">
+  <input type="text" id="search" placeholder="Search process...">
+  <button onclick="addCard()">+ Add</button>
 </div>
 
-<div class="toolbar">
-  <button class="edit-btn" id="editBtn" onclick="toggleEdit()">✏️ Edit Mode: OFF</button>
-  <div class="search-wrap">
-    <input class="search-input" id="srch" placeholder="Process search karein..." oninput="render()">
-  </div>
-  <button class="add-btn" onclick="addRow()">+ Add Process</button>
-  <div class="stats">
-    <div class="stat-chip">Total: <span id="tc">0</span></div>
-    <div class="stat-chip">Links: <span id="lc">0</span></div>
-  </div>
+<div class="stats">
+  <div class="stat-box">Total Cards: <span id="total">0</span></div>
 </div>
 
-<div class="grid" id="grid"></div>
-</div>
+<div class="container" id="dashboard"></div>
 
 <script>
-const STORE='sewa_v4';
-const ACCENTS=['#f5c518','#0ea5e9','#22c55e','#a855f7','#f97316','#14b8a6','#ec4899','#ef4444','#6366f1','#84cc16','#06b6d4','#f59e0b'];
-const COLS=[
-  {k:'fc',l:'Flow-chart',i:'📊',c:'bfc'},
-  {k:'fms',l:'F.M.S.',i:'📁',c:'bfms'},
-  {k:'pms',l:'P.M.S',i:'📋',c:'bpms'},
-  {k:'cl',l:'Checklist',i:'✅',c:'bcl'},
-  {k:'form',l:'Google Form',i:'📝',c:'bform'},
-  {k:'vid',l:'Training Video',i:'🎬',c:'bvid'},
+
+let data = JSON.parse(localStorage.getItem('dashboard')) || [
+  {title:'IMS'},
+  {title:'Stock Taking'},
+  {title:'Sales Report'}
 ];
-const DEF=[
-  {proc:'IMS',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Cust_Repair_Service',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'BMP MeCA',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Purchase_Inward_FMS',pc:'Ranjeet',solver:'Azad Ji',exec:''},
-  {proc:'Ultimate Checklist',pc:'Anju ji',solver:'Sanchit Sir',exec:''},
-  {proc:'Stock_Taking',pc:'Ranjeet',solver:'Ashok Ji',exec:''},
-  {proc:'SEWA_weekly_Sales',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Sewa Expenses Sheet',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Sewa Plan the year BMP',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Cust_Refund_SEWA',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'SEWA_Purchase_Daily_Report',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'SEWA_Whatsapp_Sales_Fms',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'IemDept_Wise_SKUs',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'SEWA_Ultimate IMS v1.1',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Sanchit_Inv_Trn_Rotation',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'MediClaim_LIC_Details',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Purchase-Max-Amount_Details',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Purchase_Limit_50Lac',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'Cust_Revisit_Data(Kavita)',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'SEWA_Cash&Bank_Inflow_Sheet',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'SEWA_Purchase_Limit_50Lac',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-  {proc:'SEWA_Cash_Flow_Jan',pc:'Ranjeet',solver:'Sanchit Sir',exec:''},
-].map(r=>({...r,...Object.fromEntries(COLS.map(c=>[c.k,'']))}));
-
-let rows=[],em=false;
-function load() {
-    try {
-        const s = localStorage.getItem(STORE);
-        rows = s ? JSON.parse(s) : [];
-
-        if (!rows || rows.length === 0) {
-            rows = [
-                {
-                    proc: "Demo Process",
-                    pc: "Ranjeet",
-                    solver: "Team",
-                    exec: ""
-                }
-            ];
-        }
-    } catch (e) {
-        // This ensures the demo data loads even if there's a storage error
-        rows = [
-            {
-                proc: "Demo Process",
-                pc: "Ranjeet",
-                solver: "Team",
-                exec: ""
-            }
-        ];
-    }
-}
-function save(){try{localStorage.setItem(STORE,JSON.stringify(rows));}catch(e){}}
-function addRow(){rows.push({proc:'New Process',pc:'',solver:'',exec:'',...Object.fromEntries(COLS.map(c=>[c.k,'']))});save();render();}
-function delRow(i){if(confirm('Delete?')){rows.splice(i,1);save();render();}}
-function go(url){if(!url){alert('Pehle Edit Mode mein URL daalen!');return;}let u=url.trim();if(!u.startsWith('http'))u='https://'+u;window.open(u,'_blank');}
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-function collect(){rows.forEach((r,i)=>{['proc','pc','solver','exec'].forEach(f=>{const e=document.getElementById(f+'_'+i);if(e)r[f]=e.value;});COLS.forEach(c=>{const e=document.getElementById(c.k+'_'+i);if(e)r[c.k]=e.value;});});save();}
-function toggleEdit(){if(em)collect();em=!em;const b=document.getElementById('editBtn');b.textContent=em?'💾 Save & Close Edit':'✏️ Edit Mode: OFF';em?b.classList.add('on'):b.classList.remove('on');render();}
 
 function render(){
-  const q=(document.getElementById('srch')||{}).value||'';
-  const g=document.getElementById('grid');g.innerHTML='';
-  let shown=0,links=0;
-  rows.forEach((r,i)=>{
-    if(q&&!r.proc.toLowerCase().includes(q.toLowerCase()))return;
-    shown++;COLS.forEach(c=>{if(r[c.k])links++;});
-    const ac=ACCENTS[i%ACCENTS.length];
-    const card=document.createElement('div');
-    card.className='card';
-    const btnHtml=COLS.map(c=>`<button class="abtn ${r[c.k]?c.c:'bempty'}" onclick="${r[c.k]?`go('${esc(r[c.k])}')`:'void(0)'}"><span class="bi">${c.i}</span><span class="bl">${c.l}</span></button>`).join('');
-    const urlHtml=em?`<div class="url-sec show">${COLS.map(c=>`<div class="uf"><div class="ufl">${c.i} ${c.l}</div><input class="ufi" id="${c.k}_${i}" value="${esc(r[c.k])}" placeholder="https://..."></div>`).join('')}</div>`:'';
-    const pHtml=em?`<div style="margin-bottom:10px">${['pc','solver','exec'].map((f,fi)=>`<input class="pedit" id="${f}_${i}" value="${esc(r[f])}" placeholder="${['P.C. Name','Problem Solver','Executive'][fi]}">`).join('')}</div>`:`<div class="people-row">${r.pc?`<div class="ptag"><span class="pdot" style="background:#f5c518"></span>${esc(r.pc)}</div>`:''} ${r.solver?`<div class="ptag"><span class="pdot" style="background:#0ea5e9"></span>${esc(r.solver)}</div>`:''} ${r.exec?`<div class="ptag"><span class="pdot" style="background:#22c55e"></span>${esc(r.exec)}</div>`:''}</div>`;
-    card.innerHTML=`<div class="card-accent" style="background:linear-gradient(90deg,${ac},transparent)"></div><div class="card-body"><div class="card-top">${em?`<input class="proc-input" id="proc_${i}" value="${esc(r.proc)}">`:`<div class="proc-name">${esc(r.proc)}</div>`}<button class="del-btn" onclick="delRow(${i})">✕</button></div>${pHtml}<div class="btns-grid">${btnHtml}</div>${urlHtml}</div>`;
-    g.appendChild(card);
+  let html='';
+  data.forEach((item,i)=>{
+    html += `
+    <div class="card">
+      <h3>${item.title}</h3>
+      <div class="buttons">
+        <a href="#" class="btn blue">FMS</a>
+        <a href="#" class="btn purple">PMS</a>
+        <a href="#" class="btn green">Checklist</a>
+        <a href="#" class="btn orange">Form</a>
+      </div>
+    </div>`;
   });
-  if(!shown)g.innerHTML='<div class="no-res">🔍 Koi process nahi mila</div>';
-  const tc=document.getElementById('tc'),lc=document.getElementById('lc');
-  if(tc)tc.textContent=rows.length;if(lc)lc.textContent=links;
+
+  document.getElementById('dashboard').innerHTML = html;
+  document.getElementById('total').innerText = data.length;
+
+  localStorage.setItem('dashboard', JSON.stringify(data));
 }
-load();render();
+
+function addCard(){
+  let name = prompt('Enter process name');
+  if(name){
+    data.push({title:name});
+    render();
+  }
+}
+
+// SEARCH
+
+document.getElementById('search').addEventListener('input', function(){
+  let val = this.value.toLowerCase();
+  let cards = document.querySelectorAll('.card');
+
+  cards.forEach(card=>{
+    let text = card.innerText.toLowerCase();
+    card.style.display = text.includes(val) ? 'block' : 'none';
+  });
+});
+
+render();
+
 </script>
-</head>
+
+</body>
 </html>
