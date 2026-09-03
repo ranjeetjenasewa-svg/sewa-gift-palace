@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEWA PO Creator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.hidden{display:none!important}
+.top{height:64px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.brand{font-weight:800}.brand small{display:block;font-weight:500;color:#7b8495;font-size:11px;margin-top:2px}
+.actions{display:flex;gap:10px;align-items:center}.avatar{width:34px;height:34px;border-radius:50%;background:#eef2ff;display:grid;place-items:center;font-weight:800;color:#4054c6}
+.btn{border:1px solid #d9deea;background:#fff;border-radius:8px;padding:9px 14px;cursor:pointer}.btn:hover{background:#f5f7fb}
+.btn.primary{background:#3157d5;color:#fff;border-color:#3157d5}.btn.danger{color:#b42318}.btn.small{padding:6px 10px;font-size:13px}
+main{max-width:1200px;margin:0 auto;padding:30px 22px}.hero h1{margin:0 0 7px;font-size:26px}.hero p{margin:0;color:#687386}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}
+.card{background:#fff;border:1px solid #e4e8f0;border-radius:12px;padding:18px}.stat-label{color:#737e91;font-size:13px}.stat-value{font-size:27px;font-weight:800;margin-top:7px}
+.panel{background:#fff;border:1px solid #e4e8f0;border-radius:12px;margin-top:18px;padding:20px}.panel-title{font-size:17px;font-weight:800;margin-bottom:18px}
+.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.field label{display:block;font-size:12px;color:#667085;margin-bottom:6px}.field input,.field select{width:100%;border:1px solid #d7dce6;border-radius:7px;padding:10px;background:#fff}
+.checks{display:flex;gap:24px;margin:17px 0;font-size:13px}.checks label{display:flex;gap:7px;align-items:center}
+.table-wrap{overflow:auto;border:1px solid #e4e8f0;border-radius:9px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:11px 12px;border-bottom:1px solid #edf0f5;text-align:left;white-space:nowrap}.table th{background:#f8f9fc;color:#667085}.pill{padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.out{background:#fee4e2;color:#b42318}.low{background:#fff0c2;color:#8a5b00}.blocked{background:#eceff3;color:#586174}.ok{background:#e4f7ec;color:#18794e}
+.notice{padding:14px;border-radius:9px;background:#fff7e6;border:1px solid #f3dfaa;color:#7a5700;font-size:13px;margin-top:15px}
+.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#f4f6ff,#f8fafc)}.login-box{width:min(420px,92vw);background:#fff;border:1px solid #e2e6ef;border-radius:14px;padding:32px;box-shadow:0 12px 40px #15203d12}.login-box h1{margin:0}.login-box p{color:#748095;margin-top:6px}.login-box .field{margin-top:17px}.login-box .btn{width:100%;margin-top:20px}.error{color:#b42318;background:#fff0ef;border-radius:7px;padding:10px;margin-top:12px;font-size:13px}.demo{font-size:12px;color:#7a8495;margin-top:14px;text-align:center}
+.modal{position:fixed;inset:0;background:#10182866;display:grid;place-items:center;z-index:5}.modal-box{width:min(520px,92vw);background:#fff;border-radius:12px;padding:22px}.modal-box h3{margin-top:0}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.footer{text-align:center;color:#8a93a3;font-size:12px;padding:25px}
+@media(max-width:800px){.stats{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}.top{padding:0 14px}main{padding:22px 14px}}
+@media(max-width:500px){.filters{grid-template-columns:1fr}.checks{flex-direction:column;gap:10px}}
+</style>
+</head>
+<body>
+
+<div id="login" class="login">
+  <div class="login-box">
+    <h1>Sewa Gift Palace</h1><p>PO Creator</p>
+    <div class="field"><label>Username</label><input id="username" placeholder="Enter username"></div>
+    <div class="field"><label>Password</label><input id="password" type="password" placeholder="Enter password"></div>
+    <div id="loginError" class="error hidden">⚠ Invalid username or password. Please try again.</div>
+    <button class="btn primary" onclick="login()">Sign In →</button>
+    <div class="demo">Demo: sanchit / sewa@2024 &nbsp;|&nbsp; admin / admin@sewa</div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+<header class="top">
+  <div class="brand">Sewa Gift Palace<small>PO Creator</small></div>
+  <div class="actions"><button class="btn small" onclick="sync()">↻ Sync</button><div class="avatar" id="avatar">SG</div><span id="userLabel">User</span><button class="btn small danger" onclick="logout()">Logout</button></div>
+</header>
+
+<main>
+<section class="hero"><h1>SEWA PO Creator</h1><p>Purchase Order Management System &nbsp;·&nbsp; Real-time Google Sheets sync</p></section>
+
+<section class="stats">
+ <div class="card"><div class="stat-label">Total SKUs</div><div id="skuCount" class="stat-value">—</div></div>
+ <div class="card"><div class="stat-label">Need Reorder</div><div id="reorderCount" class="stat-value">—</div></div>
+ <div class="card"><div class="stat-label">Stock Day</div><div id="stockDays" class="stat-value">—</div></div>
+</section>
+
+<section class="panel">
+ <div class="panel-title">Reading tab: <button class="btn small" onclick="openTab()">✏ Change tab</button></div>
+ <div id="tabName">Inventory Manag. (IMS)_2026</div>
+</section>
+
+<section class="panel">
+ <div class="panel-title">Filter & Generate Purchase Order</div>
+ <div class="filters">
+  <div class="field"><label>Brand</label><select id="brand"><option value="">All Brands</option></select></div>
+  <div class="field"><label>Group / Section</label><select id="group"><option value="">All Groups</option></select></div>
+  <div class="field"><label>Department</label><select id="department"><option value="">All Departments</option></select></div>
+  <div class="field"><label>Item Search</label><input id="search" placeholder="Search item name…"></div>
+  <div class="field"><label>Item Code</label><input id="code" placeholder="Search code…"></div>
+ </div>
+ <div class="checks">
+  <label><input id="onlyPO" type="checkbox" checked> Show only items requiring PO</label>
+  <label><input id="blocked" type="checkbox"> Include blocked items (shown separately)</label>
+  <button class="btn primary" onclick="generatePO()">Generate PO</button>
+ </div>
+</section>
+
+<section class="panel">
+ <div class="panel-title">Purchase Order <span style="float:right"><button class="btn small" onclick="exportCSV()">Export Excel</button> <button class="btn small" onclick="printPO()">Export PDF</button></span></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px">
+  <span class="pill out">Out of stock (order now)</span><span class="pill low">Low stock (order soon)</span><span class="pill blocked">Blocked — verify before ordering</span><span class="pill ok">Sufficient — no order needed</span>
+ </div>
+ <div class="table-wrap"><table class="table"><thead><tr><th>Item Code</th><th>Item Name</th><th>Brand</th><th>Group</th><th>Department</th><th>Stock</th><th>Avg Daily Sale</th><th>Days Cover</th><th>Status</th><th>Order Qty</th></tr></thead><tbody id="tbody"></tbody></table></div>
+ <div id="notice" class="notice hidden"></div>
+</section>
+<div class="footer">Sewa Gift Palace / Christofin Impex · PO Creator · Data from Google Sheets</div>
+</main>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modal-box"><h3>Change reading tab</h3><p>Enter the exact tab name (case-sensitive):</p><input id="newTab" style="width:100%;padding:10px;border:1px solid #d7dce6;border-radius:7px" placeholder="e.g. Inventory Manag. (IMS)_2026"><p style="font-size:12px;color:#7a8495">Try: Inventory Manag. (IMS)_2026 &nbsp; Sheet1 &nbsp; IMS</p><div class="modal-actions"><button class="btn" onclick="closeTab()">Cancel</button><button class="btn primary" onclick="applyTab()">✓ Apply & Resync</button></div></div></div>
+
+<script>
+const demoData=[
+ {code:"1136566",name:"STEAM IRON PHILIPS",brand:"Philips",group:"Electric App",dept:"Appliances",stock:0,avg:2.2,blocked:false},
+ {code:"1002145",name:"GIFT SET PREMIUM",brand:"Sewa",group:"Gift Items",dept:"Gift",stock:3,avg:1.1,blocked:false},
+ {code:"1023378",name:"LADIES ART JEWELLERY SET",brand:"Fashion",group:"Art Jewellery",dept:"Accessories",stock:7,avg:.35,blocked:false},
+ {code:"1048211",name:"CERAMIC MUG DESIGNER",brand:"Home",group:"Crockery",dept:"Crockery",stock:15,avg:.4,blocked:false},
+ {code:"1089212",name:"COSMETIC TRAVEL KIT",brand:"Beauty",group:"Cosmetic",dept:"Beauty",stock:1,avg:.6,blocked:false},
+ {code:"1097122",name:"LED DECORATIVE LIGHT",brand:"Philips",group:"Electric App",dept:"Electrical",stock:2,avg:.5,blocked:true},
+ {code:"1110831",name:"FOOTMAT PREMIUM",brand:"Home",group:"Home Utility",dept:"Home",stock:12,avg:.2,blocked:false}
+];
+let data=[...demoData], currentUser="";
+
+function login(){
+ const u=username.value.trim(), p=password.value;
+ if((u==="sanchit"&&p==="sewa@2024")||(u==="admin"&&p==="admin@sewa")){
+  currentUser=u; login.classList.add("hidden"); app.classList.remove("hidden"); userLabel.textContent=u; avatar.textContent=u.slice(0,2).toUpperCase(); render();
+ }else loginError.classList.remove("hidden");
+}
+function logout(){app.classList.add("hidden");login.classList.remove("hidden");}
+function sync(){notice.classList.remove("hidden");notice.textContent="Unable to connect to Google Sheet. This standalone rebuild is using demo/local data. Connect your Google Sheet API or Apps Script endpoint to enable live sync.";render();}
+function openTab(){modal.classList.remove("hidden");newTab.value=tabName.textContent}
+function closeTab(){modal.classList.add("hidden")}
+function applyTab(){tabName.textContent=newTab.value.trim()||"Inventory Manag. (IMS)_2026";closeTab();sync()}
+function options(id,key){let el=document.getElementById(id);let vals=[...new Set(data.map(x=>x[key]))].sort();el.innerHTML='<option value="">All</option>'+vals.map(v=>`<option>${v}</option>`).join("")}
+function status(x){let days=x.avg>0?x.stock/x.avg:999;if(x.blocked)return["Blocked","blocked",0];if(x.stock<=0)return["Out of stock","out",Math.max(1,Math.ceil(x.avg*7))];if(days<7)return["Low stock","low",Math.max(1,Math.ceil(x.avg*7-x.stock))];return["Sufficient","ok",0]}
+function filtered(){
+ let b=brand.value,g=group.value,d=department.value,s=search.value.toLowerCase(),c=code.value.toLowerCase();
+ return data.filter(x=>(!b||x.brand===b)&&(!g||x.group===g)&&(!d||x.dept===d)&&(!s||x.name.toLowerCase().includes(s))&&(!c||x.code.toLowerCase().includes(c))).filter(x=>!onlyPO.checked||status(x)[2]>0||(blocked.checked&&x.blocked));
+}
+function render(){
+ options("brand","brand");options("group","group");options("department","dept");
+ skuCount.textContent=data.length.toLocaleString();reorderCount.textContent=data.filter(x=>status(x)[2]>0).length;let avg=data.reduce((a,x)=>a+x.avg,0);let st=data.reduce((a,x)=>a+x.stock,0);stockDays.textContent=avg?Math.round(st/avg):"—";draw(filtered());
+}
+function draw(rows){
+ tbody.innerHTML=rows.map(x=>{let [s,cl,q]=status(x),days=x.avg?(x.stock/x.avg).toFixed(1):"∞";return `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.brand}</td><td>${x.group}</td><td>${x.dept}</td><td>${x.stock}</td><td>${x.avg}</td><td>${days}</td><td><span class="pill ${cl}">${s}</span></td><td>${q}</td></tr>`}).join("")||'<tr><td colspan="10" style="text-align:center;padding:25px">No matching items</td></tr>';
+}
+function generatePO(){draw(filtered());document.querySelector(".panel:nth-of-type(3)")?.scrollIntoView({behavior:"smooth"});}
+["brand","group","department","search","code","onlyPO","blocked"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+function exportCSV(){
+ let rows=filtered(), csv=["Item Code,Item Name,Brand,Group,Department,Stock,Avg Daily Sale,Days Cover,Status,Order Qty"];
+ rows.forEach(x=>{let [s,,q]=status(x);csv.push([x.code,x.name,x.brand,x.group,x.dept,x.stock,x.avg,x.avg?(x.stock/x.avg).toFixed(1):"Infinity",s,q].map(v=>`"${String(v).replaceAll('"','""')}"`).join(","))});
+ let a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv.join("\\n")],{type:"text/csv"}));a.download="SEWA_Purchase_Order.csv";a.click();
+}
+function printPO(){let w=window.open("","_blank");w.document.write(`<html><head><title>SEWA Purchase Order</title><style>body{font-family:Arial;padding:30px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#eee}h1{margin-bottom:5px}</style></head><body><h1>SEWA Purchase Order</h1><p>Generated: ${new Date().toLocaleString()}</p>${document.querySelector(".table-wrap").innerHTML}</body></html>`);w.document.close();w.print()}
+</script>
+</body></html>
