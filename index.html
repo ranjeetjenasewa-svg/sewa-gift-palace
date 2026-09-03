@@ -2,970 +2,137 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SEWA PO Creator</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-/* ── DESIGN TOKENS ─────────────────────────────────────────────── */
-:root {
-  --navy:      #1a2e4a;
-  --navy2:     #243d60;
-  --orange:    #e87c1e;
-  --orange2:   #d06b10;
-  --gold:      #f5a623;
-  --bg:        #eef1f5;
-  --surface:   #ffffff;
-  --surf2:     #f7f9fc;
-  --surf3:     #eff2f6;
-  --border:    #dde3ec;
-  --text:      #0f1923;
-  --text2:     #4a5568;
-  --text3:     #8a96a8;
-  --red:       #c0392b;
-  --red-bg:    #fff5f5;
-  --red-bd:    #feb2b2;
-  --gray-c:    #4a5568;
-  --gray-bg:   #f7fafc;
-  --gray-bd:   #cbd5e0;
-  --green:     #1a6b3a;
-  --green-bg:  #f0fff4;
-  --green-bd:  #9ae6b4;
-  --purple:    #553c9a;
-  --purple-bg: #faf5ff;
-  --purple-bd: #c4b5fd;
-  --r:         8px;
-  --r2:        14px;
-  --shadow:    0 1px 3px rgba(0,0,0,.07),0 2px 8px rgba(0,0,0,.05);
-  --shadow2:   0 4px 20px rgba(0,0,0,.09),0 1px 4px rgba(0,0,0,.05);
-}
-/* ── RESET ─────────────────────────────────────────────────────── */
-*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-html { scroll-behavior:smooth; }
-body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; line-height:1.6; -webkit-font-smoothing:antialiased; }
-/* ── ANIMATIONS ─────────────────────────────────────────────────── */
-@keyframes fadeIn  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-@keyframes spin    { to{transform:rotate(360deg)} }
-@keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.5} }
-.spin { animation:spin .8s linear infinite; display:inline-block; }
-.fade-in { animation:fadeIn .3s ease forwards; }
-/* ── INPUTS / BUTTONS ───────────────────────────────────────────── */
-input, select {
-  display:block; width:100%; padding:9px 12px;
-  border:1.5px solid var(--border); border-radius:var(--r);
-  background:var(--surface); color:var(--text);
-  font-family:'Inter',sans-serif; font-size:13px;
-  outline:none; transition:border-color .18s, box-shadow .18s;
-  appearance:none;
-}
-input:focus, select:focus { border-color:var(--navy); box-shadow:0 0 0 3px rgba(26,46,74,.1); }
-select {
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a96a8' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat; background-position:right 10px center; padding-right:30px;
-}
-button {
-  cursor:pointer; border:none; border-radius:var(--r);
-  font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
-  transition:all .18s; white-space:nowrap;
-}
-button:active { transform:scale(.97); }
-button:disabled { opacity:.45; cursor:not-allowed; transform:none !important; }
-/* ── LOGIN ──────────────────────────────────────────────────────── */
-#login-screen {
-  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:1.5rem;
-  background:linear-gradient(135deg,#0d1c2d 0%,#1a2e4a 45%,#1e3a5f 100%);
-  position:relative; overflow:hidden;
-}
-#login-screen::before {
-  content:''; position:absolute; width:600px; height:600px; border-radius:50%;
-  background:radial-gradient(circle,rgba(232,124,30,.12) 0%,transparent 70%);
-  top:-200px; right:-150px; pointer-events:none;
-}
-#login-screen::after {
-  content:''; position:absolute; width:400px; height:400px; border-radius:50%;
-  background:radial-gradient(circle,rgba(26,107,58,.08) 0%,transparent 70%);
-  bottom:-100px; left:-100px; pointer-events:none;
-}
-.login-box {
-  width:100%; max-width:400px; background:rgba(255,255,255,.97);
-  border-radius:20px; padding:2.25rem 2rem; box-shadow:0 20px 60px rgba(0,0,0,.25);
-  position:relative; z-index:1; animation:fadeIn .4s ease;
-}
-.login-logo {
-  display:flex; align-items:center; justify-content:center;
-  flex-direction:column; gap:10px; margin-bottom:1.75rem;
-}
-.login-logo-icon {
-  width:58px; height:58px; border-radius:16px;
-  background:linear-gradient(135deg,var(--navy),var(--navy2));
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 4px 18px rgba(26,46,74,.35);
-}
-.login-logo-icon svg { width:28px; height:28px; }
-.login-logo-name { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--navy); }
-.login-logo-sub  { font-size:11px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; margin-top:-4px; }
-.login-divider   { height:1px; background:var(--border); margin:1.25rem 0; }
-.form-lbl { display:block; font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.7px; margin-bottom:6px; }
-.input-row { position:relative; }
-.input-row svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text3); pointer-events:none; }
-.input-row input { padding-left:36px; }
-.form-group { margin-bottom:14px; }
-.login-err { display:none; background:var(--red-bg); border:1px solid var(--red-bd); border-radius:var(--r); padding:10px 14px; font-size:12px; color:var(--red); margin-bottom:12px; }
-.login-btn {
-  width:100%; padding:12px; background:linear-gradient(135deg,var(--navy),var(--navy2));
-  color:#fff; font-size:14px; font-weight:600; border-radius:var(--r); margin-top:4px;
-  box-shadow:0 4px 16px rgba(26,46,74,.3); letter-spacing:.2px;
-}
-.login-btn:hover { box-shadow:0 6px 22px rgba(26,46,74,.4); transform:translateY(-1px); }
-.login-hint { margin-top:14px; font-size:11px; color:var(--text3); text-align:center; background:var(--surf2); border-radius:var(--r); padding:8px; border:1px dashed var(--border); }
-/* ── NAVBAR ─────────────────────────────────────────────────────── */
-nav {
-  position:sticky; top:0; z-index:100;
-  background:linear-gradient(90deg,var(--navy) 0%,var(--navy2) 100%);
-  height:58px; display:flex; align-items:center; justify-content:space-between;
-  padding:0 1.25rem; box-shadow:0 2px 20px rgba(0,0,0,.2);
-}
-.nav-brand { display:flex; align-items:center; gap:10px; }
-.nav-brand-icon {
-  width:34px; height:34px; border-radius:9px;
-  background:linear-gradient(135deg,var(--orange),var(--orange2));
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 2px 10px rgba(232,124,30,.45);
-}
-.nav-brand-icon svg { width:17px; height:17px; }
-.nav-brand-name { font-family:'Playfair Display',serif; font-size:16px; font-weight:700; color:#fff; }
-.nav-brand-tag  { font-size:10px; color:rgba(255,255,255,.5); letter-spacing:1.5px; text-transform:uppercase; }
-.nav-actions { display:flex; align-items:center; gap:8px; }
-.nav-btn {
-  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);
-  border-radius:var(--r); padding:6px 12px; color:rgba(255,255,255,.88);
-  display:flex; align-items:center; gap:6px; font-size:12px;
-}
-.nav-btn:hover { background:rgba(255,255,255,.18); color:#fff; }
-.user-pill {
-  display:flex; align-items:center; gap:7px;
-  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);
-  border-radius:20px; padding:4px 12px 4px 4px;
-}
-.user-av {
-  width:26px; height:26px; border-radius:50%;
-  background:linear-gradient(135deg,var(--orange),var(--orange2));
-  display:flex; align-items:center; justify-content:center;
-  font-size:11px; font-weight:700; color:#fff;
-}
-.user-nm { font-size:12px; font-weight:500; color:rgba(255,255,255,.9); }
-/* ── HERO STRIP ─────────────────────────────────────────────────── */
-.hero {
-  background:linear-gradient(110deg,var(--navy) 0%,var(--navy2) 55%,#1e3a5f 100%);
-  padding:1.5rem 1.25rem 1.35rem; position:relative; overflow:hidden;
-}
-.hero::after {
-  content:''; position:absolute; width:280px; height:280px; border-radius:50%;
-  background:radial-gradient(circle,rgba(232,124,30,.15) 0%,transparent 70%);
-  top:-80px; right:-60px; pointer-events:none;
-}
-.hero-inner { max-width:1100px; margin:0 auto; position:relative; z-index:1; }
-.hero-row { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; }
-.hero-title { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:#fff; }
-.hero-title span { color:var(--gold); }
-.hero-sub { font-size:12px; color:rgba(255,255,255,.6); margin-top:3px; }
-.hero-stats { display:flex; gap:20px; }
-.hero-stat { text-align:right; }
-.hero-stat-val { font-size:20px; font-weight:700; color:#fff; line-height:1; }
-.hero-stat-lbl { font-size:10px; color:rgba(255,255,255,.5); letter-spacing:.8px; text-transform:uppercase; }
-/* ── MAIN LAYOUT ─────────────────────────────────────────────────── */
-.main-wrap { max-width:1100px; margin:0 auto; padding:1.25rem 1rem 5rem; }
-/* ── STATUS BAR ─────────────────────────────────────────────────── */
-.status-bar {
-  display:flex; align-items:center; justify-content:space-between;
-  flex-wrap:wrap; gap:8px; background:var(--surface);
-  border:1px solid var(--border); border-radius:var(--r);
-  padding:9px 16px; margin-bottom:12px; box-shadow:var(--shadow);
-  font-size:12px; color:var(--text2);
-}
-.s-ok      { color:var(--green); display:flex; align-items:center; gap:6px; font-weight:500; }
-.s-err     { color:var(--red);   display:flex; align-items:center; gap:6px; font-weight:500; }
-.s-loading { color:var(--navy);  display:flex; align-items:center; gap:6px; font-weight:500; }
-.s-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
-.s-dot.ok  { background:var(--green); box-shadow:0 0 0 3px rgba(26,107,58,.15); }
-.s-dot.err { background:var(--red); }
-.s-dot.loading { background:var(--navy); animation:pulse .9s ease-in-out infinite; }
-/* ── CARD ────────────────────────────────────────────────────────── */
-.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r2); box-shadow:var(--shadow); }
-.card-body { padding:1.25rem; }
-.card-title { font-size:13px; font-weight:600; color:var(--navy); display:flex; align-items:center; gap:8px; margin-bottom:1rem; padding-bottom:.75rem; border-bottom:1.5px solid var(--surf3); }
-.card-title svg { width:18px; height:18px; color:var(--orange); }
-/* ── FILTER SECTION ──────────────────────────────────────────────── */
-.filter-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-@media(min-width:560px)  { .filter-grid { grid-template-columns:repeat(3,1fr); } }
-@media(min-width:860px)  { .filter-grid { grid-template-columns:repeat(6,1fr); } }
-.filter-lbl { font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:.6px; display:block; margin-bottom:5px; }
-.search-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-.search-row input { max-width:220px; }
-.toggle-row { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:12px; color:var(--text2); }
-.toggle-lbl { display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none; }
-.toggle-lbl input[type=checkbox] { width:15px; height:15px; accent-color:var(--navy); cursor:pointer; }
-.gen-btn {
-  padding:10px 20px;
-  background:linear-gradient(135deg,var(--orange),var(--orange2));
-  color:#fff; font-weight:600; font-size:14px;
-  box-shadow:0 3px 12px rgba(232,124,30,.35);
-  display:flex; align-items:center; gap:8px; border-radius:var(--r);
-}
-.gen-btn:hover { box-shadow:0 5px 18px rgba(232,124,30,.5); transform:translateY(-1px); }
-.filter-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; padding-top:12px; border-top:1px solid var(--surf3); align-items:center; justify-content:space-between; }
-/* ── STAT CARDS ──────────────────────────────────────────────────── */
-.stats-row { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:14px; }
-@media(min-width:480px)  { .stats-row { grid-template-columns:repeat(4,1fr); } }
-@media(min-width:860px)  { .stats-row { grid-template-columns:repeat(5,1fr); } }
-.stat-card { border-radius:var(--r); padding:14px 16px; border:1.5px solid; position:relative; overflow:hidden; }
-.stat-card::after { content:''; position:absolute; width:60px; height:60px; border-radius:50%; top:-15px; right:-15px; opacity:.1; }
-.sc-red    { background:var(--red-bg);    border-color:var(--red-bd);    } .sc-red::after    { background:var(--red); }
-.sc-gray   { background:var(--gray-bg);   border-color:var(--gray-bd);   } .sc-gray::after   { background:var(--gray-c); }
-.sc-purple { background:var(--purple-bg); border-color:var(--purple-bd); } .sc-purple::after { background:var(--purple); }
-.sc-navy   { background:#eef2f8;           border-color:#c5d3e8;          } .sc-navy::after   { background:var(--navy); }
-.sc-plain  { background:var(--surf2);      border-color:var(--border);    } .sc-plain::after  { background:var(--text3); }
-.stat-lbl  { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px; }
-.sc-red    .stat-lbl { color:var(--red); }
-.sc-gray   .stat-lbl { color:var(--gray-c); }
-.sc-purple .stat-lbl { color:var(--purple); }
-.sc-navy   .stat-lbl { color:var(--navy); }
-.sc-plain  .stat-lbl { color:var(--text3); }
-.stat-val  { font-size:24px; font-weight:700; line-height:1; }
-.sc-red    .stat-val { color:var(--red); }
-.sc-gray   .stat-val { color:var(--gray-c); }
-.sc-purple .stat-val { color:var(--purple); }
-.sc-navy   .stat-val { color:var(--navy); }
-.sc-plain  .stat-val { color:var(--text); }
-/* ── PO HEADER ───────────────────────────────────────────────────── */
-.po-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
-.po-title { font-family:'Playfair Display',serif; font-size:19px; font-weight:700; color:var(--navy); }
-.po-sub   { font-size:12px; color:var(--text3); margin-top:3px; }
-.export-btns { display:flex; gap:8px; flex-wrap:wrap; }
-.btn-excel { display:flex; align-items:center; gap:6px; padding:9px 16px; background:var(--green-bg); color:var(--green); border:1.5px solid var(--green-bd); font-weight:600; font-size:13px; }
-.btn-excel:hover { background:#c6f6d5; }
-.btn-pdf   { display:flex; align-items:center; gap:6px; padding:9px 16px; background:#fdf0e4; color:var(--orange); border:1.5px solid #f5c07a; font-weight:600; font-size:13px; }
-.btn-pdf:hover   { background:#fde3b8; }
-/* ── LEGEND ──────────────────────────────────────────────────────── */
-.legend { display:flex; gap:16px; flex-wrap:wrap; padding:10px 16px; background:var(--surf2); border:1px solid var(--border); border-radius:var(--r); margin-bottom:16px; font-size:11px; font-weight:500; color:var(--text2); }
-.ldot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
-.ldot.red    { background:var(--red); }
-.ldot.gray   { background:#a0aec0; }
-.ldot.purple { background:var(--purple); }
-.ldot.green  { background:#38a169; }
-/* ── SECTION BANNERS ─────────────────────────────────────────────── */
-.banner { display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:var(--r); font-size:13px; font-weight:600; margin:8px 0 8px; border:1.5px solid; }
-.banner .bcount { margin-left:auto; font-size:11px; font-weight:700; padding:2px 10px; border-radius:12px; }
-.banner.red    { background:var(--red-bg);    color:var(--red);    border-color:var(--red-bd); }
-.banner.gray   { background:var(--gray-bg);   color:#374151;       border-color:var(--gray-bd); }
-.banner.green  { background:var(--green-bg);  color:var(--green);  border-color:var(--green-bd); }
-.banner.purple { background:var(--purple-bg); color:var(--purple); border-color:var(--purple-bd); }
-.banner.red    .bcount { background:rgba(192,57,43,.12);  color:var(--red); }
-.banner.gray   .bcount { background:rgba(74,85,104,.12);  color:#374151; }
-.banner.green  .bcount { background:rgba(26,107,58,.1);   color:var(--green); }
-.banner.purple .bcount { background:rgba(85,60,154,.12);  color:var(--purple); }
-.bdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
-.bdot.red    { background:var(--red);    box-shadow:0 0 0 3px rgba(192,57,43,.2); }
-.bdot.gray   { background:#a0aec0;       box-shadow:0 0 0 3px rgba(160,174,192,.2); }
-.bdot.green  { background:#38a169;       box-shadow:0 0 0 3px rgba(56,161,105,.2); }
-.bdot.purple { background:var(--purple); box-shadow:0 0 0 3px rgba(85,60,154,.2); }
-/* ── TABLES ──────────────────────────────────────────────────────── */
-.tbl-wrap { overflow-x:auto; border-radius:var(--r); border:1.5px solid; margin-bottom:16px; box-shadow:var(--shadow); }
-.tbl-wrap.t-red    { border-color:var(--red-bd); }
-.tbl-wrap.t-gray   { border-color:var(--gray-bd); }
-.tbl-wrap.t-green  { border-color:var(--green-bd); }
-.tbl-wrap.t-purple { border-color:var(--purple-bd); }
-table { width:100%; border-collapse:collapse; min-width:700px; }
-.tbl-wrap.t-red    thead tr { background:var(--red-bg); }
-.tbl-wrap.t-gray   thead tr { background:var(--gray-bg); }
-.tbl-wrap.t-green  thead tr { background:var(--green-bg); }
-.tbl-wrap.t-purple thead tr { background:var(--purple-bg); }
-th { padding:9px 11px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap; text-align:left; }
-.tbl-wrap.t-red    th { color:var(--red);    border-bottom:1.5px solid var(--red-bd); }
-.tbl-wrap.t-gray   th { color:#4a5568;       border-bottom:1.5px solid var(--gray-bd); }
-.tbl-wrap.t-green  th { color:var(--green);  border-bottom:1.5px solid var(--green-bd); }
-.tbl-wrap.t-purple th { color:var(--purple); border-bottom:1.5px solid var(--purple-bd); }
-th.r, td.r { text-align:right; }
-th.c, td.c { text-align:center; }
-td { padding:8px 11px; font-size:12.5px; border-top:1px solid rgba(0,0,0,.045); }
-tbody tr:hover td { background:rgba(26,46,74,.025); }
-.dept-row td { padding:6px 14px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.9px; color:var(--navy); background:#eef2f8; border-top:1px solid #d5dde8; }
-.code-cell { font-size:11px; color:var(--text3); font-family:monospace; }
-.neg-val { color:var(--red); font-weight:700; }
-.qty-red    { color:var(--red);    font-weight:700; }
-.qty-gray   { color:#374151;       font-weight:700; }
-.qty-green  { color:var(--green);  font-weight:600; }
-.qty-purple { color:var(--purple); font-weight:700; }
-.blk-tag { display:inline-flex; align-items:center; background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-bd); border-radius:4px; font-size:9.5px; font-weight:700; padding:1px 5px; margin-left:4px; }
-.warn-tag { display:inline-flex; align-items:center; background:#fffbeb; color:#92400e; border:1px solid #fde68a; border-radius:4px; font-size:9.5px; font-weight:600; padding:1px 5px; margin-left:4px; }
-.totals-row td { padding:9px 11px; font-size:12px; font-weight:700; background:var(--navy); color:#fff; border:none; }
-.totals-row td.acc { background:var(--orange); }
-/* ── MISC ────────────────────────────────────────────────────────── */
-.empty-state { text-align:center; padding:3rem 1rem; color:var(--text3); }
-.empty-state svg { width:48px; height:48px; margin:0 auto 14px; display:block; }
-.empty-ok svg { color:#38a169; }
-.error-card { background:var(--red-bg); border:1.5px solid var(--red-bd); border-radius:var(--r2); padding:2rem; text-align:center; box-shadow:var(--shadow); }
-.error-card svg { width:40px; height:40px; color:var(--red); display:block; margin:0 auto 12px; }
-.retry-btn { background:var(--red); color:#fff; padding:10px 22px; font-weight:600; margin-top:14px; box-shadow:0 3px 12px rgba(192,57,43,.3); }
-.retry-btn:hover { box-shadow:0 5px 18px rgba(192,57,43,.45); transform:translateY(-1px); }
-.neg-warn { display:flex; align-items:flex-start; gap:10px; padding:10px 14px; background:#fffbeb; border:1px solid #fde68a; border-radius:var(--r); font-size:12px; color:#92400e; margin-bottom:14px; }
-.missing-warn { display:flex; align-items:flex-start; gap:10px; padding:10px 14px; background:var(--purple-bg); border:1px solid var(--purple-bd); border-radius:var(--r); font-size:12px; color:var(--purple); margin-bottom:14px; }
-.tab-bar { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:8px 14px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; box-shadow:var(--shadow); font-size:12px; color:var(--text2); }
-.tab-name { background:var(--surf2); border:1px solid var(--border); border-radius:4px; padding:2px 8px; font-size:11px; color:var(--navy); font-weight:600; font-family:monospace; }
-.tab-chg-btn { background:transparent; border:1px solid var(--border); border-radius:var(--r); padding:4px 10px; font-size:11px; color:var(--text2); }
-.tab-editor { background:#fffbeb; border:1px solid #fde68a; border-radius:var(--r); padding:12px 14px; margin-bottom:10px; display:none; }
-.tab-editor-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-.tab-apply-btn { background:var(--navy); color:#fff; padding:8px 14px; font-weight:600; font-size:12px; }
-.tab-cancel-btn { background:transparent; border:1px solid var(--border); color:var(--text2); padding:8px 12px; font-size:12px; }
-.hints { font-size:11px; color:#92400e; margin-top:6px; }
-.hints span { cursor:pointer; text-decoration:underline; margin-right:8px; }
-.page-footer { text-align:center; padding:.75rem; font-size:11px; color:var(--text3); letter-spacing:.3px; }
-/* ── RESPONSIVE ──────────────────────────────────────────────────── */
-@media(max-width:540px) {
-  .hero-stats { display:none; }
-  .hero-title { font-size:18px; }
-  .card-body { padding:1rem; }
-  .user-nm { display:none; }
-  .po-title { font-size:16px; }
-  .stat-val { font-size:20px; }
-}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.hidden{display:none!important}
+.top{height:64px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.brand{font-weight:800}.brand small{display:block;font-weight:500;color:#7b8495;font-size:11px;margin-top:2px}
+.actions{display:flex;gap:10px;align-items:center}.avatar{width:34px;height:34px;border-radius:50%;background:#eef2ff;display:grid;place-items:center;font-weight:800;color:#4054c6}
+.btn{border:1px solid #d9deea;background:#fff;border-radius:8px;padding:9px 14px;cursor:pointer}.btn:hover{background:#f5f7fb}
+.btn.primary{background:#3157d5;color:#fff;border-color:#3157d5}.btn.danger{color:#b42318}.btn.small{padding:6px 10px;font-size:13px}
+main{max-width:1200px;margin:0 auto;padding:30px 22px}.hero h1{margin:0 0 7px;font-size:26px}.hero p{margin:0;color:#687386}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}
+.card{background:#fff;border:1px solid #e4e8f0;border-radius:12px;padding:18px}.stat-label{color:#737e91;font-size:13px}.stat-value{font-size:27px;font-weight:800;margin-top:7px}
+.panel{background:#fff;border:1px solid #e4e8f0;border-radius:12px;margin-top:18px;padding:20px}.panel-title{font-size:17px;font-weight:800;margin-bottom:18px}
+.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.field label{display:block;font-size:12px;color:#667085;margin-bottom:6px}.field input,.field select{width:100%;border:1px solid #d7dce6;border-radius:7px;padding:10px;background:#fff}
+.checks{display:flex;gap:24px;margin:17px 0;font-size:13px}.checks label{display:flex;gap:7px;align-items:center}
+.table-wrap{overflow:auto;border:1px solid #e4e8f0;border-radius:9px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{padding:11px 12px;border-bottom:1px solid #edf0f5;text-align:left;white-space:nowrap}.table th{background:#f8f9fc;color:#667085}.pill{padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.out{background:#fee4e2;color:#b42318}.low{background:#fff0c2;color:#8a5b00}.blocked{background:#eceff3;color:#586174}.ok{background:#e4f7ec;color:#18794e}
+.notice{padding:14px;border-radius:9px;background:#fff7e6;border:1px solid #f3dfaa;color:#7a5700;font-size:13px;margin-top:15px}
+.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#f4f6ff,#f8fafc)}.login-box{width:min(420px,92vw);background:#fff;border:1px solid #e2e6ef;border-radius:14px;padding:32px;box-shadow:0 12px 40px #15203d12}.login-box h1{margin:0}.login-box p{color:#748095;margin-top:6px}.login-box .field{margin-top:17px}.login-box .btn{width:100%;margin-top:20px}.error{color:#b42318;background:#fff0ef;border-radius:7px;padding:10px;margin-top:12px;font-size:13px}.demo{font-size:12px;color:#7a8495;margin-top:14px;text-align:center}
+.modal{position:fixed;inset:0;background:#10182866;display:grid;place-items:center;z-index:5}.modal-box{width:min(520px,92vw);background:#fff;border-radius:12px;padding:22px}.modal-box h3{margin-top:0}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.footer{text-align:center;color:#8a93a3;font-size:12px;padding:25px}
+@media(max-width:800px){.stats{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}.top{padding:0 14px}main{padding:22px 14px}}
+@media(max-width:500px){.filters{grid-template-columns:1fr}.checks{flex-direction:column;gap:10px}}
 </style>
 </head>
 <body>
-<!-- ══ LOGIN ═══════════════════════════════════════════════════════ -->
-<div id="login-screen">
+
+<div id="login" class="login">
   <div class="login-box">
-    <div class="login-logo">
-      <div class="login-logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-      </div>
-      <div class="login-logo-name">Sewa Gift Palace</div>
-      <div class="login-logo-sub">PO Creator</div>
-    </div>
-    <div class="login-divider"></div>
-    <div class="form-group">
-      <label class="form-lbl" for="inp-user">Username</label>
-      <div class="input-row">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <input id="inp-user" type="text" placeholder="Enter username" autocomplete="username">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-lbl" for="inp-pass">Password</label>
-      <div class="input-row">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        <input id="inp-pass" type="password" placeholder="Enter password" autocomplete="current-password">
-      </div>
-    </div>
-    <div class="login-err" id="login-err">⚠ Invalid username or password. Please try again.</div>
-    <button class="login-btn" id="btn-login" type="button">Sign In →</button>
-    <div class="login-hint"><strong>Demo:</strong> sanchit / sewa@2024 &nbsp;|&nbsp; admin / admin@sewa</div>
+    <h1>Sewa Gift Palace</h1><p>PO Creator</p>
+    <div class="field"><label>Username</label><input id="username" placeholder="Enter username"></div>
+    <div class="field"><label>Password</label><input id="password" type="password" placeholder="Enter password"></div>
+    <div id="loginError" class="error hidden">⚠ Invalid username or password. Please try again.</div>
+    <button class="btn primary" onclick="login()">Sign In →</button>
+    <div class="demo">Demo: sanchit / sewa@2024 &nbsp;|&nbsp; admin / admin@sewa</div>
   </div>
 </div>
-<!-- ══ APP ═══════════════════════════════════════════════════════════ -->
-<div id="app-screen" style="display:none">
-  <nav>
-    <div class="nav-brand">
-      <div class="nav-brand-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-      </div>
-      <div>
-        <div class="nav-brand-name">Sewa Gift Palace</div>
-        <div class="nav-brand-tag">PO Creator</div>
-      </div>
-    </div>
-    <div class="nav-actions">
-      <button class="nav-btn" id="btn-sync" type="button">
-        <svg id="sync-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-        Sync
-      </button>
-      <div class="user-pill">
-        <div class="user-av" id="user-av">SG</div>
-        <span class="user-nm" id="user-nm">User</span>
-      </div>
-      <button class="nav-btn" id="btn-logout" type="button">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Logout
-      </button>
-    </div>
-  </nav>
-  <div class="hero">
-    <div class="hero-inner">
-      <div class="hero-row">
-        <div>
-          <div class="hero-title">SEWA PO <span>Creator</span></div>
-          <div class="hero-sub">Purchase Order Management System &nbsp;·&nbsp; Real-time Google Sheets sync</div>
-        </div>
-        <div class="hero-stats" id="hero-stats" style="display:none">
-          <div class="hero-stat">
-            <div class="hero-stat-val" id="h-total">—</div>
-            <div class="hero-stat-lbl">Total SKUs</div>
-          </div>
-          <div class="hero-stat">
-            <div class="hero-stat-val" id="h-need">—</div>
-            <div class="hero-stat-lbl">Need Reorder</div>
-          </div>
-          <div class="hero-stat">
-            <div class="hero-stat-val" id="h-day">D—</div>
-            <div class="hero-stat-lbl">Stock Day</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="main-wrap">
-    <!-- Status -->
-    <div class="status-bar" id="status-bar">
-      <div id="sync-status" class="s-loading"><span class="s-dot loading"></span> Connecting to Google Sheet…</div>
-      <div id="last-sync-txt" style="font-size:11px;color:var(--text3)"></div>
-    </div>
-    <!-- Tab bar -->
-    <div class="tab-bar">
-      <div style="display:flex;align-items:center;gap:8px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        <span>Reading tab:</span>
-        <span class="tab-name" id="tab-display"></span>
-      </div>
-      <button class="tab-chg-btn" type="button" onclick="toggleTabEditor()">✏ Change tab</button>
-    </div>
-    <div class="tab-editor" id="tab-editor">
-      <div style="font-size:12px;font-weight:600;color:#92400e">Enter the exact tab name (case-sensitive):</div>
-      <div class="tab-editor-row">
-        <input id="tab-input" type="text" placeholder="e.g. Inventory Manag. (IMS)_2026" style="flex:1;min-width:200px;font-size:12px">
-        <button class="tab-apply-btn" type="button" onclick="applyTab()">✓ Apply & Resync</button>
-        <button class="tab-cancel-btn" type="button" onclick="toggleTabEditor()">Cancel</button>
-      </div>
-      <div class="hints">Try: <span onclick="setTabHint('Inventory Manag. (IMS)_2026')">Inventory Manag. (IMS)_2026</span><span onclick="setTabHint('Sheet1')">Sheet1</span><span onclick="setTabHint('IMS')">IMS</span></div>
-    </div>
-    <!-- Filter Card -->
-    <div class="card" style="margin-bottom:12px">
-      <div class="card-body">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-          Filter & Generate Purchase Order
-        </div>
-        <div class="filter-grid">
-          <div>
-            <span class="filter-lbl">Brand</span>
-            <select id="f-brand" onchange="resetPO()" disabled><option value="">All brands</option></select>
-          </div>
-          <div>
-            <span class="filter-lbl">Group / Section</span>
-            <select id="f-section" onchange="resetPO()" disabled><option value="">All sections</option></select>
-          </div>
-          <div>
-            <span class="filter-lbl">Department</span>
-            <select id="f-dept" onchange="resetPO()" disabled><option value="">All depts</option></select>
-          </div>
-          <div>
-            <span class="filter-lbl">Item Search</span>
-            <input id="f-search" type="text" placeholder="Search item name…" oninput="resetPO()" disabled>
-          </div>
-          <div>
-            <span class="filter-lbl">Item Code</span>
-            <input id="f-code" type="text" placeholder="Search code…" oninput="resetPO()" disabled>
-          </div>
-          <div style="display:flex;flex-direction:column;justify-content:flex-end">
-            <button class="gen-btn" id="btn-gen" type="button" onclick="generatePO()" disabled>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-              Generate PO
-            </button>
-          </div>
-        </div>
-        <div class="toggle-row">
-          <label class="toggle-lbl">
-            <input type="checkbox" id="chk-po-only" onchange="resetPO()">
-            Show only items requiring PO
-          </label>
-          <label class="toggle-lbl">
-            <input type="checkbox" id="chk-blocked" onchange="resetPO()">
-            Include blocked items (shown separately)
-          </label>
-        </div>
-      </div>
-    </div>
-    <!-- PO Output -->
-    <div id="po-output" class="card fade-in" style="display:none">
-      <div class="card-body">
-        <div class="po-hdr">
-          <div>
-            <div class="po-title" id="po-title">Purchase Order</div>
-            <div class="po-sub" id="po-sub"></div>
-          </div>
-          <div class="export-btns">
-            <button class="btn-excel" type="button" onclick="exportExcel()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Export Excel
-            </button>
-            <button class="btn-pdf" type="button" onclick="exportPDF()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Export PDF
-            </button>
-          </div>
-        </div>
-        <div class="legend">
-          <span><span class="ldot red"></span> Out of stock (order now)</span>
-          <span><span class="ldot gray"></span> Low stock (order soon)</span>
-          <span><span class="ldot purple"></span> Blocked — verify before ordering</span>
-          <span><span class="ldot green"></span> Sufficient — no order needed</span>
-        </div>
-        <div class="stats-row" id="stat-grid"></div>
-        <div id="neg-warn" style="display:none" class="neg-warn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <span id="neg-warn-txt"></span>
-        </div>
-        <div id="missing-warn" style="display:none" class="missing-warn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="missing-warn-txt"></span>
-        </div>
-        <div id="order-section"></div>
-        <div id="ok-section"></div>
-      </div>
-    </div>
-    <!-- Error -->
-    <div id="error-card" class="error-card" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55M5 5a10.9 10.9 0 0114.8 1.6"/><path d="M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.56 2.75c4.37 6 6 9.42 8 17.72m2.92-2.43c.41 3.35 1 5.83 1.52 8.71"/></svg>
-      <div style="font-weight:700;color:var(--red);font-size:16px;margin-bottom:8px">Unable to connect to Google Sheet</div>
-      <div style="font-size:13px;color:var(--text2);max-width:420px;margin:0 auto;line-height:1.8">
-        Please check:<br>
-        1. Sheet is shared as <strong>"Anyone with the link can view"</strong><br>
-        2. Tab name matches your IMS tab (use Change Tab above)<br>
-        3. Your internet connection is active
-      </div>
-      <button class="retry-btn" type="button" onclick="syncSheet()">↻ Sync Again</button>
-    </div>
-  </div>
-  <div class="page-footer">Sewa Gift Palace / Christofin Impex &nbsp;·&nbsp; PO Creator &nbsp;·&nbsp; Data from Google Sheets &nbsp;·&nbsp; <span id="footer-user"></span></div>
+
+<div id="app" class="hidden">
+<header class="top">
+  <div class="brand">Sewa Gift Palace<small>PO Creator</small></div>
+  <div class="actions"><button class="btn small" onclick="sync()">↻ Sync</button><div class="avatar" id="avatar">SG</div><span id="userLabel">User</span><button class="btn small danger" onclick="logout()">Logout</button></div>
+</header>
+
+<main>
+<section class="hero"><h1>SEWA PO Creator</h1><p>Purchase Order Management System &nbsp;·&nbsp; Real-time Google Sheets sync</p></section>
+
+<section class="stats">
+ <div class="card"><div class="stat-label">Total SKUs</div><div id="skuCount" class="stat-value">—</div></div>
+ <div class="card"><div class="stat-label">Need Reorder</div><div id="reorderCount" class="stat-value">—</div></div>
+ <div class="card"><div class="stat-label">Stock Day</div><div id="stockDays" class="stat-value">—</div></div>
+</section>
+
+<section class="panel">
+ <div class="panel-title">Reading tab: <button class="btn small" onclick="openTab()">✏ Change tab</button></div>
+ <div id="tabName">Inventory Manag. (IMS)_2026</div>
+</section>
+
+<section class="panel">
+ <div class="panel-title">Filter & Generate Purchase Order</div>
+ <div class="filters">
+  <div class="field"><label>Brand</label><select id="brand"><option value="">All Brands</option></select></div>
+  <div class="field"><label>Group / Section</label><select id="group"><option value="">All Groups</option></select></div>
+  <div class="field"><label>Department</label><select id="department"><option value="">All Departments</option></select></div>
+  <div class="field"><label>Item Search</label><input id="search" placeholder="Search item name…"></div>
+  <div class="field"><label>Item Code</label><input id="code" placeholder="Search code…"></div>
+ </div>
+ <div class="checks">
+  <label><input id="onlyPO" type="checkbox" checked> Show only items requiring PO</label>
+  <label><input id="blocked" type="checkbox"> Include blocked items (shown separately)</label>
+  <button class="btn primary" onclick="generatePO()">Generate PO</button>
+ </div>
+</section>
+
+<section class="panel">
+ <div class="panel-title">Purchase Order <span style="float:right"><button class="btn small" onclick="exportCSV()">Export Excel</button> <button class="btn small" onclick="printPO()">Export PDF</button></span></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px">
+  <span class="pill out">Out of stock (order now)</span><span class="pill low">Low stock (order soon)</span><span class="pill blocked">Blocked — verify before ordering</span><span class="pill ok">Sufficient — no order needed</span>
+ </div>
+ <div class="table-wrap"><table class="table"><thead><tr><th>Item Code</th><th>Item Name</th><th>Brand</th><th>Group</th><th>Department</th><th>Stock</th><th>Avg Daily Sale</th><th>Days Cover</th><th>Status</th><th>Order Qty</th></tr></thead><tbody id="tbody"></tbody></table></div>
+ <div id="notice" class="notice hidden"></div>
+</section>
+<div class="footer">Sewa Gift Palace / Christofin Impex · PO Creator · Data from Google Sheets</div>
+</main>
 </div>
+
+<div id="modal" class="modal hidden"><div class="modal-box"><h3>Change reading tab</h3><p>Enter the exact tab name (case-sensitive):</p><input id="newTab" style="width:100%;padding:10px;border:1px solid #d7dce6;border-radius:7px" placeholder="e.g. Inventory Manag. (IMS)_2026"><p style="font-size:12px;color:#7a8495">Try: Inventory Manag. (IMS)_2026 &nbsp; Sheet1 &nbsp; IMS</p><div class="modal-actions"><button class="btn" onclick="closeTab()">Cancel</button><button class="btn primary" onclick="applyTab()">✓ Apply & Resync</button></div></div></div>
+
 <script>
-// ── CONFIG ─────────────────────────────────────────────────────────
-var SHEET_ID  = "1pKJ3vBepekFkTcD8FkszVEfozFMs-0QchHtLcKsy7b8";
-var SHEET_GID = "1508765207"; // Tab GID for "Inventory Manag. (IMS)_2026"
-var APPS_SCRIPT_URL = ""; // ← Paste your Google Apps Script web app URL here if needed
-var IMS_TAB  = "Inventory Manag. (IMS)_2026";
-var USERS = [
-  {u:"sanchit", p:"sewa@2024",  name:"Sanchit Mittal", role:"Owner"},
-  {u:"staff1",  p:"staff@123",  name:"Store Staff",     role:"Staff"},
-  {u:"admin",   p:"admin@sewa", name:"Admin",           role:"Admin"}
+const demoData=[
+ {code:"1136566",name:"STEAM IRON PHILIPS",brand:"Philips",group:"Electric App",dept:"Appliances",stock:0,avg:2.2,blocked:false},
+ {code:"1002145",name:"GIFT SET PREMIUM",brand:"Sewa",group:"Gift Items",dept:"Gift",stock:3,avg:1.1,blocked:false},
+ {code:"1023378",name:"LADIES ART JEWELLERY SET",brand:"Fashion",group:"Art Jewellery",dept:"Accessories",stock:7,avg:.35,blocked:false},
+ {code:"1048211",name:"CERAMIC MUG DESIGNER",brand:"Home",group:"Crockery",dept:"Crockery",stock:15,avg:.4,blocked:false},
+ {code:"1089212",name:"COSMETIC TRAVEL KIT",brand:"Beauty",group:"Cosmetic",dept:"Beauty",stock:1,avg:.6,blocked:false},
+ {code:"1097122",name:"LED DECORATIVE LIGHT",brand:"Philips",group:"Electric App",dept:"Electrical",stock:2,avg:.5,blocked:true},
+ {code:"1110831",name:"FOOTMAT PREMIUM",brand:"Home",group:"Home Utility",dept:"Home",stock:12,avg:.2,blocked:false}
 ];
-// Column indices (0-based)
-var C = {
-  CODE:0, BLOCKED:1, BRAND:2, SECTION:3, DEPT:4, NAME:5,
-  RSP:6, MAX_LVL:7, SALE90:8, AVG_DAILY:9, LEAD:10, SAFETY:11,
-  DAY_START:12, DAY_END:42,
-  LAST_STOCK:43,
-  REORDER:44
-};
-// ── STATE ───────────────────────────────────────────────────────────
-var currentUser = null;
-var csvRows     = null;
-var currentPO   = null;
-var syncTimer   = null;
-var activeTab   = IMS_TAB;
-// ── BOOT ────────────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById("btn-login").addEventListener("click", doLogin);
-  document.getElementById("btn-logout").addEventListener("click", doLogout);
-  document.getElementById("btn-sync").addEventListener("click", syncSheet);
-  document.getElementById("inp-pass").addEventListener("keydown", function(e){ if(e.key==="Enter") doLogin(); });
-  document.getElementById("inp-user").addEventListener("keydown", function(e){ if(e.key==="Enter") document.getElementById("inp-pass").focus(); });
-  document.getElementById("tab-display").textContent = activeTab;
-  document.getElementById("tab-input").value = activeTab;
-});
-// ── AUTH ────────────────────────────────────────────────────────────
-function doLogin() {
-  var u = (document.getElementById("inp-user").value||"").trim();
-  var p = (document.getElementById("inp-pass").value||"");
-  var user = null;
-  for (var i=0; i<USERS.length; i++) {
-    if (USERS[i].u===u && USERS[i].p===p) { user=USERS[i]; break; }
-  }
-  if (!user) { document.getElementById("login-err").style.display="block"; return; }
-  document.getElementById("login-err").style.display="none";
-  currentUser = user;
-  var initials = user.name.split(" ").map(function(w){return w[0];}).join("").slice(0,2).toUpperCase();
-  document.getElementById("user-av").textContent = initials;
-  document.getElementById("user-nm").textContent = user.name.split(" ")[0];
-  document.getElementById("footer-user").textContent = "Logged in as " + user.name;
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("app-screen").style.display = "block";
-  syncSheet();
-  syncTimer = setInterval(syncSheet, 5*60*1000);
+let data=[...demoData], currentUser="";
+
+function login(){
+ const u=username.value.trim(), p=password.value;
+ if((u==="sanchit"&&p==="sewa@2024")||(u==="admin"&&p==="admin@sewa")){
+  currentUser=u; login.classList.add("hidden"); app.classList.remove("hidden"); userLabel.textContent=u; avatar.textContent=u.slice(0,2).toUpperCase(); render();
+ }else loginError.classList.remove("hidden");
 }
-function doLogout() {
-  clearInterval(syncTimer);
-  currentUser=null; csvRows=null; currentPO=null;
-  document.getElementById("login-screen").style.display="flex";
-  document.getElementById("app-screen").style.display="none";
-  document.getElementById("inp-user").value="";
-  document.getElementById("inp-pass").value="";
-  document.getElementById("po-output").style.display="none";
-  document.getElementById("error-card").style.display="none";
+function logout(){app.classList.add("hidden");login.classList.remove("hidden");}
+function sync(){notice.classList.remove("hidden");notice.textContent="Unable to connect to Google Sheet. This standalone rebuild is using demo/local data. Connect your Google Sheet API or Apps Script endpoint to enable live sync.";render();}
+function openTab(){modal.classList.remove("hidden");newTab.value=tabName.textContent}
+function closeTab(){modal.classList.add("hidden")}
+function applyTab(){tabName.textContent=newTab.value.trim()||"Inventory Manag. (IMS)_2026";closeTab();sync()}
+function options(id,key){let el=document.getElementById(id);let vals=[...new Set(data.map(x=>x[key]))].sort();el.innerHTML='<option value="">All</option>'+vals.map(v=>`<option>${v}</option>`).join("")}
+function status(x){let days=x.avg>0?x.stock/x.avg:999;if(x.blocked)return["Blocked","blocked",0];if(x.stock<=0)return["Out of stock","out",Math.max(1,Math.ceil(x.avg*7))];if(days<7)return["Low stock","low",Math.max(1,Math.ceil(x.avg*7-x.stock))];return["Sufficient","ok",0]}
+function filtered(){
+ let b=brand.value,g=group.value,d=department.value,s=search.value.toLowerCase(),c=code.value.toLowerCase();
+ return data.filter(x=>(!b||x.brand===b)&&(!g||x.group===g)&&(!d||x.dept===d)&&(!s||x.name.toLowerCase().includes(s))&&(!c||x.code.toLowerCase().includes(c))).filter(x=>!onlyPO.checked||status(x)[2]>0||(blocked.checked&&x.blocked));
 }
-// ── CSV PARSER ──────────────────────────────────────────────────────
-function parseCSV(text) {
-  var rows=[], lines=text.split(/\r?\n/);
-  for (var li=0; li<lines.length; li++) {
-    var line=lines[li]; if(!line.trim()) continue;
-    var cells=[], cur="", inQ=false;
-    for (var i=0; i<line.length; i++) {
-      var ch=line[i];
-      if (ch==='"') { inQ=!inQ; }
-      else if (ch==="," && !inQ) { cells.push(cur.replace(/^"|"$/g,"").trim()); cur=""; }
-      else { cur+=ch; }
-    }
-    cells.push(cur.replace(/^"|"$/g,"").trim());
-    rows.push(cells);
-  }
-  return rows;
+function render(){
+ options("brand","brand");options("group","group");options("department","dept");
+ skuCount.textContent=data.length.toLocaleString();reorderCount.textContent=data.filter(x=>status(x)[2]>0).length;let avg=data.reduce((a,x)=>a+x.avg,0);let st=data.reduce((a,x)=>a+x.stock,0);stockDays.textContent=avg?Math.round(st/avg):"—";draw(filtered());
 }
-function num(v) {
-  var n = parseFloat((v||"").toString().replace(/,/g,""));
-  return isNaN(n) ? null : n;
+function draw(rows){
+ tbody.innerHTML=rows.map(x=>{let [s,cl,q]=status(x),days=x.avg?(x.stock/x.avg).toFixed(1):"∞";return `<tr><td>${x.code}</td><td>${x.name}</td><td>${x.brand}</td><td>${x.group}</td><td>${x.dept}</td><td>${x.stock}</td><td>${x.avg}</td><td>${days}</td><td><span class="pill ${cl}">${s}</span></td><td>${q}</td></tr>`}).join("")||'<tr><td colspan="10" style="text-align:center;padding:25px">No matching items</td></tr>';
 }
-// ── SYNC ────────────────────────────────────────────────────────────
-function syncSheet() {
-  setSyncStatus("loading");
-  var icon = document.getElementById("sync-icon");
-  icon.classList.add("spin");
-  document.getElementById("btn-sync").disabled = true;
-  var tabEnc = encodeURIComponent(activeTab);
-  var ts = Date.now();
-  var urls = [];
-  // Apps Script proxy (most reliable — add URL above to enable)
-  if (APPS_SCRIPT_URL) urls.push(APPS_SCRIPT_URL + "?t=" + ts);
-  // GID-based URLs (bypass tab name issues)
-  urls.push("https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/export?format=csv&gid="+SHEET_GID+"&t="+ts);
-  urls.push("https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:csv&gid="+SHEET_GID+"&t="+ts);
-  // Tab name fallbacks
-  urls.push("https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:csv&sheet="+tabEnc+"&t="+ts);
-  urls.push("https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/export?format=csv&sheet="+tabEnc+"&t="+ts);
-  urls.push("https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:csv&t="+ts);
-  tryFetch(urls, 0, icon);
+function generatePO(){draw(filtered());document.querySelector(".panel:nth-of-type(3)")?.scrollIntoView({behavior:"smooth"});}
+["brand","group","department","search","code","onlyPO","blocked"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+function exportCSV(){
+ let rows=filtered(), csv=["Item Code,Item Name,Brand,Group,Department,Stock,Avg Daily Sale,Days Cover,Status,Order Qty"];
+ rows.forEach(x=>{let [s,,q]=status(x);csv.push([x.code,x.name,x.brand,x.group,x.dept,x.stock,x.avg,x.avg?(x.stock/x.avg).toFixed(1):"Infinity",s,q].map(v=>`"${String(v).replaceAll('"','""')}"`).join(","))});
+ let a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv.join("\\n")],{type:"text/csv"}));a.download="SEWA_Purchase_Order.csv";a.click();
 }
-function tryFetch(urls, idx, icon) {
-  if (idx>=urls.length) {
-    setSyncStatus("err");
-    document.getElementById("error-card").style.display="block";
-    document.getElementById("sync-icon").classList.remove("spin");
-    document.getElementById("btn-sync").disabled=false;
-    return;
-  }
-  console.log("[PO] Trying URL "+idx+":", urls[idx]);
-  fetch(urls[idx], {cache:"no-store"})
-    .then(function(r){
-      console.log("[PO] URL "+idx+" status:", r.status);
-      if(!r.ok) throw new Error("HTTP "+r.status);
-      return r.text();
-    })
-    .then(function(text){
-      console.log("[PO] Got "+( text?text.length:0)+" chars. Preview:", text?text.slice(0,60):"");
-      if (!text||text.trim().length<50) throw new Error("empty");
-      var rows = parseCSV(text);
-      if (rows.length<5) throw new Error("too few rows: "+rows.length);
-      csvRows = rows;
-      document.getElementById("error-card").style.display="none";
-      populateFilters();
-      setSyncStatus("ok");
-      var t = new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-      document.getElementById("last-sync-txt").textContent = "Last sync: "+t;
-      document.getElementById("sync-icon").classList.remove("spin");
-      document.getElementById("btn-sync").disabled=false;
-      updateHeroStats();
-    })
-    .catch(function(e){
-      console.log("[PO] URL "+idx+" failed:", e.message);
-      tryFetch(urls, idx+1, icon);
-    });
-}
-function setSyncStatus(type) {
-  var el=document.getElementById("sync-status");
-  if (type==="loading") {
-    el.className="s-loading";
-    el.innerHTML='<span class="s-dot loading"></span> Syncing with Google Sheet…';
-  } else if (type==="ok") {
-    var tot=csvRows?csvRows.length-1:0;
-    el.className="s-ok";
-    el.innerHTML='<span class="s-dot ok"></span> Live &nbsp;·&nbsp; '+tot.toLocaleString("en-IN")+" SKUs &nbsp;·&nbsp; Using: Last date Stock column";
-  } else {
-    el.className="s-err";
-    el.innerHTML='<span class="s-dot err"></span> Unable to connect to Google Sheet. Check sharing settings.';
-  }
-}
-function updateHeroStats() {
-  if (!csvRows||csvRows.length<2) return;
-  var needCount=0;
-  for (var i=1; i<csvRows.length; i++) {
-    var r=csvRows[i]; if(!r) continue;
-    var bl=(r[C.BLOCKED]||"").trim().toUpperCase();
-    if (bl==="BLOCK"||bl==="BLOCKED") continue;
-    var reorder=num(r[C.REORDER]);
-    if (reorder!==null && reorder>0) needCount++;
-  }
-  document.getElementById("h-total").textContent=(csvRows.length-1).toLocaleString("en-IN");
-  document.getElementById("h-need").textContent=needCount.toLocaleString("en-IN");
-  document.getElementById("h-day").textContent="Live";
-  document.getElementById("hero-stats").style.display="flex";
-}
-// ── TAB EDITOR ──────────────────────────────────────────────────────
-function toggleTabEditor() {
-  var ed=document.getElementById("tab-editor");
-  ed.style.display=ed.style.display==="none"?"block":"none";
-  if (ed.style.display==="block") document.getElementById("tab-input").value=activeTab;
-}
-function setTabHint(n){ document.getElementById("tab-input").value=n; }
-function applyTab() {
-  var v=(document.getElementById("tab-input").value||"").trim();
-  if (!v) return;
-  activeTab=v;
-  document.getElementById("tab-display").textContent=activeTab;
-  document.getElementById("tab-editor").style.display="none";
-  csvRows=null; resetPO(); syncSheet();
-}
-// ── FILTERS ─────────────────────────────────────────────────────────
-function populateFilters() {
-  if (!csvRows||csvRows.length<2) return;
-  var brands={}, sections={}, depts={};
-  for (var i=1; i<csvRows.length; i++) {
-    var r=csvRows[i]; if(!r) continue;
-    if (r[C.BRAND]&&r[C.BRAND].trim())   brands[r[C.BRAND].trim()]=1;
-    if (r[C.SECTION]&&r[C.SECTION].trim()) sections[r[C.SECTION].trim()]=1;
-    if (r[C.DEPT]&&r[C.DEPT].trim())     depts[r[C.DEPT].trim()]=1;
-  }
-  fillSel("f-brand",   Object.keys(brands).sort());
-  fillSel("f-section", Object.keys(sections).sort());
-  fillSel("f-dept",    Object.keys(depts).sort());
-  ["f-brand","f-section","f-dept","f-search","f-code","btn-gen"].forEach(function(id){
-    document.getElementById(id).disabled=false;
-  });
-}
-function fillSel(id, items) {
-  var sel=document.getElementById(id), cur=sel.value, first=sel.options[0];
-  sel.innerHTML=""; sel.appendChild(first);
-  for (var i=0; i<items.length; i++) {
-    var o=document.createElement("option"); o.value=items[i]; o.textContent=items[i]; sel.appendChild(o);
-  }
-  if (cur) sel.value=cur;
-}
-function resetPO() { currentPO=null; document.getElementById("po-output").style.display="none"; }
-// ── GENERATE PO ─────────────────────────────────────────────────────
-function generatePO() {
-  if (!csvRows) return;
-  var brand   = document.getElementById("f-brand").value;
-  var section = document.getElementById("f-section").value;
-  var dept    = document.getElementById("f-dept").value;
-  var search  = document.getElementById("f-search").value.trim().toLowerCase();
-  var code    = document.getElementById("f-code").value.trim().toLowerCase();
-  var poOnly  = document.getElementById("chk-po-only").checked;
-  var inclBlk = document.getElementById("chk-blocked").checked;
-  var items=[], missingCount=0, negCount=0;
-  for (var i=1; i<csvRows.length; i++) {
-    var r=csvRows[i]; if(!r||r.length<45) continue;
-    if (brand   && (r[C.BRAND]  ||"").trim().toUpperCase()!==brand.toUpperCase())   continue;
-    if (section && (r[C.SECTION]||"").trim().toUpperCase()!==section.toUpperCase()) continue;
-    if (dept    && (r[C.DEPT]   ||"").trim().toUpperCase()!==dept.toUpperCase())    continue;
-    if (search  && !(r[C.NAME]  ||"").toLowerCase().includes(search))               continue;
-    if (code    && !(r[C.CODE]  ||"").toLowerCase().includes(code))                 continue;
-    var bl        = (r[C.BLOCKED]||"").trim().toUpperCase();
-    var isBlocked = bl==="BLOCK"||bl==="BLOCKED";
-    var rsp     = num(r[C.RSP])     || 0;
-    var maxLvl  = num(r[C.MAX_LVL]);
-    var stock   = num(r[C.LAST_STOCK]);
-    var reorder = num(r[C.REORDER]) || 0;
-    if (stock===null) stock=0;
-    var hasMissing = (maxLvl===null);
-    if (hasMissing && reorder>0) missingCount++;
-    if (stock < 0) negCount++;
-    var needsPO = reorder > 0;
-    var colorTag;
-    if (isBlocked) {
-      if (!inclBlk) continue;
-      colorTag = "purple";
-    } else if (!needsPO) {
-      colorTag = "green";
-    } else if (stock <= 0) {
-      colorTag = "red";
-    } else {
-      colorTag = "gray";
-    }
-    if (poOnly && colorTag==="green") continue;
-    items.push({
-      code:r[C.CODE]||"", name:r[C.NAME]||"", brand:r[C.BRAND]||"",
-      dept:r[C.DEPT]||"", section:r[C.SECTION]||"", rsp:rsp,
-      maxLvl:maxLvl, minReq:null, stock:stock, reorder:reorder,
-      needsPO:needsPO, isNeg:stock<0, isBlocked:isBlocked,
-      hasMissing:hasMissing, colorTag:colorTag
-    });
-  }
-  currentPO = { items:items, stockDay:"Latest", brand:brand, section:section, dept:dept, missingCount:missingCount, negCount:negCount };
-  renderPO();
-}
-// ── RENDER PO ────────────────────────────────────────────────────────
-function renderPO() {
-  if (!currentPO) return;
-  var items=currentPO.items, stockDay=currentPO.stockDay;
-  var brand=currentPO.brand, section=currentPO.section, dept=currentPO.dept;
-  var missingCount=currentPO.missingCount, negCount=currentPO.negCount;
-  var label = brand||section||dept||"All Items";
-  var redItems    = items.filter(function(x){ return x.colorTag==="red"; });
-  var grayItems   = items.filter(function(x){ return x.colorTag==="gray"; });
-  var purpleItems = items.filter(function(x){ return x.colorTag==="purple"; });
-  var greenItems  = items.filter(function(x){ return x.colorTag==="green"; });
-  var needOrder   = items.filter(function(x){ return x.colorTag==="red"||x.colorTag==="gray"; });
-  var totalUnits  = needOrder.reduce(function(a,x){ return a+x.reorder; },0);
-  var totalRSP    = needOrder.reduce(function(a,x){ return a+x.reorder*x.rsp; },0);
-  document.getElementById("po-title").textContent = label + " — Purchase Order";
-  document.getElementById("po-sub").innerHTML =
-    "Stock: Last date Stock column &nbsp;·&nbsp; "+items.length+" SKUs matched" +
-    (needOrder.length ? " &nbsp;·&nbsp; <strong>"+needOrder.length+" need ordering</strong>" : "");
-  var statsData = [
-    {cls:"sc-red",    lbl:"Out of Stock",    val:redItems.length},
-    {cls:"sc-gray",   lbl:"Low Stock",       val:grayItems.length},
-    {cls:"sc-purple", lbl:"Blocked — Check", val:purpleItems.length},
-    {cls:"sc-navy",   lbl:"Order Units",     val:totalUnits.toLocaleString("en-IN")},
-    {cls:"sc-plain",  lbl:"RSP Value",       val:"₹"+totalRSP.toLocaleString("en-IN")}
-  ];
-  var shtml="";
-  for (var si=0; si<statsData.length; si++) {
-    var sd=statsData[si];
-    shtml+='<div class="stat-card '+sd.cls+'"><div class="stat-lbl">'+sd.lbl+'</div><div class="stat-val">'+sd.val+'</div></div>';
-  }
-  document.getElementById("stat-grid").innerHTML=shtml;
-  var nw=document.getElementById("neg-warn");
-  if (negCount>0) { nw.style.display="flex"; document.getElementById("neg-warn-txt").textContent=negCount+" item(s) show negative stock — possible data sync issue. Verify before ordering."; }
-  else { nw.style.display="none"; }
-  var mw=document.getElementById("missing-warn");
-  if (missingCount>0) { mw.style.display="flex"; document.getElementById("missing-warn-txt").textContent=missingCount+" item(s) are missing Maximum Requirement (MAX Level) data. PO quantity may be inaccurate for these items."; }
-  else { mw.style.display="none"; }
-  var TH=["#","Item Code","Item Name","Dept","RSP (₹)","MIN Req","MAX Level","Stock (Last date)","PO Qty","Value (₹)"];
-  var thRow="<tr>"+TH.map(function(h,i){ return '<th class="'+(i>=4?"r":"c")+'">' +h+'</th>'; }).join("")+"</tr>";
-  function buildTable(arr, tag) {
-    if (!arr.length) return "";
-    var groups={}, html="", sno=1;
-    for (var ai=0; ai<arr.length; ai++) { var it=arr[ai], d=it.dept||"OTHER"; if (!groups[d]) groups[d]=[]; groups[d].push(it); }
-    var depts=Object.keys(groups).sort();
-    for (var di=0; di<depts.length; di++) {
-      var dn=depts[di];
-      html+='<tr class="dept-row"><td colspan="10">▸ '+dn+"</td></tr>";
-      var gi=groups[dn];
-      for (var k=0; k<gi.length; k++) {
-        var it=gi[k], val=(it.reorder*it.rsp);
-        var negCls=it.isNeg?" neg-val":"";
-        var blkTag=it.isBlocked?'<span class="blk-tag">BLOCK</span>':"";
-        var warnTag=it.hasMissing?'<span class="warn-tag">⚠ Missing MAX</span>':"";
-        var qtyCls="qty-"+tag;
-        var minDisp=it.minReq!==null?it.minReq.toFixed(1):"—";
-        var maxDisp=it.maxLvl!==null?it.maxLvl:"—";
-        html+='<tr>'+
-          '<td class="c" style="color:var(--text3);font-size:11px">'+(sno++)+'</td>'+
-          '<td class="code-cell">'+it.code+'</td>'+
-          '<td>'+it.name+blkTag+warnTag+'</td>'+
-          '<td style="font-size:11px;color:var(--text3)">'+it.dept+'</td>'+
-          '<td class="r">₹'+it.rsp.toLocaleString("en-IN")+'</td>'+
-          '<td class="r" style="color:var(--text2)">'+minDisp+'</td>'+
-          '<td class="r" style="color:var(--text2)">'+maxDisp+'</td>'+
-          '<td class="c'+negCls+'">'+it.stock+'</td>'+
-          '<td class="r '+qtyCls+'">'+it.reorder+'</td>'+
-          '<td class="r '+qtyCls+'">₹'+val.toLocaleString("en-IN")+'</td>'+
-          '</tr>';
-      }
-    }
-    return html;
-  }
-  var orderHTML="";
-  if (redItems.length) orderHTML+='<div class="banner red"><div class="bdot red"></div>Out of Stock — Order Immediately<span class="bcount">'+redItems.length+' items</span></div><div class="tbl-wrap t-red"><table><thead>'+thRow+'</thead><tbody>'+buildTable(redItems,"red")+'</tbody></table></div>';
-  if (grayItems.length) orderHTML+='<div class="banner gray"><div class="bdot gray"></div>Low Stock — Order Soon<span class="bcount">'+grayItems.length+' items</span></div><div class="tbl-wrap t-gray"><table><thead>'+thRow+'</thead><tbody>'+buildTable(grayItems,"gray")+'</tbody></table></div>';
-  if (needOrder.length) orderHTML+='<table style="width:100%;border-collapse:collapse;margin-bottom:18px"><tr class="totals-row"><td colspan="8">Total — '+needOrder.length+' items to order &nbsp;·&nbsp; Blocked items excluded</td><td class="r">'+totalUnits.toLocaleString("en-IN")+" units</td><td class=\"r acc\">₹"+totalRSP.toLocaleString("en-IN")+'</td></tr></table>';
-  if (purpleItems.length) orderHTML+='<div class="banner purple"><div class="bdot purple"></div>Blocked Items — Verify Before Ordering<span class="bcount">'+purpleItems.length+' items</span></div><div style="background:var(--purple-bg);border:1px solid var(--purple-bd);border-radius:var(--r);padding:9px 14px;margin-bottom:8px;font-size:12px;color:var(--purple)">⚠ These items are BLOCKED in the IMS but have reorder quantities. Verify with your supplier before ordering.</div><div class="tbl-wrap t-purple"><table><thead>'+thRow+'</thead><tbody>'+buildTable(purpleItems,"purple")+'</tbody></table></div>';
-  if (!redItems.length && !grayItems.length && !purpleItems.length) orderHTML='<div class="empty-state empty-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div style="font-weight:600;font-size:15px;color:var(--green)">All stock levels are sufficient</div><div style="font-size:13px;margin-top:6px">No purchase order needed for the current filter.</div></div>';
-  document.getElementById("order-section").innerHTML=orderHTML;
-  var okHTML="";
-  if (greenItems.length) okHTML='<div class="banner green"><div class="bdot green"></div>Sufficient Stock — No Action Needed<span class="bcount">'+greenItems.length+' items</span></div><div class="tbl-wrap t-green"><table><thead>'+thRow+'</thead><tbody>'+buildTable(greenItems,"green")+'</tbody></table></div>';
-  document.getElementById("ok-section").innerHTML=okHTML;
-  var out=document.getElementById("po-output");
-  out.style.display="block";
-  out.classList.remove("fade-in"); void out.offsetWidth; out.classList.add("fade-in");
-  setTimeout(function(){ out.scrollIntoView({behavior:"smooth",block:"start"}); },50);
-}
-// ── EXPORT EXCEL ─────────────────────────────────────────────────────
-function exportExcel() {
-  if (!currentPO) return;
-  var items=currentPO.items, stockDay=currentPO.stockDay;
-  var brand=currentPO.brand, section=currentPO.section, dept=currentPO.dept;
-  var label=(brand||section||dept||"ALL").replace(/\s+/g,"_");
-  var now=new Date();
-  var poNum="PO-"+now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0")+"-"+Math.floor(Math.random()*1000).toString().padStart(3,"0");
-  var poDate=now.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
-  var redI=items.filter(function(x){return x.colorTag==="red";});
-  var grayI=items.filter(function(x){return x.colorTag==="gray";});
-  var blkI=items.filter(function(x){return x.colorTag==="purple";});
-  var greenI=items.filter(function(x){return x.colorTag==="green";});
-  var orderI=[].concat(redI,grayI);
-  var totalU=orderI.reduce(function(a,x){return a+x.reorder;},0);
-  var totalV=orderI.reduce(function(a,x){return a+x.reorder*x.rsp;},0);
-  var hdr=["S.No.","Item Code","Item Name","Department","RSP (₹)","MIN Req","MAX Level","Last date Stock","PO Qty","Value (₹)"];
-  function toRow(it,i){ return [i+1,it.code,it.name,it.dept,it.rsp,it.minReq!==null?parseFloat(it.minReq.toFixed(1)):"-",it.maxLvl!==null?it.maxLvl:"-",it.stock,it.reorder,it.reorder*it.rsp]; }
-  var data=[["SEWA GIFT PALACE — PURCHASE ORDER"],["Christofin Impex | New Delhi"],[],["PO Number:",poNum,"","PO Date:",poDate],["Filter:",brand||section||dept||"All Items","","Stock Day:",stockDay],[],["PO CALCULATION RULE: PO Qty = MAX Level − Current Stock  |  Trigger: Current Stock < MIN Requirement"],["🔴 Red = Out of stock  |  ⬜ Gray = Low stock  |  🟢 Green = Sufficient  |  🟣 Purple = Blocked"],[],["🔴 OUT OF STOCK — ORDER IMMEDIATELY ("+redI.length+")",hdr]].concat(redI.map(toRow)).concat([[],["⬜ LOW STOCK — ORDER SOON ("+grayI.length+")"],hdr]).concat(grayI.map(toRow)).concat([[],["GRAND TOTAL"],["Total Items to Order:",orderI.length,"","Total PO Units:",totalU,"","Total RSP Value (₹):",totalV],[]]);
-  if (blkI.length) data=data.concat([["🟣 BLOCKED ITEMS — VERIFY BEFORE ORDERING ("+blkI.length+")"],["Note: These items are BLOCKED in IMS but have reorder quantities. Verify before placing order."],hdr]).concat(blkI.map(toRow)).concat([[]]);
-  if (greenI.length) data=data.concat([["🟢 SUFFICIENT STOCK ("+greenI.length+")"],hdr]).concat(greenI.map(toRow));
-  data=data.concat([[],["Generated by: SEWA PO Creator","","Date:",new Date().toLocaleString("en-IN")],["Authorized by:","________________________","","Date:","________________________"]]);
-  var wb=XLSX.utils.book_new();
-  var ws=XLSX.utils.aoa_to_sheet(data);
-  ws["!cols"]=[{wch:6},{wch:14},{wch:44},{wch:20},{wch:11},{wch:10},{wch:11},{wch:14},{wch:10},{wch:14}];
-  XLSX.utils.book_append_sheet(wb,ws,"PO");
-  XLSX.writeFile(wb,label+"_PO_Day"+stockDay+"_"+poNum+".xlsx");
-}
-// ── EXPORT PDF ────────────────────────────────────────────────────────
-function exportPDF() {
-  if (!currentPO) return;
-  var items=currentPO.items, stockDay=currentPO.stockDay;
-  var filterBrand=currentPO.brand, filterSection=currentPO.section, filterDept=currentPO.dept;
-  var label=filterBrand||filterSection||filterDept||"All Items";
-  var now=new Date();
-  var poNum="PO-"+now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0")+"-"+String(Math.floor(Math.random()*1000)).padStart(3,"0");
-  var poDate=now.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
-  var genTime=now.toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});
-  var redI=items.filter(function(x){return x.colorTag==="red";});
-  var grayI=items.filter(function(x){return x.colorTag==="gray";});
-  var purpleI=items.filter(function(x){return x.colorTag==="purple";});
-  var greenI=items.filter(function(x){return x.colorTag==="green";});
-  var orderI=redI.concat(grayI);
-  var totalU=orderI.reduce(function(a,x){return a+x.reorder;},0);
-  var totalV=orderI.reduce(function(a,x){return a+x.reorder*x.rsp;},0);
-  function groupByDept(arr){ var m={}; for(var i=0;i<arr.length;i++){var d=arr[i].dept||"OTHER";if(!m[d])m[d]=[];m[d].push(arr[i]);} return Object.keys(m).sort().map(function(k){return{dept:k,rows:m[k]};}); }
-  var TH=["S.No.","Item Code","Department","Item Name","RSP (₹)","MAX Level","Last date Stock","Order Qty","Value (₹)\nRSP × Qty"];
-  function tableHTML(arr,dotColor,sectionLabel,countLabel,totalRow){
-    if(!arr.length)return"";
-    var groups=groupByDept(arr), rows="", sno=1;
-    for(var gi=0;gi<groups.length;gi++){
-      var g=groups[gi];
-      rows+='<tr><td colspan="9" style="padding:5px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;background:#e8eef8;color:#1a2e4a;border:1px solid #c5d3e8">&#9658; '+g.dept+'</td></tr>';
-      for(var ri=0;ri<g.rows.length;ri++){
-        var it=g.rows[ri], bg=ri%2===0?"#ffffff":"#f8fafc", val=it.reorder*it.rsp;
-        var negS=it.isNeg?"color:#c0392b;font-weight:700;":"";
-        var qClr=(it.colorTag==="red"||it.colorTag==="gray")?"color:#c0392b;font-weight:700;":it.colorTag==="purple"?"color:#553c9a;font-weight:700;":"color:#555;";
-        function td(v,align,ex){return'<td style="padding:5px 8px;font-size:10px;border:1px solid #dde3ec;background:'+bg+';text-align:'+(align||"left")+';'+(ex||"")+'">'+v+'</td>';}
-        rows+='<tr>'+td(sno++,"center","color:#aaa;font-size:9px")+td('<span style="font-family:monospace;font-size:9px;color:#666">'+it.code+'</span>','')+td('<span style="font-size:10px;color:#555">'+it.dept+'</span>','')+td(it.name+(it.isBlocked?'<span style="font-size:8px;font-weight:700;color:#553c9a;background:#faf5ff;border:1px solid #c4b5fd;border-radius:3px;padding:0 3px;margin-left:3px">BLOCK</span>':"")+(it.hasMissing?'<span style="font-size:8px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:3px;padding:0 3px;margin-left:3px">&#9888;</span>':""),'')+td(it.rsp>0?"&#8377;"+it.rsp.toLocaleString("en-IN"):"—","right","")+td(it.maxLvl!==null?it.maxLvl:"—","center","color:#555")+td(it.stock,"center",negS)+td(it.reorder,"center",qClr)+td(val>0?"&#8377;"+val.toLocaleString("en-IN"):"0.00","right",qClr)+'</tr>';
-      }
-    }
-    var totRow=totalRow?'<tr style="background:#c0392b"><td colspan="8" style="padding:8px 10px;font-size:11px;font-weight:700;color:#fff;border:1px solid #9b2217;text-align:right">TOTAL &mdash; '+arr.length+' items</td><td style="padding:8px 10px;font-size:11px;font-weight:700;color:#fff;border:1px solid #9b2217;text-align:right;background:#e87c1e">&#8377;'+totalV.toLocaleString("en-IN")+'</td></tr>':"";
-    return'<div style="display:flex;align-items:center;gap:8px;margin:12px 0 4px"><span style="width:12px;height:12px;border-radius:50%;background:'+dotColor+';display:inline-block;flex-shrink:0"></span><span style="font-size:12px;font-weight:700;color:'+dotColor+'">'+sectionLabel+'</span><span style="font-size:11px;color:#666;margin-left:4px">('+countLabel+')</span></div><table style="width:100%;border-collapse:collapse;margin-bottom:4px"><thead><tr style="background:#1a2e4a">'+TH.map(function(h,i){return'<th style="padding:7px 9px;font-size:9.5px;font-weight:700;color:#fff;text-align:'+(i>=4?"right":"left")+';white-space:nowrap;border:1px solid #0d1e32;letter-spacing:.3px">'+h+'</th>';}).join("")+'</tr></thead><tbody>'+rows+totRow+'</tbody></table>';
-  }
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+label+' — Purchase Order '+poNum+'</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;background:#f0f2f5;font-size:11px;color:#0f1923}.page{background:#fff;max-width:960px;margin:12px auto;padding:0;box-shadow:0 2px 12px rgba(0,0,0,.12);border-radius:4px;overflow:hidden;margin-bottom:24px}@media print{body{background:#fff}-webkit-print-color-adjust:exact;print-color-adjust:exact;.page{margin:0;box-shadow:none;border-radius:0;max-width:100%}@page{size:A4 landscape;margin:8mm}}</style></head><body><div class="page"><div style="background:#1a2e4a;padding:14px 20px;text-align:center"><div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:.5px">SEWA GIFT PALACE</div><div style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-top:2px">Christofin Impex &middot; New Delhi</div></div><div style="background:#e87c1e;padding:8px;text-align:center;font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px">PURCHASE ORDER &mdash; '+label.toUpperCase()+'</div><div style="padding:7px 16px;background:#f0f4f8;border-bottom:1px solid #dde3ec;display:flex;justify-content:space-between;font-size:9.5px;color:#555;flex-wrap:wrap;gap:4px"><span><strong>Stock as of Day '+stockDay+'</strong></span><span><strong>PO No:</strong> '+poNum+' &nbsp;|&nbsp; <strong>Date:</strong> '+poDate+' &nbsp;|&nbsp; '+genTime+'</span></div><div style="display:flex;border-bottom:1px solid #dde3ec">'+[{lbl:"Out of Stock",val:redI.length,bg:"#fff5f5",clr:"#c0392b"},{lbl:"Low Stock",val:grayI.length,bg:"#f7fafc",clr:"#4a5568"},{lbl:"Blocked",val:purpleI.length,bg:"#faf5ff",clr:"#553c9a"},{lbl:"Order Units",val:totalU,bg:"#eef2f8",clr:"#1a2e4a"},{lbl:"RSP Value",val:"&#8377;"+totalV.toLocaleString("en-IN"),bg:"#fff8f0",clr:"#e87c1e"}].map(function(s){return'<div style="flex:1;padding:9px 12px;background:'+s.bg+';border-right:1px solid #dde3ec"><div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:'+s.clr+';margin-bottom:3px">'+s.lbl+'</div><div style="font-size:17px;font-weight:700;color:'+s.clr+'">'+s.val+'</div></div>';}).join("")+'</div><div style="padding:12px 16px">'+tableHTML(redI,"#c0392b","ITEMS TO ORDER — Out of Stock",redI.length+" items",false)+tableHTML(grayI,"#e87c1e","ITEMS TO ORDER — Low Stock",grayI.length+" items",false)+(orderI.length?'<table style="width:100%;border-collapse:collapse;margin:4px 0 14px"><tr><td style="padding:8px 12px;font-size:11px;font-weight:700;background:#1a2e4a;color:#fff;border:1px solid #0d1e32">TOTAL &mdash; '+orderI.length+' items to order</td><td style="padding:8px 12px;font-size:11px;font-weight:700;background:#1a2e4a;color:#fff;border:1px solid #0d1e32;text-align:center;white-space:nowrap">'+totalU.toLocaleString("en-IN")+' units</td><td style="padding:8px 12px;font-size:11px;font-weight:700;background:#e87c1e;color:#fff;border:1px solid #c55e10;text-align:right;white-space:nowrap">&#8377;'+totalV.toLocaleString("en-IN")+'</td></tr></table>':"")+tableHTML(purpleI,"#553c9a","BLOCKED ITEMS — Verify Before Ordering",purpleI.length+" items",false)+tableHTML(greenI,"#1a6b3a","SUFFICIENT STOCK — No Action Needed",greenI.length+" items",false)+'</div><div style="padding:14px 16px;border-top:1px solid #dde3ec;display:flex;gap:30px">'+["Prepared By","Checked By","Authorized By"].map(function(lbl){return'<div style="flex:1"><div style="font-size:8.5px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:22px">'+lbl+'</div><div style="border-top:1px solid #1a2e4a;padding-top:4px;font-size:9px;color:#888">Signature &amp; Date</div></div>';}).join("")+'</div><div style="padding:6px 16px;border-top:1px solid #e8ecf0;font-size:8.5px;color:#aaa;text-align:center">SEWA GIFT PALACE / CHRISTOFIN IMPEX &middot; '+poNum+' &middot; '+genTime+'</div></div><script>window.onload=function(){document.title="'+label.replace(/"/g,"'")+' PO '+poNum+'";setTimeout(function(){window.print();},800);};<\/script></body></html>';
-  try {
-    var blob=new Blob([html],{type:"text/html;charset=utf-8"});
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement("a");
-    a.href=url; a.download=label.replace(/\s+/g,"_")+"_PO_Day"+stockDay+"_"+poNum+".html";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(function(){URL.revokeObjectURL(url);},3000);
-  } catch(e) {
-    var win=window.open("","_blank");
-    if(win){win.document.write(html);win.document.close();}
-    else{alert("PDF download failed. Please allow popups for this site and try again.");}
-  }
-}
+function printPO(){let w=window.open("","_blank");w.document.write(`<html><head><title>SEWA Purchase Order</title><style>body{font-family:Arial;padding:30px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#eee}h1{margin-bottom:5px}</style></head><body><h1>SEWA Purchase Order</h1><p>Generated: ${new Date().toLocaleString()}</p>${document.querySelector(".table-wrap").innerHTML}</body></html>`);w.document.close();w.print()}
 </script>
-</body>
-</html>
+</body></html>
