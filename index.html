@@ -1122,12 +1122,13 @@ function exportExcel() {
   var totalU=orderI.reduce(function(a,x){return a+x.reorder;},0);
   var totalV=orderI.reduce(function(a,x){return a+x.reorder*x.rsp;},0);
 
-  var hdr=["S.No.","Item Code","Item Name","Department","RSP (₹)","MIN Req","MAX Level","Last date Stock","PO Qty","Value (₹)"];
+  var hdr=["S.No.","Item Code","Item Name","Department","RSP (₹)","MIN Req","MAX Level","Last date Stock","PO Qty","Value (₹)","Sales-Based Reorder Policy"];
   function toRow(it,i){
     return [i+1,it.code,it.name,it.dept,it.rsp,
       it.minReq!==null?parseFloat(it.minReq.toFixed(1)):"-",
       it.maxLvl!==null?it.maxLvl:"-",
-      it.stock, it.reorder, it.reorder*it.rsp];
+      it.stock, it.reorder, it.reorder*it.rsp,
+      it.salesPolicy||""];
   }
   var data=[
     ["SEWA GIFT PALACE — PURCHASE ORDER"],
@@ -1213,7 +1214,7 @@ function exportPDF() {
     return Object.keys(m).sort().map(function(k){return{dept:k,rows:m[k]};});
   }
 
-  var TH = ["S.No.","Item Code","Department","Item Name","RSP (₹)","MAX Level","Last date Stock","Order Qty","Value (₹)\nRSP × Qty"];
+  var TH = ["S.No.","Item Code","Department","Item Name","RSP (₹)","MAX Level","Last date Stock","Order Qty","Value (₹)\nRSP × Qty","Policy"];
 
   function tableHTML(arr, dotColor, sectionLabel, countLabel, totalRow) {
     if (!arr.length) return "";
@@ -1222,7 +1223,7 @@ function exportPDF() {
     var sno  = 1;
     for (var gi=0; gi<groups.length; gi++) {
       var g = groups[gi];
-      rows += '<tr><td colspan="9" style="padding:5px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;background:#e8eef8;color:#1a2e4a;border:1px solid #c5d3e8">&#9658; '+g.dept+'</td></tr>';
+      rows += '<tr><td colspan="10" style="padding:5px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;background:#e8eef8;color:#1a2e4a;border:1px solid #c5d3e8">&#9658; '+g.dept+'</td></tr>';
       for (var ri=0; ri<g.rows.length; ri++) {
         var it  = g.rows[ri];
         var bg  = ri%2===0 ? "#ffffff" : "#f8fafc";
@@ -1244,10 +1245,11 @@ function exportPDF() {
           td(it.stock,"center",negS)+
           td(it.reorder,"center",qClr)+
           td(val>0?"&#8377;"+val.toLocaleString("en-IN"):"0.00","right",qClr)+
+          td(it.salesPolicy||"—","center","color:#1a2e4a;font-weight:600;font-size:9px")+
           '</tr>';
       }
     }
-    var totRow = totalRow ? '<tr style="background:#c0392b"><td colspan="8" style="padding:8px 10px;font-size:11px;font-weight:700;color:#fff;border:1px solid #9b2217;text-align:right">TOTAL &mdash; '+arr.length+' items</td><td style="padding:8px 10px;font-size:11px;font-weight:700;color:#fff;border:1px solid #9b2217;text-align:right;background:#e87c1e">&#8377;'+totalV.toLocaleString("en-IN")+'</td></tr>' : "";
+    var totRow = totalRow ? '<tr style="background:#c0392b"><td colspan="9" style="padding:8px 10px;font-size:11px;font-weight:700;color:#fff;border:1px solid #9b2217;text-align:right">TOTAL &mdash; '+arr.length+' items</td><td style="padding:8px 10px;font-size:11px;font-weight:700;color:#fff;border:1px solid #9b2217;text-align:right;background:#e87c1e">&#8377;'+totalV.toLocaleString("en-IN")+'</td></tr>' : "";
     return (
       '<div style="display:flex;align-items:center;gap:8px;margin:12px 0 4px">'+
       '<span style="width:12px;height:12px;border-radius:50%;background:'+dotColor+';display:inline-block;flex-shrink:0"></span>'+
@@ -1257,7 +1259,9 @@ function exportPDF() {
       '<table style="width:100%;border-collapse:collapse;margin-bottom:4px">'+
       '<thead><tr style="background:#1a2e4a">'+
       TH.map(function(h,i){
-        return '<th style="padding:7px 9px;font-size:9.5px;font-weight:700;color:#fff;text-align:'+(i>=4?"right":"left")+';white-space:nowrap;border:1px solid #0d1e32;letter-spacing:.3px">'+h+'</th>';
+        var align = i>=4 && i<=8 ? "right" : "center";
+        if (i<4) align = "left";
+        return '<th style="padding:7px 9px;font-size:9.5px;font-weight:700;color:#fff;text-align:'+align+';white-space:nowrap;border:1px solid #0d1e32;letter-spacing:.3px">'+h+'</th>';
       }).join("")+
       '</tr></thead>'+
       '<tbody>'+rows+totRow+'</tbody></table>'
