@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Vendor PO Creator</title>
+<style>
+  :root {
+    --primary: #1565C0;
+    --primary-light: #1976D2;
+    --accent: #FF6F00;
+    --bg: #F5F7FA;
+    --card: #FFFFFF;
+    --text: #1A1A2E;
+    --muted: #6B7280;
+    --border: #E5E7EB;
+    --success: #16A34A;
+    --danger: #DC2626;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ---- NAV ---- */
+  .top-bar {
+    background: var(--primary);
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .top-bar .title { font-size: 18px; font-weight: 700; }
+  .top-bar .subtitle { font-size: 11px; opacity: 0.8; }
+  .menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+
+  /* ---- BOTTOM NAV ---- */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff; border-top: 1px solid var(--border);
+    display: flex; z-index: 100;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; padding: 8px 4px;
+    cursor: pointer; color: var(--muted); font-size: 11px;
+    transition: color 0.2s;
+  }
+  .nav-item .icon { font-size: 22px; margin-bottom: 2px; }
+  .nav-item.active { color: var(--primary); }
+  .nav-item.active .icon { transform: scale(1.1); }
+
+  /* ---- SCREENS ---- */
+  .screen { display: none; padding: 16px 16px 80px; max-width: 500px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  /* ---- CARDS ---- */
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 16px; margin-bottom: 12px;
+  }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+
+  /* ---- FORM ---- */
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  input, select, textarea {
+    width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 15px; color: var(--text);
+    background: #fff; transition: border-color 0.2s; outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+  textarea { resize: none; height: 72px; }
+
+  /* ---- BUTTONS ---- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 20px; border-radius: 8px; font-size: 15px; font-weight: 600;
+    cursor: pointer; border: none; transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.97); opacity: 0.9; }
+  .btn-primary { background: var(--primary); color: #fff; width: 100%; }
+  .btn-accent { background: var(--accent); color: #fff; width: 100%; }
+  .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-sm { padding: 7px 14px; font-size: 13px; border-radius: 6px; }
+  .btn-success { background: var(--success); color: #fff; }
+
+  /* ---- IMAGE CAPTURE ---- */
+  .img-capture-area {
+    border: 2px dashed var(--border); border-radius: 10px;
+    min-height: 120px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer;
+    transition: border-color 0.2s; position: relative; overflow: hidden;
+  }
+  .img-capture-area:hover { border-color: var(--primary); }
+  .img-capture-area img { width: 100%; max-height: 180px; object-fit: contain; border-radius: 8px; }
+  .img-capture-area .placeholder { color: var(--muted); text-align: center; padding: 16px; }
+  .img-capture-area .placeholder .cam-icon { font-size: 36px; margin-bottom: 6px; }
+  #fileInput { display: none; }
+  .upload-status { font-size: 12px; margin-top: 6px; color: var(--muted); }
+
+  /* ---- PRODUCT LIST ---- */
+  .product-card {
+    background: var(--card); border-radius: 10px; padding: 12px;
+    margin-bottom: 10px; display: flex; gap: 12px; align-items: flex-start;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  }
+  .product-thumb {
+    width: 60px; height: 60px; border-radius: 8px; object-fit: cover;
+    background: #EEF2FF; flex-shrink: 0; display: flex; align-items: center;
+    justify-content: center; font-size: 28px; overflow: hidden;
+  }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .product-info { flex: 1; min-width: 0; }
+  .product-name { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .product-code { font-size: 12px; color: var(--muted); margin: 2px 0; }
+  .product-meta { display: flex; justify-content: space-between; margin-top: 4px; font-size: 13px; }
+  .product-price { color: var(--primary); font-weight: 600; }
+  .product-total { font-weight: 700; }
+  .product-remove { color: var(--danger); font-size: 20px; cursor: pointer; align-self: flex-start; padding: 2px; }
+
+  /* ---- SUMMARY BAR ---- */
+  .summary-bar {
+    background: var(--primary); color: #fff; border-radius: var(--radius);
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  .summary-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 14px; }
+  .summary-row.grand { font-size: 18px; font-weight: 700; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 8px; }
+
+  /* ---- PO HISTORY ---- */
+  .po-card {
+    background: var(--card); border-radius: 10px; padding: 14px;
+    margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .po-number { font-weight: 700; color: var(--primary); font-size: 15px; }
+  .po-vendor { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .po-date { font-size: 12px; color: var(--muted); }
+  .po-total { font-size: 17px; font-weight: 700; color: var(--text); }
+
+  /* ---- MODAL ---- */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 200; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 20px 20px 0 0; padding: 20px;
+    width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; color: var(--primary); }
+
+  /* ---- TOAST ---- */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: #1A1A2E; color: #fff; padding: 10px 20px; border-radius: 50px;
+    font-size: 14px; z-index: 300; display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .toast.show { display: block; animation: fadeInOut 2.5s ease forwards; }
+  @keyframes fadeInOut { 0%{opacity:0} 10%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
+
+  /* ---- SPINNER ---- */
+  .spinner { display: none; text-align: center; padding: 20px; }
+  .spinner.show { display: block; }
+  .spin { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- VENDOR BADGE ---- */
+  .vendor-badge {
+    background: #EEF2FF; border: 1.5px solid var(--primary); border-radius: 8px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+  }
+  .vendor-badge .vicon { font-size: 22px; }
+  .vendor-badge .vname { font-weight: 600; font-size: 14px; }
+  .vendor-badge .vcode { font-size: 12px; color: var(--muted); }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-state .eicon { font-size: 48px; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ---- TAG ---- */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 50px; font-size: 11px; font-weight: 600; }
+  .tag-blue { background: #DBEAFE; color: var(--primary); }
+
+  /* ---- PO PREVIEW ---- */
+  .preview-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  .preview-table th { background: var(--primary); color: #fff; padding: 8px 6px; text-align: left; }
+  .preview-table td { padding: 7px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .preview-table img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+  .flex-row { display: flex; gap: 10px; }
+  .flex-row > * { flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div>
+    <div class="title">🛒 Vendor PO Creator</div>
+    <div class="subtitle">Sewa Gift Palace</div>
+  </div>
+  <div id="poNumBadge" style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:20px;font-size:13px;font-weight:700;display:none"></div>
+</div>
+
+<!-- ==================== SCREEN: CREATE PO ==================== -->
+<div class="screen active" id="screen-create">
+
+  <!-- Vendor Entry -->
+  <div class="card">
+    <div class="card-title">1. Vendor Details</div>
+    <div class="form-group">
+      <label>Vendor Name *</label>
+      <input type="text" id="vendorNameInput" placeholder="e.g. Cello Industries" oninput="updateVendorState()">
+    </div>
+    <div class="flex-row">
+      <div class="form-group">
+        <label>Vendor Code</label>
+        <input type="text" id="vendorCodeInput" placeholder="e.g. VEN-001" oninput="updateVendorState()">
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="vendorPhoneInput" placeholder="9XXXXXXXXX">
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Product -->
+  <div class="card" id="addProductCard">
+    <div class="card-title">2. Add Product</div>
+
+    <!-- Image Capture -->
+    <div class="form-group">
+      <label>Product Photo</label>
+      <div class="img-capture-area" onclick="triggerCamera()" id="captureArea">
+        <div class="placeholder" id="capturePlaceholder">
+          <div class="cam-icon">📷</div>
+          <div style="font-size:13px;font-weight:600">Tap to capture</div>
+          <div style="font-size:11px;color:#9CA3AF;margin-top:2px">Camera or Gallery</div>
+        </div>
+        <img id="capturedImg" src="" alt="" style="display:none">
+      </div>
+      <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="handleImageCapture(this)">
+      <div class="upload-status" id="uploadStatus"></div>
+    </div>
+
+    <div class="flex-row">
+      <div class="form-group">
+        <label>Item Code</label>
+        <input type="text" id="itemCode" placeholder="e.g. CROCK-001">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Product Name *</label>
+      <input type="text" id="productName" placeholder="e.g. Steel Dinner Set 101pc">
+    </div>
+
+    <div class="flex-row">
+      <div class="form-group">
+        <label>Purchase Price (₹) *</label>
+        <input type="number" id="purchasePrice" placeholder="0.00" min="0" step="0.01" oninput="calcLine()">
+      </div>
+      <div class="form-group">
+        <label>Quantity *</label>
+        <input type="number" id="quantity" placeholder="1" min="1" value="1" oninput="calcLine()">
+      </div>
+    </div>
+
+    <div style="background:#EEF2FF;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;color:var(--muted)">Line Total</span>
+      <span style="font-size:18px;font-weight:700;color:var(--primary)" id="lineTotal">₹0.00</span>
+    </div>
+
+    <button class="btn btn-accent" onclick="addProduct()">＋ Add to PO</button>
+  </div>
+
+  <!-- Product List -->
+  <div id="productListSection" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:600;color:var(--muted)">ITEMS IN PO</div>
+      <span class="tag tag-blue" id="itemCount">0 items</span>
+    </div>
+    <div id="productList"></div>
+
+    <!-- Summary -->
+    <div class="card">
+      <div class="card-title">PO Summary</div>
+      <div class="flex-row">
+        <div class="form-group">
+          <label>Discount %</label>
+          <input type="number" id="discountPct" placeholder="0" min="0" max="100" value="0" oninput="calcSummary()">
+        </div>
+        <div class="form-group">
+          <label>GST %</label>
+          <input type="number" id="gstPct" placeholder="0" min="0" max="28" value="0" oninput="calcSummary()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="poNotes" placeholder="Any special instructions..."></textarea>
+      </div>
+    </div>
+
+    <div class="summary-bar" id="summaryBar">
+      <div class="summary-row"><span>Subtotal</span><span id="sumSubtotal">₹0.00</span></div>
+      <div class="summary-row"><span>Discount</span><span id="sumDiscount">- ₹0.00</span></div>
+      <div class="summary-row"><span>GST</span><span id="sumGst">₹0.00</span></div>
+      <div class="summary-row grand"><span>GRAND TOTAL</span><span id="sumGrand">₹0.00</span></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="previewPO()" style="margin-bottom:8px">👁 Preview & Generate PO</button>
+  </div>
+
+</div>
+
+<!-- ==================== SCREEN: HISTORY ==================== -->
+<div class="screen" id="screen-history">
+  <div class="card-title" style="padding:4px 0 8px">Purchase Order History</div>
+  <div class="spinner show" id="histSpinner"><div class="spin"></div></div>
+  <div id="poHistoryList"></div>
+</div>
+
+<!-- ==================== SCREEN: VENDORS ==================== -->
+<div class="screen" id="screen-vendors">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div class="card-title" style="padding:0">Vendor Master</div>
+    <button class="btn btn-primary btn-sm" onclick="openAddVendorModal()">+ Add Vendor</button>
+  </div>
+  <div class="spinner show" id="vendorListSpinner"><div class="spin"></div></div>
+  <div id="vendorMasterList"></div>
+</div>
+
+<!-- ==================== BOTTOM NAV ==================== -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchTab('create')" id="nav-create">
+    <div class="icon">📝</div><div>Create PO</div>
+  </div>
+  <div class="nav-item" onclick="switchTab('history')" id="nav-history">
+    <div class="icon">📋</div><div>History</div>
+  </div>
+  <div class="nav-item" onclick="switchTab('vendors')" id="nav-vendors">
+    <div class="icon">🏭</div><div>Vendors</div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: ADD VENDOR ==================== -->
+<div class="modal-overlay" id="addVendorModal">
+  <div class="modal">
+    <div class="modal-title">Add New Vendor</div>
+    <div class="form-group">
+      <label>Vendor Code *</label>
+      <input type="text" id="av_code" placeholder="e.g. VEN-001">
+    </div>
+    <div class="form-group">
+      <label>Vendor Name *</label>
+      <input type="text" id="av_name" placeholder="Company / Shop Name">
+    </div>
+    <div class="form-group">
+      <label>Contact Person</label>
+      <input type="text" id="av_contact" placeholder="Name">
+    </div>
+    <div class="form-group">
+      <label>Phone</label>
+      <input type="tel" id="av_phone" placeholder="+91 XXXXX XXXXX">
+    </div>
+    <div class="form-group">
+      <label>Address</label>
+      <textarea id="av_address" placeholder="Full address"></textarea>
+    </div>
+    <div class="form-group">
+      <label>GST Number</label>
+      <input type="text" id="av_gst" placeholder="27XXXXX...">
+    </div>
+    <button class="btn btn-primary" onclick="saveVendor()" style="margin-bottom:8px">Save Vendor</button>
+    <button class="btn btn-outline" style="width:100%" onclick="closeModal('addVendorModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- ==================== MODAL: PO PREVIEW ==================== -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal">
+    <div class="modal-title">📄 PO Preview</div>
+    <div id="previewContent"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-direction:column">
+      <button class="btn btn-primary" onclick="submitPO()">✅ Confirm & Generate PO</button>
+      <button class="btn btn-outline" onclick="closeModal('previewModal')">← Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: PO SUCCESS ==================== -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:56px;margin-bottom:8px">🎉</div>
+    <div class="modal-title" style="text-align:center" id="successPONum">PO-0001</div>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Purchase Order created successfully!</p>
+    <button class="btn btn-success" id="btnDownloadPDF" onclick="downloadPDF()" style="margin-bottom:8px">📥 Download PDF</button>
+    <button class="btn btn-outline" style="width:100%" onclick="closeModal('successModal');resetPO()">Create New PO</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+var state = {
+  vendors: [],
+  selectedVendor: null,
+  products: [],
+  currentImageLink: "",
+  currentImageThumb: "",
+  currentPONumber: "",
+  lastPONum: ""
+};
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = function() {
+  loadVendors();
+};
+
+function loadVendors() {
+  google.script.run
+    .withSuccessHandler(function(vendors) {
+      state.vendors = vendors || [];
+      renderVendorMasterList();
+      document.getElementById("vendorListSpinner").classList.remove("show");
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById("vendorListSpinner").classList.remove("show");
+    })
+    .getVendors();
+}
+
+function updateVendorState() {
+  var name = document.getElementById("vendorNameInput").value.trim();
+  var code = document.getElementById("vendorCodeInput").value.trim();
+  if (name) {
+    state.selectedVendor = {
+      name: name,
+      code: code || "—",
+      phone: document.getElementById("vendorPhoneInput").value.trim()
+    };
+  } else {
+    state.selectedVendor = null;
+  }
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll(".screen").forEach(function(s) { s.classList.remove("active"); });
+  document.querySelectorAll(".nav-item").forEach(function(n) { n.classList.remove("active"); });
+  document.getElementById("screen-" + tab).classList.add("active");
+  document.getElementById("nav-" + tab).classList.add("active");
+
+  if (tab === "history") loadHistory();
+  if (tab === "vendors") renderVendorMasterList();
+}
+
+// ============================================================
+// VENDOR LOGIC
+// ============================================================
+
+function openAddVendorModal() {
+  ["av_code","av_name","av_contact","av_phone","av_address","av_gst"].forEach(function(id) {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("addVendorModal").classList.add("open");
+}
+
+function saveVendor() {
+  var code = document.getElementById("av_code").value.trim();
+  var name = document.getElementById("av_name").value.trim();
+  if (!code || !name) { toast("Vendor Code and Name are required."); return; }
+
+  var data = {
+    code: code, name: name,
+    contact: document.getElementById("av_contact").value.trim(),
+    phone: document.getElementById("av_phone").value.trim(),
+    address: document.getElementById("av_address").value.trim(),
+    gst: document.getElementById("av_gst").value.trim()
+  };
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res.success) {
+        state.vendors.push(data);
+        renderVendorMasterList();
+        closeModal("addVendorModal");
+        toast("Vendor added successfully!");
+      } else {
+        toast(res.message || "Error saving vendor.");
+      }
+    })
+    .withFailureHandler(function(e) { toast("Error: " + e.message); })
+    .addVendor(data);
+}
+
+function renderVendorMasterList() {
+  var el = document.getElementById("vendorMasterList");
+  if (!el) return;
+  if (!state.vendors.length) {
+    el.innerHTML = '<div class="empty-state"><div class="eicon">🏭</div><p>No vendors yet. Add your first vendor.</p></div>';
+    return;
+  }
+  el.innerHTML = state.vendors.map(function(v) {
+    return '<div class="card" style="margin-bottom:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<div><div style="font-weight:700;font-size:15px">' + v.name + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">' + v.code + (v.phone ? ' · ' + v.phone : '') + '</div>' +
+      (v.gst ? '<div style="font-size:11px;color:var(--muted)">GST: ' + v.gst + '</div>' : '') +
+      '</div><span class="tag tag-blue">Active</span></div>' +
+      (v.address ? '<div style="font-size:12px;color:var(--muted);margin-top:6px">📍 ' + v.address + '</div>' : '') +
+      '</div>';
+  }).join("");
+}
+
+// ============================================================
+// IMAGE CAPTURE
+// ============================================================
+function triggerCamera() { document.getElementById("fileInput").click(); }
+
+function handleImageCapture(input) {
+  var file = input.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var base64 = e.target.result;
+    // Show preview
+    document.getElementById("capturePlaceholder").style.display = "none";
+    var imgEl = document.getElementById("capturedImg");
+    imgEl.src = base64;
+    imgEl.style.display = "block";
+
+    // Upload to Drive
+    document.getElementById("uploadStatus").innerHTML = "⏳ Uploading to Drive...";
+    var fname = "PO_Product_" + Date.now() + ".jpg";
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res.success) {
+          state.currentImageLink = res.link;
+          state.currentImageThumb = res.thumb;
+          document.getElementById("uploadStatus").innerHTML = '✅ <a href="' + res.link + '" target="_blank">Image uploaded</a>';
+        } else {
+          state.currentImageLink = "";
+          document.getElementById("uploadStatus").innerHTML = "⚠️ Upload failed. PO will be saved without image.";
+        }
+      })
+      .withFailureHandler(function(err) {
+        document.getElementById("uploadStatus").innerHTML = "⚠️ Upload error. Continuing without image.";
+      })
+      .uploadImage(base64, fname);
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage() {
+  state.currentImageLink = "";
+  state.currentImageThumb = "";
+  document.getElementById("capturedImg").style.display = "none";
+  document.getElementById("capturePlaceholder").style.display = "flex";
+  document.getElementById("uploadStatus").innerHTML = "";
+  document.getElementById("fileInput").value = "";
+}
+
+// ============================================================
+// PRODUCT LOGIC
+// ============================================================
+function calcLine() {
+  var p = parseFloat(document.getElementById("purchasePrice").value) || 0;
+  var q = parseInt(document.getElementById("quantity").value) || 0;
+  document.getElementById("lineTotal").textContent = "₹" + (p * q).toFixed(2);
+}
+
+function addProduct() {
+  updateVendorState();
+  if (!state.selectedVendor) { toast("Enter vendor name first."); return; }
+  var name = document.getElementById("productName").value.trim();
+  var price = parseFloat(document.getElementById("purchasePrice").value);
+  var qty = parseInt(document.getElementById("quantity").value);
+  if (!name) { toast("Product Name is required."); return; }
+  if (!price || price <= 0) { toast("Enter a valid purchase price."); return; }
+  if (!qty || qty <= 0) { toast("Quantity must be at least 1."); return; }
+
+  state.products.push({
+    itemCode: document.getElementById("itemCode").value.trim(),
+    productName: name,
+    price: price,
+    qty: qty,
+    lineTotal: price * qty,
+    imageLink: state.currentImageLink,
+    imageThumb: state.currentImageThumb
+  });
+
+  // Reset fields
+  document.getElementById("itemCode").value = "";
+  document.getElementById("productName").value = "";
+  document.getElementById("purchasePrice").value = "";
+  document.getElementById("quantity").value = "1";
+  document.getElementById("lineTotal").textContent = "₹0.00";
+  clearImage();
+
+  renderProductList();
+  calcSummary();
+  toast("Product added!");
+}
+
+function removeProduct(idx) {
+  state.products.splice(idx, 1);
+  renderProductList();
+  calcSummary();
+}
+
+function renderProductList() {
+  var el = document.getElementById("productList");
+  var section = document.getElementById("productListSection");
+
+  if (!state.products.length) {
+    section.style.display = "none"; return;
+  }
+  section.style.display = "block";
+  document.getElementById("itemCount").textContent = state.products.length + " item" + (state.products.length > 1 ? "s" : "");
+
+  el.innerHTML = state.products.map(function(p, idx) {
+    var thumb = p.imageThumb
+      ? '<img src="' + p.imageThumb + '" alt="product">'
+      : '📦';
+    return '<div class="product-card">' +
+      '<div class="product-thumb">' + thumb + '</div>' +
+      '<div class="product-info">' +
+        '<div class="product-name">' + p.productName + '</div>' +
+        (p.itemCode ? '<div class="product-code">' + p.itemCode + '</div>' : '') +
+        '<div class="product-meta">' +
+          '<span class="product-price">₹' + p.price.toFixed(2) + ' × ' + p.qty + '</span>' +
+          '<span class="product-total">₹' + p.lineTotal.toFixed(2) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="product-remove" onclick="removeProduct(' + idx + ')">🗑</div>' +
+      '</div>';
+  }).join("");
+}
+
+function calcSummary() {
+  var subtotal = state.products.reduce(function(s, p) { return s + p.lineTotal; }, 0);
+  var discPct = parseFloat(document.getElementById("discountPct").value) || 0;
+  var gstPct = parseFloat(document.getElementById("gstPct").value) || 0;
+  var discAmt = subtotal * discPct / 100;
+  var afterDisc = subtotal - discAmt;
+  var gstAmt = afterDisc * gstPct / 100;
+  var grand = afterDisc + gstAmt;
+
+  document.getElementById("sumSubtotal").textContent = "₹" + subtotal.toFixed(2);
+  document.getElementById("sumDiscount").textContent = "- ₹" + discAmt.toFixed(2);
+  document.getElementById("sumGst").textContent = "₹" + gstAmt.toFixed(2);
+  document.getElementById("sumGrand").textContent = "₹" + grand.toFixed(2);
+
+  return { subtotal, discPct, discAmt, gstPct, gstAmt, grand };
+}
+
+// ============================================================
+// PO PREVIEW
+// ============================================================
+function previewPO() {
+  updateVendorState();
+  if (!state.selectedVendor) { toast("Enter vendor name."); return; }
+  if (!state.products.length) { toast("Add at least one product."); return; }
+
+  var summary = calcSummary();
+  var v = state.selectedVendor;
+
+  var rows = state.products.map(function(p, i) {
+    var imgCell = p.imageLink
+      ? '<a href="' + p.imageLink + '" target="_blank"><img src="' + (p.imageThumb || p.imageLink) + '" style="width:36px;height:36px;object-fit:cover;border-radius:4px"></a>'
+      : '—';
+    return '<tr><td>' + (i+1) + '</td><td>' + imgCell + '</td>' +
+      '<td>' + (p.itemCode || '—') + '</td>' +
+      '<td>' + p.productName + '</td>' +
+      '<td>₹' + p.price.toFixed(2) + '</td>' +
+      '<td>' + p.qty + '</td>' +
+      '<td><b>₹' + p.lineTotal.toFixed(2) + '</b></td></tr>';
+  }).join("");
+
+  document.getElementById("previewContent").innerHTML =
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:8px">' +
+    '🏭 <b>' + v.name + '</b> (' + v.code + ')</div>' +
+    '<div style="overflow-x:auto"><table class="preview-table">' +
+    '<thead><tr><th>#</th><th>Img</th><th>Code</th><th>Product</th><th>Price</th><th>Qty</th><th>Total</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table></div>' +
+    '<div class="summary-bar" style="margin-top:12px">' +
+    '<div class="summary-row"><span>Subtotal</span><span>₹' + summary.subtotal.toFixed(2) + '</span></div>' +
+    '<div class="summary-row"><span>Discount (' + summary.discPct + '%)</span><span>- ₹' + summary.discAmt.toFixed(2) + '</span></div>' +
+    '<div class="summary-row"><span>GST (' + summary.gstPct + '%)</span><span>₹' + summary.gstAmt.toFixed(2) + '</span></div>' +
+    '<div class="summary-row grand"><span>GRAND TOTAL</span><span>₹' + summary.grand.toFixed(2) + '</span></div>' +
+    '</div>';
+
+  document.getElementById("previewModal").classList.add("open");
+}
+
+// ============================================================
+// SUBMIT PO
+// ============================================================
+function submitPO() {
+  var summary = calcSummary();
+  var v = state.selectedVendor;
+
+  // Get PO number first
+  google.script.run
+    .withSuccessHandler(function(poNum) {
+      state.currentPONumber = poNum;
+
+      var poData = {
+        poNumber: poNum,
+        vendorCode: v.code,
+        vendorName: v.name,
+        items: state.products,
+        totalQty: state.products.reduce(function(s,p){ return s+p.qty; }, 0),
+        subtotal: summary.subtotal,
+        discountPct: summary.discPct,
+        discountAmt: summary.discAmt,
+        gstPct: summary.gstPct,
+        gstAmt: summary.gstAmt,
+        grandTotal: summary.grand,
+        notes: document.getElementById("poNotes").value.trim()
+      };
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res.success) {
+            closeModal("previewModal");
+            document.getElementById("successPONum").textContent = poNum + " Generated!";
+            document.getElementById("successModal").classList.add("open");
+            state.lastPONum = poNum;
+            document.getElementById("poNumBadge").textContent = poNum;
+            document.getElementById("poNumBadge").style.display = "block";
+          } else {
+            toast("Error: " + (res.message || "Could not save PO."));
+          }
+        })
+        .withFailureHandler(function(e) { toast("Error: " + e.message); })
+        .savePO(poData);
+    })
+    .withFailureHandler(function(e) { toast("Error generating PO number: " + e.message); })
+    .generatePONumber();
+}
+
+// ============================================================
+// DOWNLOAD PDF
+// ============================================================
+function downloadPDF() {
+  if (!state.lastPONum) return;
+  document.getElementById("btnDownloadPDF").textContent = "⏳ Generating PDF...";
+  google.script.run
+    .withSuccessHandler(function(res) {
+      document.getElementById("btnDownloadPDF").textContent = "📥 Download PDF";
+      if (res.success) {
+        window.open(res.link, "_blank");
+      } else {
+        toast("PDF error: " + (res.message || "Failed"));
+      }
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById("btnDownloadPDF").textContent = "📥 Download PDF";
+      toast("PDF error: " + e.message);
+    })
+    .generatePDF(state.lastPONum);
+}
+
+// ============================================================
+// RESET PO
+// ============================================================
+function resetPO() {
+  state.products = [];
+  state.selectedVendor = null;
+  state.currentImageLink = "";
+  state.currentImageThumb = "";
+  document.getElementById("vendorNameInput").value = "";
+  document.getElementById("vendorCodeInput").value = "";
+  document.getElementById("vendorPhoneInput").value = "";
+  document.getElementById("discountPct").value = "0";
+  document.getElementById("gstPct").value = "0";
+  document.getElementById("poNotes").value = "";
+  document.getElementById("poNumBadge").style.display = "none";
+  clearImage();
+  renderProductList();
+  calcSummary();
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function loadHistory() {
+  document.getElementById("histSpinner").classList.add("show");
+  document.getElementById("poHistoryList").innerHTML = "";
+  google.script.run
+    .withSuccessHandler(function(pos) {
+      document.getElementById("histSpinner").classList.remove("show");
+      renderHistory(pos);
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById("histSpinner").classList.remove("show");
+      toast("Error: " + e.message);
+    })
+    .getPOs();
+}
+
+function renderHistory(pos) {
+  var el = document.getElementById("poHistoryList");
+  if (!pos || !pos.length) {
+    el.innerHTML = '<div class="empty-state"><div class="eicon">📋</div><p>No POs created yet.</p></div>';
+    return;
+  }
+  el.innerHTML = pos.map(function(p) {
+    return '<div class="po-card" onclick="viewPO(\'' + p.poNumber + '\')">' +
+      '<div><div class="po-number">' + p.poNumber + '</div>' +
+      '<div class="po-vendor">🏭 ' + p.vendorName + '</div>' +
+      '<div class="po-date">📅 ' + p.date + ' · ' + p.totalItems + ' items</div></div>' +
+      '<div class="po-total">₹' + Number(p.grandTotal).toFixed(2) + '</div>' +
+      '</div>';
+  }).join("");
+}
+
+function viewPO(poNum) {
+  state.lastPONum = poNum;
+  document.getElementById("successPONum").textContent = poNum;
+  document.getElementById("successModal").classList.add("open");
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+// Close on overlay click
+document.querySelectorAll(".modal-overlay").forEach(function(overlay) {
+  overlay.addEventListener("click", function(e) {
+    if (e.target === overlay) overlay.classList.remove("open");
+  });
+});
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg) {
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(function() { el.classList.remove("show"); }, 2600);
+}
+</script>
+</body>
+</html>
