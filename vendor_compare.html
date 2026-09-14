@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendor Price Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:         #f5f6fa;
+  --surface:    #ffffff;
+  --surface2:   #eef0f7;
+  --border:     #dde1f0;
+  --text:       #1a1d2e;
+  --text-muted: #6b7280;
+  --accent:     #4f46e5;
+  --accent-lit: #ede9fe;
+  --best:       #16a34a;
+  --best-bg:    #dcfce7;
+  --warn:       #d97706;
+  --warn-bg:    #fef3c7;
+  --badge-text: #ffffff;
+  --shadow:     0 2px 10px rgba(79,70,229,0.08);
+  --shadow-card:0 4px 20px rgba(0,0,0,0.08);
+  --radius:     12px;
+  --radius-sm:  8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:         #0f1117;
+    --surface:    #1a1d2e;
+    --surface2:   #242740;
+    --border:     #2e3250;
+    --text:       #e8eaf6;
+    --text-muted: #9196b3;
+    --accent:     #7c73ff;
+    --accent-lit: #1e1a40;
+    --best:       #4ade80;
+    --best-bg:    #052e16;
+    --warn:       #fbbf24;
+    --warn-bg:    #1c1107;
+    --shadow:     0 2px 10px rgba(0,0,0,0.4);
+    --shadow-card:0 4px 20px rgba(0,0,0,0.4);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:         #0f1117;
+  --surface:    #1a1d2e;
+  --surface2:   #242740;
+  --border:     #2e3250;
+  --text:       #e8eaf6;
+  --text-muted: #9196b3;
+  --accent:     #7c73ff;
+  --accent-lit: #1e1a40;
+  --best:       #4ade80;
+  --best-bg:    #052e16;
+  --warn:       #fbbf24;
+  --warn-bg:    #1c1107;
+  --shadow:     0 2px 10px rgba(0,0,0,0.4);
+  --shadow-card:0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-logo {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.header-logo svg { flex-shrink: 0; }
+.header-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+}
+.header-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ── MAIN LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  min-height: calc(100vh - 57px);
+}
+@media (max-width: 700px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; border-right: none; border-bottom: 1px solid var(--border); }
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-section {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-section:last-child { border-bottom: none; flex: 1; overflow-y: auto; }
+.section-label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* Search */
+.search-wrap { position: relative; }
+.search-wrap svg {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); pointer-events: none;
+}
+#productSearch {
+  width: 100%;
+  padding: 9px 10px 9px 34px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 0.87rem; color: var(--text);
+  outline: none; transition: border-color .15s;
+}
+#productSearch:focus { border-color: var(--accent); }
+#productSearch::placeholder { color: var(--text-muted); }
+
+/* Product list */
+.product-list { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.product-item {
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .12s;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.product-item:hover { background: var(--surface2); }
+.product-item.active {
+  background: var(--accent-lit);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 500;
+}
+.product-count {
+  font-size: 0.72rem;
+  background: var(--surface2);
+  color: var(--text-muted);
+  border-radius: 100px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.product-item.active .product-count { background: var(--accent); color: #fff; }
+
+/* Vendor Bucket */
+.vendor-bucket { display: flex; flex-direction: column; gap: 6px; }
+.vendor-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .12s;
+  user-select: none;
+  font-size: 0.84rem;
+}
+.vendor-chip:hover { background: var(--surface2); }
+.vendor-chip input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; }
+.vendor-chip-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.vendor-name-text { flex: 1; font-weight: 500; }
+.vendor-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 100px;
+  background: var(--surface2);
+  color: var(--text-muted);
+}
+.bucket-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.btn-tiny {
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .12s;
+}
+.btn-tiny:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Data source control */
+.source-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 0.78rem; color: var(--text);
+  outline: none; margin-bottom: 8px;
+  word-break: break-all;
+  resize: none;
+}
+.source-input:focus { border-color: var(--accent); }
+.btn-load {
+  width: 100%;
+  padding: 9px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.btn-load:hover { opacity: .85; }
+.btn-load:disabled { opacity: .5; cursor: default; }
+
+/* Column mapper */
+.col-mapper { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+.col-map-row { display: contents; }
+.col-map-label { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; }
+.col-map-select {
+  padding: 5px 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit; font-size: 0.78rem; color: var(--text);
+  outline: none;
+}
+.col-map-select:focus { border-color: var(--accent); }
+
+/* ── MAIN CONTENT ── */
+.main { padding: 24px; overflow-y: auto; }
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.state-icon { font-size: 2.5rem; }
+.state-title { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 1rem; color: var(--text); }
+.state-sub { font-size: 0.83rem; max-width: 320px; line-height: 1.6; }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Comparison header */
+.compare-header {
+  margin-bottom: 20px;
+}
+.compare-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.compare-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* Vendor cards grid */
+.vendor-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.vendor-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  transition: transform .15s, box-shadow .15s;
+}
+.vendor-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+.vendor-card.best-price { border-color: var(--best); }
+
+.card-image-wrap {
+  position: relative;
+  background: var(--surface2);
+  aspect-ratio: 1/1;
+  overflow: hidden;
+}
+.card-image-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity .3s;
+}
+.card-no-img {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: var(--border);
+}
+.best-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: var(--best);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 100px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.vendor-dot-badge {
+  position: absolute;
+  top: 8px; left: 8px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.card-body { padding: 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.card-vendor {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+.card-product {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.card-price {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-top: auto;
+  padding-top: 6px;
+}
+.vendor-card.best-price .card-price { color: var(--best); }
+.card-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.card-savings {
+  font-size: 0.72rem;
+  background: var(--best-bg);
+  color: var(--best);
+  padding: 3px 8px;
+  border-radius: 100px;
+  font-weight: 600;
+  display: inline-block;
+}
+.card-costly {
+  font-size: 0.72rem;
+  background: var(--warn-bg);
+  color: var(--warn);
+  padding: 3px 8px;
+  border-radius: 100px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* "No data" for product */
+.no-vendor-data {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 0.87rem;
+}
+
+/* Status bar */
+.status-bar {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 8px 24px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  bottom: 0;
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.status-dot.ok { background: var(--best); }
+.status-dot.err { background: #ef4444; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 60px; left: 50%; transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 20px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity .25s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 999;
+}
+.toast.show { opacity: 1; }
+
+/* Collapsible section toggle */
+.toggle-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  gap: 6px;
+}
+.toggle-section .caret { font-size: 0.7rem; transition: transform .15s; color: var(--text-muted); }
+.toggle-section.collapsed .caret { transform: rotate(-90deg); }
+.toggle-body { overflow: hidden; transition: max-height .25s ease; }
+
+/* Error box */
+.error-box {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 0.8rem;
+  color: #be123c;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+[data-theme="dark"] .error-box,
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .error-box {
+  background: #2d0a12; border-color: #7f1d1d; color: #fca5a5;
+}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 3h18v5H3zM3 10h7v11H3zM14 10h7v11h-7z"/>
+    </svg>
+    Vendor Compare
+  </div>
+  <div class="header-divider"></div>
+  <div class="header-subtitle">Sewa Gift Palace · PO Rate Analyser</div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Data Source -->
+    <div class="sidebar-section">
+      <div class="section-label toggle-section" onclick="toggleSection('src')">
+        Data Source <span class="caret">▼</span>
+      </div>
+      <div class="toggle-body" id="src-body">
+        <div style="margin-top:10px">
+          <textarea class="source-input" id="sheetUrl" rows="2" placeholder="Paste Google Sheet URL or CSV link…">https://docs.google.com/spreadsheets/d/1-rQpJMhTdlzjUfLl0xeZmhSJiuyF6k14aEhJooXHveM/export?format=csv&amp;gid=1480924230</textarea>
+          <button class="btn-load" id="btnLoad" onclick="loadData()">⟳ Load Sheet Data</button>
+          <div id="sourceError"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column Mapping -->
+    <div class="sidebar-section">
+      <div class="section-label toggle-section collapsed" onclick="toggleSection('cols')">
+        Column Mapping <span class="caret">▼</span>
+      </div>
+      <div class="toggle-body" id="cols-body" style="max-height:0">
+        <div class="col-mapper" id="colMapper" style="margin-top:10px">
+          <span class="col-map-label">Vendor</span>
+          <select class="col-map-select" id="cm_vendor" onchange="rebuildView()"></select>
+          <span class="col-map-label">Product</span>
+          <select class="col-map-select" id="cm_product" onchange="rebuildView()"></select>
+          <span class="col-map-label">Price</span>
+          <select class="col-map-select" id="cm_price" onchange="rebuildView()"></select>
+          <span class="col-map-label">Date</span>
+          <select class="col-map-select" id="cm_date" onchange="rebuildView()"></select>
+          <span class="col-map-label">Image URL</span>
+          <select class="col-map-select" id="cm_image" onchange="rebuildView()"></select>
+          <span class="col-map-label">PO / Bill No</span>
+          <select class="col-map-select" id="cm_po" onchange="rebuildView()"></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Search -->
+    <div class="sidebar-section">
+      <div class="section-label">Products</div>
+      <div class="search-wrap">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="productSearch" placeholder="Search product…" oninput="filterProducts()">
+      </div>
+      <div class="product-list" id="productList">
+        <div style="font-size:.8rem;color:var(--text-muted);margin-top:8px;text-align:center">Load sheet data first</div>
+      </div>
+    </div>
+
+    <!-- Vendor Bucket -->
+    <div class="sidebar-section">
+      <div class="section-label">Vendor Bucket</div>
+      <div class="bucket-actions">
+        <button class="btn-tiny" onclick="setAllVendors(true)">Select All</button>
+        <button class="btn-tiny" onclick="setAllVendors(false)">Clear All</button>
+      </div>
+      <div class="vendor-bucket" id="vendorBucket">
+        <div style="font-size:.8rem;color:var(--text-muted)">Load data to see vendors</div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- MAIN -->
+  <div class="main" id="mainContent">
+    <div class="state-box" id="stateBox">
+      <div class="state-icon">🏪</div>
+      <div class="state-title">Vendor Price Comparison</div>
+      <div class="state-sub">Click <strong>Load Sheet Data</strong> in the sidebar, then select a product to compare prices across vendors.</div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-dot" id="statusDot"></div>
+  <span id="statusText">No data loaded</span>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+const VENDOR_COLORS = [
+  '#4f46e5','#e11d48','#059669','#d97706','#7c3aed',
+  '#0891b2','#be185d','#16a34a','#dc2626','#2563eb'
+];
+
+let allRows       = [];    // raw parsed CSV rows (objects)
+let headers       = [];    // column names
+let colMap        = { vendor:'', product:'', price:'', date:'', image:'', po:'' };
+let vendorList    = [];    // unique vendor names
+let vendorActive  = {};    // name → true/false
+let vendorColors  = {};    // name → hex
+let productGroups = {};    // product → [row, ...]
+let selectedProduct = null;
+
+/* ─────────────────────────────────────────────
+   TOGGLE SECTIONS
+───────────────────────────────────────────── */
+function toggleSection(id) {
+  const btn  = document.querySelector(`[onclick="toggleSection('${id}')"]`);
+  const body = document.getElementById(`${id}-body`);
+  const open = !btn.classList.contains('collapsed');
+  if (open) {
+    btn.classList.add('collapsed');
+    body.style.maxHeight = '0';
+  } else {
+    btn.classList.remove('collapsed');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  }
+}
+// open source section by default
+document.getElementById('src-body').style.maxHeight = '9999px';
+
+/* ─────────────────────────────────────────────
+   LOAD DATA
+───────────────────────────────────────────── */
+async function fetchWithCors(url) {
+  // Try direct first (works when sheet is public + browser allows CORS)
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (r.ok) return await r.text();
+  } catch(_) {}
+
+  // Fallback 1: corsproxy.io
+  try {
+    const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url),
+      { signal: AbortSignal.timeout(10000) });
+    if (r.ok) return await r.text();
+  } catch(_) {}
+
+  // Fallback 2: allorigins.win
+  const r2 = await fetch(
+    'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
+    { signal: AbortSignal.timeout(12000) }
+  );
+  if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
+  const j = await r2.json();
+  if (!j.contents) throw new Error('Empty response from proxy');
+  return j.contents;
+}
+
+async function loadData() {
+  const urlRaw = document.getElementById('sheetUrl').value.trim();
+  if (!urlRaw) return;
+  const url = resolveUrl(urlRaw);
+
+  const btn = document.getElementById('btnLoad');
+  btn.disabled = true;
+  btn.textContent = '⌛ Loading…';
+  setStatus('loading','Fetching data…');
+  document.getElementById('sourceError').innerHTML = '';
+
+  try {
+    const csv = await fetchWithCors(url);
+    parseCSV(csv);
+  } catch(e) {
+    document.getElementById('sourceError').innerHTML =
+      `<div class="error-box">⚠️ Could not load sheet.<br>${e.message}<br><br>
+      Make sure the sheet is shared as <strong>"Anyone with the link can view"</strong>.</div>`;
+    setStatus('err', 'Load failed');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⟳ Load Sheet Data';
+  }
+}
+
+function resolveUrl(raw) {
+  // Already a CSV export URL → use as-is
+  if (raw.includes('export?format=csv') || raw.includes('.csv')) return raw;
+  // Regular Google Sheet URL → convert to CSV export
+  const m = raw.match(/\/spreadsheets\/d\/([^/]+)/);
+  if (!m) return raw;
+  const sheetId = m[1];
+  const gidM = raw.match(/gid=(\d+)/);
+  const gid  = gidM ? gidM[1] : '0';
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+}
+
+function parseCSV(csv) {
+  const result = Papa.parse(csv, { header: true, skipEmptyLines: true, dynamicTyping: false });
+  if (!result.data || !result.data.length) {
+    document.getElementById('sourceError').innerHTML =
+      '<div class="error-box">No rows found in the sheet.</div>';
+    setStatus('err','Empty sheet');
+    return;
+  }
+  allRows  = result.data;
+  headers  = result.meta.fields || [];
+  autoDetectColumns();
+  buildVendorList();
+  buildProductGroups();
+  populateColumnSelects();
+  renderVendorBucket();
+  renderProductList();
+  showStateBox('pick');
+  setStatus('ok', `${allRows.length} rows loaded · ${vendorList.length} vendors · ${Object.keys(productGroups).length} products`);
+  // auto-open column mapping so user can check
+  const colBtn = document.querySelector(`[onclick="toggleSection('cols')"]`);
+  if (colBtn.classList.contains('collapsed')) toggleSection('cols');
+}
+
+/* ─────────────────────────────────────────────
+   AUTO-DETECT COLUMNS
+───────────────────────────────────────────── */
+const COL_HINTS = {
+  vendor:  ['vendor','supplier','party','firm','seller','distributor','company'],
+  product: ['product','item','description','desc','name','article','particular','particulars'],
+  price:   ['price','rate','cost','amount','unit price','unit rate','mrp','value','unit_price','unit_rate'],
+  date:    ['date','po date','bill date','invoice date','order date'],
+  image:   ['image','photo','pic','picture','img','url','link','drive'],
+  po:      ['po','po no','bill no','invoice','order no','po number','voucher']
+};
+
+function scoreHeader(h, hints) {
+  const low = h.toLowerCase();
+  for (const hint of hints) {
+    if (low === hint) return 100;
+    if (low.includes(hint)) return 50;
+  }
+  return 0;
+}
+
+function autoDetectColumns() {
+  for (const key of Object.keys(COL_HINTS)) {
+    let best = '', bestScore = 0;
+    for (const h of headers) {
+      const s = scoreHeader(h, COL_HINTS[key]);
+      if (s > bestScore) { bestScore = s; best = h; }
+    }
+    colMap[key] = best;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   COLUMN SELECT DROPDOWNS
+───────────────────────────────────────────── */
+function populateColumnSelects() {
+  const opts = ['(none)', ...headers].map(h =>
+    `<option value="${esc(h)}">${esc(h) || '(none)'}</option>`
+  ).join('');
+  for (const key of Object.keys(colMap)) {
+    const sel = document.getElementById(`cm_${key}`);
+    if (!sel) continue;
+    sel.innerHTML = opts;
+    sel.value = colMap[key];
+  }
+}
+
+// When user changes a select, update colMap and rebuild
+for (const key of Object.keys({ vendor:'', product:'', price:'', date:'', image:'', po:'' })) {
+  const el = document.getElementById(`cm_${key}`);
+  if (el) el.addEventListener('change', function() {
+    colMap[key] = this.value;
+    buildVendorList();
+    buildProductGroups();
+    renderVendorBucket();
+    renderProductList();
+    if (selectedProduct) showComparison(selectedProduct);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   VENDORS & PRODUCTS
+───────────────────────────────────────────── */
+function buildVendorList() {
+  const seen = new Set();
+  for (const row of allRows) {
+    const v = (row[colMap.vendor] || '').toString().trim();
+    if (v) seen.add(v);
+  }
+  const prev = new Set(vendorList);
+  vendorList = [...seen].sort();
+  // init new vendors as active
+  for (const v of vendorList) {
+    if (!(v in vendorActive)) vendorActive[v] = true;
+  }
+  // assign colors
+  vendorList.forEach((v, i) => {
+    if (!vendorColors[v]) vendorColors[v] = VENDOR_COLORS[i % VENDOR_COLORS.length];
+  });
+}
+
+function buildProductGroups() {
+  productGroups = {};
+  for (const row of allRows) {
+    const vendor = (row[colMap.vendor] || '').toString().trim();
+    const prod   = (row[colMap.product] || '').toString().trim();
+    if (!prod) continue;
+    const key = prod.toLowerCase();
+    if (!productGroups[key]) productGroups[key] = { label: prod, rows: [] };
+    productGroups[key].rows.push(row);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   RENDER VENDOR BUCKET
+───────────────────────────────────────────── */
+function renderVendorBucket() {
+  const el = document.getElementById('vendorBucket');
+  if (!vendorList.length) {
+    el.innerHTML = '<div style="font-size:.8rem;color:var(--text-muted)">No vendors found — check column mapping</div>';
+    return;
+  }
+  el.innerHTML = vendorList.map(v => `
+    <label class="vendor-chip" onclick="">
+      <input type="checkbox" ${vendorActive[v] ? 'checked' : ''}
+        onchange="toggleVendor('${esc(v)}', this.checked)">
+      <span class="vendor-chip-dot" style="background:${vendorColors[v]}"></span>
+      <span class="vendor-name-text">${esc(v)}</span>
+      <span class="vendor-badge">${countVendorRows(v)}</span>
+    </label>
+  `).join('');
+}
+
+function countVendorRows(v) {
+  return allRows.filter(r => (r[colMap.vendor]||'').toString().trim() === v).length;
+}
+
+function toggleVendor(name, active) {
+  vendorActive[name] = active;
+  if (selectedProduct) showComparison(selectedProduct);
+}
+
+function setAllVendors(state) {
+  for (const v of vendorList) vendorActive[v] = state;
+  renderVendorBucket();
+  if (selectedProduct) showComparison(selectedProduct);
+}
+
+/* ─────────────────────────────────────────────
+   RENDER PRODUCT LIST
+───────────────────────────────────────────── */
+function renderProductList(filter='') {
+  const el = document.getElementById('productList');
+  const keys = Object.keys(productGroups).filter(k =>
+    !filter || k.includes(filter.toLowerCase())
+  );
+  if (!keys.length) {
+    el.innerHTML = '<div style="font-size:.8rem;color:var(--text-muted);margin-top:8px;text-align:center">No products found</div>';
+    return;
+  }
+  el.innerHTML = keys.map(k => {
+    const g = productGroups[k];
+    const uniqueVendors = new Set(g.rows.map(r => (r[colMap.vendor]||'').trim())).size;
+    const active = selectedProduct === k ? 'active' : '';
+    return `<div class="product-item ${active}" onclick="selectProduct('${esc(k)}')">
+      <span>${esc(g.label)}</span>
+      <span class="product-count">${uniqueVendors}V</span>
+    </div>`;
+  }).join('');
+}
+
+function filterProducts() {
+  const q = document.getElementById('productSearch').value;
+  renderProductList(q);
+}
+
+function selectProduct(key) {
+  selectedProduct = key;
+  renderProductList(document.getElementById('productSearch').value);
+  showComparison(key);
+}
+
+/* ─────────────────────────────────────────────
+   SHOW COMPARISON
+───────────────────────────────────────────── */
+function showComparison(key) {
+  const group = productGroups[key];
+  if (!group) return;
+
+  const main = document.getElementById('mainContent');
+
+  // Filter to active vendors only, keep latest PO per vendor
+  const activeVendors = vendorList.filter(v => vendorActive[v]);
+  // Group rows by vendor, pick most recent per vendor
+  const vendorBest = {};
+  for (const row of group.rows) {
+    const v = (row[colMap.vendor]||'').trim();
+    if (!activeVendors.includes(v)) continue;
+    const price = parseFloat((row[colMap.price]||'0').toString().replace(/[^0-9.]/g,'')) || 0;
+    if (!vendorBest[v]) {
+      vendorBest[v] = { row, price };
+    } else {
+      // keep lower price record (for bargaining)
+      if (price > 0 && price < vendorBest[v].price) {
+        vendorBest[v] = { row, price };
+      }
+    }
+  }
+
+  const entries = Object.entries(vendorBest);
+  if (!entries.length) {
+    main.innerHTML = `<div class="compare-header">
+      <div class="compare-title">${esc(group.label)}</div>
+      <div class="compare-sub">No active vendors have purchased this product.</div>
+    </div>`;
+    return;
+  }
+
+  // Find best (lowest) price
+  const prices = entries.map(([,e]) => e.price).filter(p => p > 0);
+  const bestPrice = prices.length ? Math.min(...prices) : 0;
+  const maxPrice  = prices.length ? Math.max(...prices) : 0;
+
+  const cards = entries.map(([vendor, entry]) => {
+    const { row, price } = entry;
+    const isBest = price > 0 && price === bestPrice;
+    const imgUrl  = buildImgUrl(row[colMap.image]);
+    const dateStr = formatDate(row[colMap.date]);
+    const poNo    = colMap.po ? (row[colMap.po]||'') : '';
+    const color   = vendorColors[vendor] || '#888';
+
+    const savingsAmt = maxPrice > 0 && price > 0 ? maxPrice - price : 0;
+    const savingsPct = maxPrice > 0 && price > 0 ? ((savingsAmt / maxPrice) * 100).toFixed(0) : 0;
+
+    let pillHtml = '';
+    if (isBest && entries.length > 1)
+      pillHtml = `<span class="card-savings">✓ Cheapest · Save ₹${fmt(savingsAmt)} (${savingsPct}%)</span>`;
+    else if (!isBest && price > 0 && bestPrice > 0) {
+      const diff = price - bestPrice;
+      pillHtml = `<span class="card-costly">+₹${fmt(diff)} costlier</span>`;
+    }
+
+    return `
+    <div class="vendor-card${isBest ? ' best-price' : ''}">
+      <div class="card-image-wrap">
+        ${imgUrl
+          ? `<img src="${imgUrl}" alt="${esc(vendor)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          : ''}
+        <div class="card-no-img" style="${imgUrl ? 'display:none' : ''}">📦</div>
+        ${isBest ? '<span class="best-badge">★ Best Price</span>' : ''}
+        <div class="vendor-dot-badge" style="background:${color}">${vendor.charAt(0).toUpperCase()}</div>
+      </div>
+      <div class="card-body">
+        <div class="card-vendor" style="color:${color}">${esc(vendor)}</div>
+        <div class="card-product">${esc(group.label)}</div>
+        ${poNo ? `<div class="card-date">📄 PO: ${esc(poNo.toString())}</div>` : ''}
+        ${dateStr ? `<div class="card-date">📅 ${dateStr}</div>` : ''}
+        <div class="card-price">₹${price > 0 ? fmt(price) : '—'}</div>
+        ${pillHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  const vendorCount = entries.length;
+  const withImg = entries.filter(([,e]) => buildImgUrl(e.row[colMap.image])).length;
+
+  main.innerHTML = `
+    <div class="compare-header">
+      <div class="compare-title">📦 ${esc(group.label)}</div>
+      <div class="compare-sub">${vendorCount} vendor${vendorCount>1?'s':''} compared
+        · Best ₹${bestPrice > 0 ? fmt(bestPrice) : '—'}
+        · Highest ₹${maxPrice > 0 ? fmt(maxPrice) : '—'}
+        ${maxPrice>bestPrice ? `· <strong style="color:var(--best)">Save ₹${fmt(maxPrice-bestPrice)}</strong> by choosing wisely` : ''}
+      </div>
+    </div>
+    <div class="vendor-cards">${cards}</div>
+  `;
+}
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function buildImgUrl(raw) {
+  if (!raw) return '';
+  raw = raw.toString().trim();
+  if (!raw) return '';
+  // Already a direct image URL
+  if (/^https?:\/\//.test(raw) && !raw.includes('drive.google.com')) return raw;
+  // Google Drive share link → lh3 CDN
+  const m = raw.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  if (m) return `https://lh3.googleusercontent.com/d/${m[1]}`;
+  // open?id=
+  const m2 = raw.match(/[?&]id=([a-zA-Z0-9_-]{20,})/);
+  if (m2) return `https://lh3.googleusercontent.com/d/${m2[1]}`;
+  // Raw ID (20+ alphanumeric chars)
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(raw)) return `https://lh3.googleusercontent.com/d/${raw}`;
+  return '';
+}
+
+function formatDate(raw) {
+  if (!raw) return '';
+  raw = raw.toString().trim();
+  if (!raw) return '';
+  // Try to parse
+  const d = new Date(raw);
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  return raw;
+}
+
+function fmt(n) {
+  const num = parseFloat(n) || 0;
+  return num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+}
+
+function esc(s) {
+  if (s == null) return '';
+  return s.toString()
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function showStateBox(mode) {
+  const main = document.getElementById('mainContent');
+  if (mode === 'pick') {
+    main.innerHTML = `<div class="state-box">
+      <div class="state-icon">👈</div>
+      <div class="state-title">Select a Product</div>
+      <div class="state-sub">Pick a product from the list on the left to see vendor prices side by side.</div>
+    </div>`;
+  }
+}
+
+function setStatus(type, msg) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (type === 'ok' ? ' ok' : type === 'err' ? ' err' : '');
+  document.getElementById('statusText').textContent = msg;
+}
+
+function rebuildView() {
+  // sync colMap from selects
+  for (const key of Object.keys(colMap)) {
+    const el = document.getElementById(`cm_${key}`);
+    if (el) colMap[key] = el.value === '(none)' ? '' : el.value;
+  }
+  buildVendorList();
+  buildProductGroups();
+  renderVendorBucket();
+  renderProductList(document.getElementById('productSearch').value);
+  if (selectedProduct) showComparison(selectedProduct);
+}
+
+// Init collapsible
+function initToggles() {
+  document.querySelectorAll('.toggle-body').forEach(el => {
+    if (!el.parentElement.querySelector('.toggle-section.collapsed')) {
+      el.style.maxHeight = '9999px';
+    }
+  });
+}
+initToggles();
+
+// Auto-load on open
+window.addEventListener('DOMContentLoaded', () => {
+  const url = document.getElementById('sheetUrl').value.trim();
+  if (url) loadData();
+});
+</script>
+</body>
+</html>
