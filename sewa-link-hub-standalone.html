@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sewa Link Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  body{margin:0;font:14px system-ui,sans-serif}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<style>
+/* Layout: sticky command bar, colour-coded filter pills, then one tinted bucket per category. */
+:root{
+  --bg:#f1f3f8;
+  --bg-2:#e7eaf2;
+  --surface:#ffffff;
+  --surface-2:#eef0f6;
+  --fg:#141720;
+  --fg-dim:#565f73;
+  --fg-faint:#88909f;
+  --line:#dde1ea;
+  --line-strong:#c4cad8;
+  --accent:#3457a6;
+  --accent-fg:#ffffff;
+  --danger:#b3261e;
+  --danger-soft:#fbeae8;
+  --shadow-s:0 1px 2px rgba(17,24,40,.05), 0 2px 8px rgba(17,24,40,.05);
+  --shadow-m:0 6px 18px rgba(17,24,40,.11), 0 2px 5px rgba(17,24,40,.06);
+  --tile-l:93%; --tile-bd-l:80%; --ink-l:33%; --band-l:96%; --band-bd-l:86%; --sat:62%;
+  --font-ui:"Outfit","Helvetica Neue",Arial,sans-serif;
+  --font-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1016; --bg-2:#141821; --surface:#191d27; --surface-2:#232835; --fg:#eef0f6;
+  --fg-dim:#a6aec0; --fg-faint:#788194; --line:#2b3140; --line-strong:#3b4356;
+  --accent:#7ba3e8; --accent-fg:#0d1017; --danger:#f0a19a; --danger-soft:#30201e;
+  --shadow-s:0 1px 2px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+  --shadow-m:0 8px 24px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35);
+  --tile-l:24%; --tile-bd-l:36%; --ink-l:76%; --band-l:16%; --band-bd-l:28%; --sat:46%;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e1016; --bg-2:#141821; --surface:#191d27; --surface-2:#232835; --fg:#eef0f6;
+  --fg-dim:#a6aec0; --fg-faint:#788194; --line:#2b3140; --line-strong:#3b4356;
+  --accent:#7ba3e8; --accent-fg:#0d1017; --danger:#f0a19a; --danger-soft:#30201e;
+  --shadow-s:0 1px 2px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+  --shadow-m:0 8px 24px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35);
+  --tile-l:24%; --tile-bd-l:36%; --ink-l:76%; --band-l:16%; --band-bd-l:28%; --sat:46%;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--surface)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ---------- command bar ---------- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);
+  border-bottom:1px solid var(--line);box-shadow:var(--shadow-s)}
+.bar-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:13px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand .glyph{width:36px;height:36px;flex:0 0 auto;border-radius:11px;display:grid;place-items:center;font-size:18px;
+  background:linear-gradient(140deg,hsl(212 70% 54%),hsl(268 62% 58%));box-shadow:0 3px 10px hsl(230 60% 50% / .32)}
+.brand h1{font-family:var(--font-ui);font-weight:700;font-size:20px;letter-spacing:-.015em;margin:0;white-space:nowrap;line-height:1.1}
+.brand .sub{display:block;font-size:11.5px;color:var(--fg-faint);font-family:var(--font-mono);letter-spacing:.02em}
+.spacer{flex:1 1 auto;min-width:0}
+.search{position:relative;flex:1 1 260px;min-width:0;max-width:440px}
+.search input{width:100%;padding:10px 34px 10px 38px;background:var(--surface-2);border:1.5px solid transparent;
+  border-radius:12px;font-size:14px;transition:border-color .16s, background .16s}
+.search input:hover{background:var(--bg-2)}
+.search input:focus{background:var(--surface);border-color:var(--accent);outline:none;box-shadow:0 0 0 4px hsl(220 60% 55% / .14)}
+.search input::placeholder{color:var(--fg-faint)}
+.search .ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--fg-faint);fill:none;stroke-width:2.1;pointer-events:none}
+.search .clr{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--fg-faint);
+  cursor:pointer;padding:3px 7px;line-height:1;font-size:17px;border-radius:7px}
+.search .clr:hover{color:var(--fg);background:var(--surface-2)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 15px;border-radius:11px;border:1.5px solid transparent;
+  cursor:pointer;font-family:var(--font-ui);font-weight:600;font-size:13.5px;white-space:nowrap;
+  transition:transform .14s, box-shadow .16s, background .16s, border-color .16s}
+.btn:active{transform:scale(.96)}
+.btn-primary{background:linear-gradient(140deg,hsl(214 66% 50%),hsl(248 56% 55%));color:#fff;box-shadow:0 3px 10px hsl(228 60% 48% / .3)}
+.btn-primary:hover{box-shadow:0 6px 18px hsl(228 60% 48% / .42);transform:translateY(-1px)}
+.btn-primary:active{transform:scale(.96)}
+.btn-ghost{background:var(--surface-2);border-color:var(--line);color:var(--fg-dim)}
+.btn-ghost:hover{color:var(--fg);border-color:var(--line-strong);background:var(--bg-2)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+
+/* ---------- filter pills ---------- */
+.rail{background:var(--surface);border-bottom:1px solid var(--line)}
+.rail-in{display:flex;gap:8px;overflow-x:auto;padding-block:11px;scrollbar-width:thin}
+.rail-in::-webkit-scrollbar{height:6px}
+.rail-in::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px}
+.chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;
+  background:hsl(var(--h) var(--sat) var(--band-l));border:1.5px solid hsl(var(--h) var(--sat) var(--band-bd-l));
+  color:hsl(var(--h) var(--sat) var(--ink-l));cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font-ui);
+  transition:transform .14s, box-shadow .16s, filter .16s}
+.chip:hover{transform:translateY(-1px);box-shadow:0 4px 12px hsl(var(--h) 50% 50% / .22)}
+.chip:active{transform:scale(.95)}
+.chip .em{font-size:14px;line-height:1}
+.chip .n{font-family:var(--font-mono);font-size:11px;font-variant-numeric:tabular-nums;
+  background:hsl(var(--h) var(--sat) var(--tile-l));padding:1px 6px;border-radius:999px}
+.chip[aria-pressed="true"]{background:hsl(var(--h) var(--sat) 48%);border-color:hsl(var(--h) var(--sat) 48%);
+  color:#fff;box-shadow:0 4px 14px hsl(var(--h) 55% 48% / .4)}
+.chip[aria-pressed="true"] .n{background:rgba(255,255,255,.22);color:#fff}
+
+/* ---------- buckets ---------- */
+main{padding-block:24px 72px}
+.sec{margin-bottom:22px;border-radius:18px;overflow:hidden;border:1.5px solid hsl(var(--h) var(--sat) var(--band-bd-l));
+  background:var(--surface);box-shadow:var(--shadow-s);scroll-margin-top:130px}
+.sec-head{display:flex;align-items:center;gap:11px;padding:13px 16px;
+  background:linear-gradient(100deg,hsl(var(--h) var(--sat) var(--band-l)),hsl(var(--h) var(--sat) var(--band-l) / .35));
+  border-bottom:1px solid hsl(var(--h) var(--sat) var(--band-bd-l))}
+.sec-head .em{width:32px;height:32px;flex:0 0 auto;border-radius:10px;display:grid;place-items:center;font-size:16px;
+  background:hsl(var(--h) var(--sat) var(--tile-l));border:1px solid hsl(var(--h) var(--sat) var(--tile-bd-l))}
+.sec-head h2{font-family:var(--font-ui);font-size:14.5px;font-weight:700;letter-spacing:.03em;margin:0;
+  color:hsl(var(--h) var(--sat) var(--ink-l));min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sec-head .n{margin-left:auto;flex:0 0 auto;font-family:var(--font-mono);font-size:11.5px;font-variant-numeric:tabular-nums;
+  color:hsl(var(--h) var(--sat) var(--ink-l));background:hsl(var(--h) var(--sat) var(--tile-l));
+  border:1px solid hsl(var(--h) var(--sat) var(--tile-bd-l));padding:3px 9px;border-radius:999px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:10px;padding:14px 16px 16px}
+.card{position:relative;display:flex;align-items:flex-start;gap:11px;min-width:0;background:var(--surface);
+  border:1.5px solid var(--line);border-radius:13px;padding:12px;
+  transition:transform .16s cubic-bezier(.2,.7,.3,1), box-shadow .18s, border-color .18s}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-m);border-color:hsl(var(--h) var(--sat) var(--tile-bd-l))}
+.card:active{transform:translateY(-1px) scale(.99)}
+.card .tile{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:15px;
+  background:hsl(var(--h) var(--sat) var(--tile-l));border:1px solid hsl(var(--h) var(--sat) var(--tile-bd-l));
+  transition:transform .18s cubic-bezier(.2,.7,.3,1)}
+.card:hover .tile{transform:scale(1.09) rotate(-5deg)}
+.card .body{flex:1 1 auto;min-width:0}
+.card .t{display:block;font-weight:500;font-size:14px;line-height:1.35;text-decoration:none;color:var(--fg);word-break:break-word}
+.card:hover .t{color:hsl(var(--h) var(--sat) var(--ink-l))}
+.card .t::after{content:"";position:absolute;inset:0;border-radius:13px}
+.card .host{display:block;margin-top:4px;font-family:var(--font-mono);font-size:10.5px;color:var(--fg-faint);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .tools{position:relative;z-index:1;flex:0 0 auto;display:flex;gap:1px;opacity:0;transform:translateX(4px);
+  transition:opacity .16s, transform .16s}
+.card:hover .tools,.card:focus-within .tools{opacity:1;transform:none}
+@media (hover:none){.card .tools{opacity:1;transform:none}}
+.icbtn{background:none;border:0;cursor:pointer;color:var(--fg-faint);padding:5px;border-radius:8px;line-height:0;transition:color .14s, background .14s}
+.icbtn:hover{color:var(--fg);background:var(--surface-2)}
+.icbtn.del:hover{color:var(--danger);background:var(--danger-soft)}
+.icbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.card.confirming{border-color:var(--danger);background:var(--danger-soft);transform:none}
+.confirm{position:relative;z-index:2;display:flex;align-items:center;gap:8px;width:100%;min-width:0}
+.confirm p{margin:0;flex:1 1 auto;min-width:0;font-size:13px;color:var(--danger);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.confirm button{padding:5px 11px;border-radius:8px;font-size:12.5px;font-weight:600;font-family:var(--font-ui);
+  cursor:pointer;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--fg);transition:transform .12s}
+.confirm button:active{transform:scale(.94)}
+.confirm button.yes{background:var(--danger);border-color:var(--danger);color:#fff}
+
+/* ---------- empty / status ---------- */
+.state{text-align:center;padding:56px 22px;border:2px dashed var(--line-strong);border-radius:18px;background:var(--surface)}
+.state .big{font-size:34px;line-height:1;margin-bottom:12px}
+.state h3{font-family:var(--font-ui);font-size:17px;margin:0 0 7px}
+.state p{margin:0 auto;max-width:48ch;color:var(--fg-dim);font-size:14px}
+.state .btn{margin-top:18px}
+.skel{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:10px}
+.skel i{display:block;height:60px;border-radius:13px;background:var(--surface);border:1.5px solid var(--line);
+  animation:pulse 1.5s ease-in-out infinite}
+.skel i:nth-child(2){animation-delay:.1s} .skel i:nth-child(3){animation-delay:.2s}
+.skel i:nth-child(4){animation-delay:.3s} .skel i:nth-child(5){animation-delay:.4s} .skel i:nth-child(6){animation-delay:.5s}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* ---------- modal ---------- */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(10,13,20,.55);backdrop-filter:blur(3px);
+  display:grid;place-items:start center;overflow-y:auto;animation:fade .16s ease-out;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 28px max(16px,env(safe-area-inset-left,0px))}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{width:100%;max-width:470px;margin-top:6vh;background:var(--surface);border:1.5px solid var(--line-strong);
+  border-radius:18px;box-shadow:0 24px 60px rgba(6,9,16,.4);padding:22px;animation:rise .2s cubic-bezier(.2,.7,.3,1)}
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.modal h2{font-family:var(--font-ui);font-size:18px;margin:0 0 3px}
+.modal .hint{margin:0 0 17px;font-size:13px;color:var(--fg-dim)}
+.field{display:block;margin-bottom:13px}
+.field span{display:block;font-size:11.5px;font-weight:600;font-family:var(--font-ui);letter-spacing:.05em;
+  text-transform:uppercase;color:var(--fg-dim);margin-bottom:6px}
+.field input,.field select{width:100%;padding:10px 12px;background:var(--surface-2);border:1.5px solid var(--line);
+  border-radius:11px;font-size:14px;transition:border-color .16s, box-shadow .16s}
+.field input:focus,.field select:focus{border-color:var(--accent);outline:none;background:var(--surface);
+  box-shadow:0 0 0 4px hsl(220 60% 55% / .14)}
+.err{color:var(--danger);font-size:12.5px;margin:-6px 0 12px;min-height:1px}
+.actions{display:flex;gap:9px;justify-content:flex-end;margin-top:6px}
+.mlist{display:flex;flex-direction:column;gap:3px;margin-bottom:15px;max-height:52vh;overflow-y:auto}
+.mrow{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:11px;min-width:0;transition:background .14s}
+.mrow:hover{background:hsl(var(--h) var(--sat) var(--band-l))}
+.mrow .em{flex:0 0 auto;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:14px;
+  background:hsl(var(--h) var(--sat) var(--tile-l));border:1px solid hsl(var(--h) var(--sat) var(--tile-bd-l))}
+.mname{flex:1 1 auto;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:6px;
+  padding:10px;background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;
+  max-height:148px;overflow-y:auto}
+.picker button{aspect-ratio:1;display:grid;place-items:center;font-size:19px;line-height:1;cursor:pointer;
+  background:var(--surface);border:1.5px solid var(--line);border-radius:10px;transition:transform .13s, border-color .15s, box-shadow .15s}
+.picker button:hover{transform:translateY(-2px) scale(1.06);border-color:var(--line-strong);box-shadow:var(--shadow-s)}
+.picker button:active{transform:scale(.93)}
+.picker button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px hsl(220 60% 55% / .2);background:var(--surface)}
+.newcat{border:1.5px dashed var(--line-strong);border-radius:13px;padding:13px;margin-bottom:13px;background:var(--surface-2)}
+.newcat .field:last-of-type{margin-bottom:0}
+.mrow .add{flex:1 1 auto;text-align:left}
+.mn{flex:0 0 auto;font-family:var(--font-mono);font-size:11px;color:var(--fg-faint);font-variant-numeric:tabular-nums}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:60;
+  background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:13.5px;font-weight:500;
+  box-shadow:var(--shadow-m);animation:pop .22s cubic-bezier(.2,.7,.3,1)}
+@keyframes pop{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+@media (max-width:620px){
+  .bar-in{gap:10px}
+  .search{flex-basis:100%;max-width:none;order:3}
+  .grid,.skel{grid-template-columns:1fr}
+  .brand h1{font-size:18px}
+}
+</style>
+
+<div class="bar">
+  <div class="wrap bar-in">
+    <div class="brand">
+      <span class="glyph" aria-hidden="true">🔖</span>
+      <span><h1>Sewa Link Hub</h1><span class="sub" id="count">—</span></span>
+    </div>
+    <div class="spacer"></div>
+    <div class="search">
+      <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input id="q" type="search" placeholder="Search by name, category or link…" autocomplete="off" aria-label="Search bookmarks">
+      <button class="clr" id="clr" hidden aria-label="Clear search">&times;</button>
+    </div>
+    <button class="btn btn-ghost" id="manageBtn">⚙️ Categories</button>
+    <button class="btn btn-primary" id="addBtn">+ Add link</button>
+  </div>
+</div>
+
+<div class="rail"><div class="wrap rail-in" id="rail"></div></div>
+
+<main class="wrap">
+  <div id="loading" class="skel" aria-live="polite" aria-label="Loading your links">
+    <i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+  <div id="sections" hidden></div>
+  <div id="empty" hidden></div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* category identity: hue + icon */
+  var CAT = {
+    "FMS & Workflows":        {h:212, em:"📋"},
+    "Google Forms":           {h:276, em:"📝"},
+    "IMS & Inventory":        {h:162, em:"📦"},
+    "Dashboards & Apps":      {h:26,  em:"📊"},
+    "Looker Studio Reports":  {h:194, em:"📈"},
+    "Checklists & MIS":       {h:140, em:"✅"},
+    "Sales & Customers":      {h:340, em:"🛒"},
+    "Finance & Accounts":     {h:44,  em:"💰"},
+    "Staff & HR":             {h:300, em:"👥"},
+    "Apps Script Projects":   {h:232, em:"⚙️"},
+    "Operations & Misc":      {h:184, em:"🗂️"},
+    "Reference & Learning":   {h:10,  em:"🎓"}
+  };
+  var ORDER = ["FMS & Workflows","Google Forms","IMS & Inventory","Dashboards & Apps",
+    "Looker Studio Reports","Checklists & MIS","Sales & Customers","Finance & Accounts",
+    "Staff & HR","Apps Script Projects","Operations & Misc","Reference & Learning"];
+  var KIND_ICON = {sheet:"📗", form:"📝", script:"⚙️", studio:"📈", doc:"📄", web:"🌐"};
+  var ICON_CHOICES = ["📋","📝","✅","📊","📦","📈","💰","🛒","👥","⚙️","🗂️","🎓",
+    "🚚","🏷️","🧾","🔑","📅","📌","🔔","🏪","🧮","🖥️","📣","🧰","⭐","🔥","💡","🎯"];
+  var PALETTE = [212,276,162,26,194,140,340,44,300,232,184,10,120,254,66,320];
+
+  /* category icons and user-made buckets live in one db doc */
+  var catMeta = { icons:{}, custom:[] };
+
+  function meta(cat){
+    var base = CAT[cat];
+    if (!base){
+      var h = 0; for (var i=0;i<cat.length;i++) h = (h*31 + cat.charCodeAt(i)) % 360;
+      base = { h: PALETTE[Math.abs(h) % PALETTE.length], em:"🔖" };
+    }
+    var custom = catMeta.icons && catMeta.icons[cat];
+    return custom ? { h: base.h, em: custom } : base;
+  }
+  function iconPicker(id, selected){
+    return '<div class="picker" id="' + id + '" role="group" aria-label="Pick an icon">' +
+      ICON_CHOICES.map(function(e){
+        return '<button type="button" data-em="' + e + '" aria-pressed="' + (e === selected) + '" aria-label="Icon ' + e + '">' + e + '</button>';
+      }).join("") + '</div>';
+  }
+  function wirePicker(scope, id, initial){
+    var box = scope.querySelector("#" + id), chosen = { em: initial || ICON_CHOICES[0] };
+    box.addEventListener("click", function(e){
+      var b = e.target.closest("button[data-em]"); if (!b) return;
+      chosen.em = b.getAttribute("data-em");
+      [].forEach.call(box.querySelectorAll("button[data-em]"), function(x){
+        x.setAttribute("aria-pressed", String(x === b));
+      });
+    });
+    return chosen;
+  }
+  function saveCatMeta(next){
+    if (!db) return Promise.resolve();
+    return db.collection("meta").doc("categories").set({
+      icons: next.icons || {}, custom: next.custom || []
+    });
+  }
+  function hostOf(u){ try { return new URL(u).hostname.replace(/^www\./,""); } catch(e){ return String(u).slice(0,40); } }
+  function kindOf(u){
+    if (u.indexOf("/forms/") > -1) return "form";
+    if (u.indexOf("/spreadsheets/") > -1) return "sheet";
+    if (u.indexOf("/document/") > -1) return "doc";
+    if (u.indexOf("script.google.com") > -1) return "script";
+    if (u.indexOf("datastudio.google.com") > -1 || u.indexOf("lookerstudio.google.com") > -1) return "studio";
+    return "web";
+  }
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  var els = {
+    q: document.getElementById("q"), clr: document.getElementById("clr"),
+    rail: document.getElementById("rail"), sections: document.getElementById("sections"),
+    loading: document.getElementById("loading"), empty: document.getElementById("empty"),
+    count: document.getElementById("count"), addBtn: document.getElementById("addBtn"),
+    manageBtn: document.getElementById("manageBtn")
+  };
+
+  var items = [], filter = "all", query = "", db = null, canWrite = null, loaded = false, pendingDel = null;
+
+  /* ---------- rendering ---------- */
+  function catsPresent(){
+    var seen = {}; items.forEach(function(b){ seen[b.category] = (seen[b.category]||0)+1; });
+    var known = ORDER.filter(function(c){ return seen[c]; });
+    var extra = Object.keys(seen).filter(function(c){ return ORDER.indexOf(c) === -1; }).sort();
+    return { list: known.concat(extra), counts: seen };
+  }
+  function allCats(){
+    var cats = catsPresent().list.slice();
+    (catMeta.custom || []).forEach(function(c){ if (cats.indexOf(c) === -1) cats.push(c); });
+    ORDER.forEach(function(c){ if (cats.indexOf(c) === -1) cats.push(c); });
+    return cats;
+  }
+  function matches(b){
+    if (filter !== "all" && b.category !== filter) return false;
+    if (!query) return true;
+    return (b.title + " " + b.category + " " + b.url).toLowerCase().indexOf(query) > -1;
+  }
+
+  function renderRail(){
+    var c = catsPresent(), html = "";
+    html += '<button class="chip" style="--h:220" data-cat="all" aria-pressed="' + (filter==="all") + '">' +
+            '<span class="em">🗃️</span>All links <span class="n">' + items.length + '</span></button>';
+    c.list.forEach(function(cat){
+      var m = meta(cat);
+      html += '<button class="chip" style="--h:' + m.h + '" data-cat="' + esc(cat) + '" aria-pressed="' + (filter===cat) + '">' +
+              '<span class="em">' + m.em + '</span>' + esc(cat) + ' <span class="n">' + c.counts[cat] + '</span></button>';
+    });
+    els.rail.innerHTML = html;
+  }
+
+  function cardHTML(b){
+    if (pendingDel === b.id){
+      return '<div class="card confirming" data-id="' + esc(b.id) + '"><div class="confirm">' +
+        '<p>Remove &ldquo;' + esc(b.title) + '&rdquo;?</p>' +
+        '<button class="yes" data-act="yes">Remove</button>' +
+        '<button data-act="no">Keep</button></div></div>';
+    }
+    var m = meta(b.category);
+    return '<div class="card" style="--h:' + m.h + '" data-id="' + esc(b.id) + '">' +
+      '<span class="tile" aria-hidden="true">' + (KIND_ICON[b.kind] || "🌐") + '</span>' +
+      '<span class="body"><a class="t" href="' + esc(b.url) + '" target="_blank" rel="noopener noreferrer">' + esc(b.title) + '</a>' +
+      '<span class="host">' + esc(hostOf(b.url)) + '</span></span>' +
+      '<span class="tools">' +
+        '<button class="icbtn" data-act="copy" title="Copy link" aria-label="Copy link to ' + esc(b.title) + '">' +
+          '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg></button>' +
+        (canWrite === false ? "" :
+        '<button class="icbtn" data-act="edit" title="Edit" aria-label="Edit ' + esc(b.title) + '">' +
+          '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"></path><path d="M14.5 7.5l2 2"></path></svg></button>' +
+        '<button class="icbtn del" data-act="del" title="Remove" aria-label="Remove ' + esc(b.title) + '">' +
+          '<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>') +
+      '</span></div>';
+  }
+
+  function render(){
+    els.loading.hidden = loaded;
+    if (!loaded) return;
+
+    var cp = catsPresent();
+    els.count.textContent = items.length + (items.length === 1 ? " link · " : " links · ") +
+                            cp.list.length + (cp.list.length === 1 ? " bucket" : " buckets");
+    renderRail();
+
+    var shown = items.filter(matches);
+
+    if (!items.length){
+      els.sections.hidden = true; els.empty.hidden = false;
+      els.empty.innerHTML = '<div class="state"><div class="big">🔖</div><h3>No links saved yet</h3>' +
+        '<p>Add your first bookmark and it will be filed under the category you pick. Everything you add stays here next time you open this page.</p>' +
+        (canWrite === false ? "" : '<button class="btn btn-primary" data-act="open-add">+ Add your first link</button>') + '</div>';
+      return;
+    }
+    if (!shown.length){
+      els.sections.hidden = true; els.empty.hidden = false;
+      els.empty.innerHTML = '<div class="state"><div class="big">🔍</div><h3>Nothing matches that</h3>' +
+        '<p>No link in ' + (filter === "all" ? "your collection" : esc(filter)) + ' matches &ldquo;' + esc(els.q.value) + '&rdquo;. Try a shorter word, or clear the filter.</p>' +
+        '<button class="btn btn-ghost" data-act="reset">Show all links</button></div>';
+      return;
+    }
+    els.empty.hidden = true; els.sections.hidden = false;
+
+    var groups = {}, order = [];
+    shown.forEach(function(b){
+      if (!groups[b.category]){ groups[b.category] = []; order.push(b.category); }
+      groups[b.category].push(b);
+    });
+    order.sort(function(a,b){
+      var ia = ORDER.indexOf(a), ib = ORDER.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1; if (ib === -1) return -1;
+      return ia - ib;
+    });
+
+    var html = "";
+    order.forEach(function(cat){
+      var m = meta(cat);
+      var list = groups[cat].slice().sort(function(a,b){ return a.title.localeCompare(b.title, undefined, {numeric:true}); });
+      html += '<section class="sec" style="--h:' + m.h + '">' +
+        '<div class="sec-head"><span class="em" aria-hidden="true">' + m.em + '</span>' +
+        '<h2>' + esc(cat) + '</h2><span class="n">' + list.length + '</span></div>' +
+        '<div class="grid">' + list.map(cardHTML).join("") + '</div></section>';
+    });
+    els.sections.innerHTML = html;
+  }
+
+  /* ---------- interaction ---------- */
+  function toast(msg){
+    var t = document.createElement("div");
+    t.className = "toast"; t.textContent = msg; t.setAttribute("role","status");
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2300);
+  }
+
+  els.q.addEventListener("input", function(){
+    query = els.q.value.trim().toLowerCase();
+    els.clr.hidden = !els.q.value;
+    pendingDel = null;
+    render();
+  });
+  els.clr.addEventListener("click", function(){
+    els.q.value = ""; query = ""; els.clr.hidden = true; els.q.focus(); render();
+  });
+  els.rail.addEventListener("click", function(e){
+    var c = e.target.closest(".chip"); if (!c) return;
+    filter = c.getAttribute("data-cat"); pendingDel = null; render();
+    var top = document.getElementById("sections");
+    if (filter !== "all" && top) window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  document.addEventListener("click", function(e){
+    var b = e.target.closest("[data-act]"); if (!b) return;
+    var act = b.getAttribute("data-act");
+    if (act === "reset"){ filter = "all"; els.q.value = ""; query = ""; els.clr.hidden = true; render(); return; }
+    if (act === "open-add"){ openForm(null); return; }
+    var card = b.closest(".card"); if (!card) return;
+    var id = card.getAttribute("data-id");
+    var item = items.filter(function(x){ return x.id === id; })[0];
+    if (act === "copy" && item){
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(item.url).then(function(){ toast("Link copied"); },
+          function(){ selectText(card); toast("Press Ctrl+C to copy"); });
+      } else { selectText(card); toast("Press Ctrl+C to copy"); }
+    }
+    if (act === "edit" && item){ openForm(item); return; }
+    if (act === "del"){ pendingDel = id; render(); }
+    if (act === "no"){ pendingDel = null; render(); }
+    if (act === "yes" && item) remove(item);
+  });
+  function selectText(card){
+    var a = card.querySelector(".t"); if (!a) return;
+    var r = document.createRange(); r.selectNodeContents(a);
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+
+  /* ---------- modal shell ---------- */
+  function modal(html){
+    var ov = document.createElement("div");
+    ov.className = "ov";
+    ov.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>';
+    document.body.appendChild(ov);
+    function close(){ ov.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e){ if (e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    ov.addEventListener("click", function(e){
+      if (e.target === ov || (e.target.hasAttribute && e.target.hasAttribute("data-close"))) close();
+    });
+    return { el: ov, close: close };
+  }
+
+  /* ---------- add / edit link ---------- */
+  function openForm(existing){
+    if (canWrite === false){ toast("You have view-only access"); return; }
+    var cats = allCats();
+    if (existing && cats.indexOf(existing.category) === -1) cats.unshift(existing.category);
+    var m = modal(
+      '<h2>' + (existing ? "✏️ Edit link" : "➕ Add a link") + '</h2>' +
+      '<p class="hint">' + (existing ? "Change the name, the address, or which bucket it sits in." : "It will appear under the category you choose.") + '</p>' +
+      '<label class="field"><span>Name</span><input id="f-title" type="text" placeholder="Purchase Inward FMS" autocomplete="off" value="' + (existing ? esc(existing.title) : "") + '"></label>' +
+      '<label class="field"><span>Link</span><input id="f-url" type="url" placeholder="https://…" autocomplete="off" inputmode="url" value="' + (existing ? esc(existing.url) : "") + '"></label>' +
+      '<label class="field"><span>Category</span><select id="f-cat">' +
+        cats.map(function(c){ return '<option value="' + esc(c) + '">' + meta(c).em + "  " + esc(c) + '</option>'; }).join("") +
+        '<option value="__new">➕  New category…</option></select></label>' +
+      '<div class="newcat" id="f-newwrap" hidden>' +
+        '<label class="field"><span>New category name</span><input id="f-new" type="text" placeholder="Vendor Portals" autocomplete="off"></label>' +
+        '<label class="field"><span>Pick its icon</span></label>' + iconPicker("f-pick", "🔖") +
+      '</div>' +
+      '<p class="err" id="f-err"></p>' +
+      '<div class="actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
+      '<button class="btn btn-primary" id="f-save">' + (existing ? "Save changes" : "Save link") + '</button></div>');
+
+    var ov = m.el, sel = ov.querySelector("#f-cat"), newWrap = ov.querySelector("#f-newwrap"),
+        err = ov.querySelector("#f-err"), save = ov.querySelector("#f-save");
+    var pick = wirePicker(ov, "f-pick", "🔖");
+    if (existing) sel.value = existing.category;
+    else if (filter !== "all" && cats.indexOf(filter) > -1) sel.value = filter;
+    ov.querySelector("#f-title").focus();
+
+    sel.addEventListener("change", function(){
+      newWrap.hidden = sel.value !== "__new";
+      if (!newWrap.hidden) ov.querySelector("#f-new").focus();
+    });
+    ov.addEventListener("keydown", function(e){
+      if (e.key === "Enter" && e.target.tagName === "INPUT"){ e.preventDefault(); save.click(); }
+    });
+
+    save.addEventListener("click", function(){
+      var title = ov.querySelector("#f-title").value.trim();
+      var url = ov.querySelector("#f-url").value.trim();
+      var isNew = sel.value === "__new";
+      var cat = isNew ? ov.querySelector("#f-new").value.trim() : sel.value;
+      if (!title){ err.textContent = "Give the link a name so you can find it later."; return; }
+      if (!url){ err.textContent = "Paste the link address."; return; }
+      if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+      try { new URL(url); } catch(e2){ err.textContent = "That address isn't a valid link."; return; }
+      if (!cat){ err.textContent = "Name the new category."; return; }
+      save.disabled = true; err.textContent = "";
+      var rec = { title: title, url: url, category: cat, kind: kindOf(url),
+                  createdAt: existing ? (existing.createdAt || Date.now()) : Date.now() };
+      var first = isNew ? registerCat(cat, pick.em) : Promise.resolve();
+      var p = first.then(function(){
+        return existing ? db.collection("bookmarks").doc(existing.id).set(rec) : add(rec);
+      });
+      p.then(function(){ m.close(); toast(existing ? "Updated" : "Saved to " + cat); })
+       .catch(function(e3){
+          save.disabled = false;
+          err.textContent = e3 && e3.code === "invalid_argument"
+            ? "You don't have permission to change links here."
+            : "Couldn't save that link. Try again in a moment.";
+       });
+    });
+  }
+  els.addBtn.addEventListener("click", function(){ openForm(null); });
+
+  /* ---------- manage categories ---------- */
+  function registerCat(name, em){
+    var next = { icons: {}, custom: (catMeta.custom || []).slice() };
+    Object.keys(catMeta.icons || {}).forEach(function(k){ next.icons[k] = catMeta.icons[k]; });
+    if (em) next.icons[name] = em;
+    if (next.custom.indexOf(name) === -1 && ORDER.indexOf(name) === -1) next.custom.push(name);
+    return saveCatMeta(next);
+  }
+
+  function openManage(){
+    var c = catsPresent();
+    var known = allCats().filter(function(x){ return c.counts[x] || (catMeta.custom || []).indexOf(x) > -1; });
+    if (!known.length){ toast("Add a link first"); return; }
+    var rows = known.map(function(cat){
+      var m = meta(cat);
+      return '<div class="mrow" style="--h:' + m.h + '">' +
+        '<span class="em" aria-hidden="true">' + m.em + '</span>' +
+        '<span class="mname">' + esc(cat) + '</span>' +
+        '<span class="mn">' + (c.counts[cat] || 0) + '</span>' +
+        (canWrite === false ? "" :
+          '<button class="icbtn" data-mact="rename" data-cat="' + esc(cat) + '" title="Rename" aria-label="Rename ' + esc(cat) + '">' +
+            '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3z"></path><path d="M14.5 7.5l2 2"></path></svg></button>' +
+          '<button class="icbtn" data-mact="merge" data-cat="' + esc(cat) + '" title="Move links elsewhere" aria-label="Move links out of ' + esc(cat) + '">' +
+            '<svg viewBox="0 0 24 24"><path d="M5 12h12"></path><path d="M13 7l5 5-5 5"></path></svg></button>') +
+      '</div>';
+    }).join("");
+
+    var m = modal('<h2>⚙️ Categories</h2>' +
+      '<p class="hint">Rename a bucket, or move all of its links into another one. A bucket disappears once nothing is in it.</p>' +
+      '<div class="mlist">' + rows + '</div>' +
+      '<div class="actions">' +
+      (canWrite === false ? "" : '<button class="btn btn-ghost" data-mact="create" style="margin-right:auto">➕ New category</button>') +
+      '<button class="btn btn-ghost" data-close>Done</button></div>');
+
+    m.el.addEventListener("click", function(e){
+      var b = e.target.closest("[data-mact]"); if (!b) return;
+      var act = b.getAttribute("data-mact"), cat = b.getAttribute("data-cat");
+      m.close();
+      if (act === "create") openCreateCat();
+      else if (act === "rename") openRename(cat);
+      else openMerge(cat);
+    });
+  }
+  els.manageBtn.addEventListener("click", openManage);
+
+  function openCreateCat(){
+    var m = modal('<h2>➕ New category</h2>' +
+      '<p class="hint">Name the bucket and give it an icon. It shows up straight away when you add or edit a link.</p>' +
+      '<label class="field"><span>Category name</span><input id="c-name" type="text" placeholder="Vendor Portals" autocomplete="off"></label>' +
+      '<label class="field"><span>Pick its icon</span></label>' + iconPicker("c-pick", "🔖") +
+      '<p class="err" id="c-err" style="margin-top:12px"></p>' +
+      '<div class="actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
+      '<button class="btn btn-primary" id="c-save">Create category</button></div>');
+    var input = m.el.querySelector("#c-name"), err = m.el.querySelector("#c-err"),
+        save = m.el.querySelector("#c-save"), pick = wirePicker(m.el, "c-pick", "🔖");
+    input.focus();
+    m.el.addEventListener("keydown", function(e){
+      if (e.key === "Enter" && e.target.tagName === "INPUT"){ e.preventDefault(); save.click(); }
+    });
+    save.addEventListener("click", function(){
+      var name = input.value.trim();
+      if (!name){ err.textContent = "Give the category a name."; return; }
+      if (allCats().indexOf(name) > -1){ err.textContent = "You already have a category with that name."; return; }
+      save.disabled = true; err.textContent = "";
+      registerCat(name, pick.em).then(function(){
+        m.close(); toast(pick.em + "  " + name + " created");
+      }).catch(function(){ save.disabled = false; err.textContent = "Couldn't create that category. Try again."; });
+    });
+  }
+
+  function openRename(cat){
+    var cur = meta(cat).em;
+    var m = modal('<h2>Rename category</h2>' +
+      '<p class="hint">Every link in &ldquo;' + esc(cat) + '&rdquo; moves to the new name.</p>' +
+      '<label class="field"><span>New name</span><input id="r-name" type="text" autocomplete="off" value="' + esc(cat) + '"></label>' +
+      '<label class="field"><span>Its icon</span></label>' + iconPicker("r-pick", cur) +
+      '<p class="err" id="r-err" style="margin-top:12px"></p>' +
+      '<div class="actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
+      '<button class="btn btn-primary" id="r-save">Save</button></div>');
+    var input = m.el.querySelector("#r-name"), err = m.el.querySelector("#r-err"),
+        save = m.el.querySelector("#r-save"), pick = wirePicker(m.el, "r-pick", cur);
+    input.focus(); input.select();
+    m.el.addEventListener("keydown", function(e){
+      if (e.key === "Enter" && e.target.tagName === "INPUT"){ e.preventDefault(); save.click(); }
+    });
+    save.addEventListener("click", function(){
+      var name = input.value.trim();
+      if (!name){ err.textContent = "Give the category a name."; return; }
+      save.disabled = true; err.textContent = "";
+      var next = { icons: {}, custom: (catMeta.custom || []).filter(function(x){ return x !== cat; }) };
+      Object.keys(catMeta.icons || {}).forEach(function(k){ if (k !== cat) next.icons[k] = catMeta.icons[k]; });
+      next.icons[name] = pick.em;
+      if (next.custom.indexOf(name) === -1 && ORDER.indexOf(name) === -1) next.custom.push(name);
+      saveCatMeta(next)
+        .then(function(){ return name === cat ? 0 : moveAll(cat, name); })
+        .then(function(n){
+          m.close();
+          if (filter === cat) filter = name;
+          render();
+          toast(name === cat ? "Icon updated" : "Renamed — " + n + (n === 1 ? " link moved" : " links moved"));
+        })
+        .catch(function(){ save.disabled = false; err.textContent = "Couldn't save that category. Try again."; });
+    });
+  }
+
+  function openMerge(cat){
+    var others = catsPresent().list.filter(function(x){ return x !== cat; });
+    if (!others.length){ toast("There's no other category to move them into"); return; }
+    var m = modal('<h2>Move links out of ' + esc(cat) + '</h2>' +
+      '<p class="hint">All of its links go to the category you pick, and &ldquo;' + esc(cat) + '&rdquo; disappears.</p>' +
+      '<label class="field"><span>Move into</span><select id="g-cat">' +
+        others.map(function(x){ return '<option value="' + esc(x) + '">' + meta(x).em + "  " + esc(x) + '</option>'; }).join("") +
+        '</select></label>' +
+      '<p class="err" id="g-err"></p>' +
+      '<div class="actions"><button class="btn btn-ghost" data-close>Cancel</button>' +
+      '<button class="btn btn-primary" id="g-save">Move links</button></div>');
+    var sel = m.el.querySelector("#g-cat"), err = m.el.querySelector("#g-err"), save = m.el.querySelector("#g-save");
+    save.addEventListener("click", function(){
+      save.disabled = true; err.textContent = "";
+      var target = sel.value;
+      moveAll(cat, target).then(function(n){
+        m.close();
+        if (filter === cat) filter = target;
+        toast(n + (n === 1 ? " link moved to " : " links moved to ") + target);
+      }).catch(function(){ save.disabled = false; err.textContent = "Couldn't move those links. Try again."; });
+    });
+  }
+
+  function moveAll(from, to){
+    var list = items.filter(function(b){ return b.category === from; });
+    return Promise.all(list.map(function(b){
+      return db.collection("bookmarks").doc(b.id).update({ category: to });
+    })).then(function(){ return list.length; });
+  }
+
+  /* ---------- storage: this browser ---------- */
+  var SEED = [{"id":"bm_0001","title":"Christofin_Flow Order to delivery","url":"https://docs.google.com/spreadsheets/d/1r_iuztmJudJSnnG05lvu1Bduhso3z5Rrd_12kOEa1kA/edit?gid=663292535#gid=663292535","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000001},{"id":"bm_0002","title":"CN_Tracking FMS Sheet","url":"https://docs.google.com/spreadsheets/d/1N16OnGOZNroCs1QASCLlXSCLjiXl73hORcRdvqE2q8w/edit?gid=663292535#gid=663292535","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000002},{"id":"bm_0003","title":"FMS Practice Sheet","url":"https://docs.google.com/spreadsheets/d/15ABOWH5V7LDh8CzLrtbi9AHoaw5ptVFcKb1uxq8MvEs/copy","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000003},{"id":"bm_0004","title":"Order to Delivery_Christofin_Impex","url":"https://docs.google.com/spreadsheets/d/1r-7ziwAMhYTsnQf0SDliOdve1l0PMeovaxfSBtHr-4M/edit?gid=663292535#gid=663292535","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000004},{"id":"bm_0005","title":"ORDER TO DISPATCH SHEET","url":"https://docs.google.com/spreadsheets/d/1d0GC2a-W7Jwyz2Lgsu2aIzi52jAXB1-CpS0e_rht3dM/edit?gid=1824998617#gid=1824998617","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000005},{"id":"bm_0006","title":"Purchase FMS CHR","url":"https://docs.google.com/spreadsheets/d/1ZR3ZDTdG3NBY9rQkkV3jDSNlzaEzegCU5n0LP_m529A/edit?gid=663292535#gid=663292535","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000006},{"id":"bm_0007","title":"Purchase_Inward_FMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1HuWucxnc486HTwg6ku_ruoA2B4zGJRqM9xrfVaFNz6Y/edit?gid=663292535#gid=663292535","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000007},{"id":"bm_0008","title":"Purchase_Inward_FMS_Sewa","url":"https://docs.google.com/spreadsheets/d/1v2YII8YlRVPE6_7mBGbhZFie8W0aKD1__dXYwFjcSxs/edit?gid=663292535#gid=663292535","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000008},{"id":"bm_0009","title":"SEWA_Whatsapp_Sales_Fms","url":"https://docs.google.com/spreadsheets/d/1KUkCeTnYiEzq2iJvReYrZ0iEdvLa3GUE4RpF0BCMpXc/edit?gid=663292535#gid=663292535","category":"FMS & Workflows","kind":"sheet","createdAt":1761000000009},{"id":"bm_0010","title":"Akib_Work_Flow","url":"https://docs.google.com/forms/d/e/1FAIpQLSeCPLTR4NpsaKoJLbGa81q5lC-pdy_KseRzrxPWUN0GhCxqkg/viewform","category":"Google Forms","kind":"form","createdAt":1761000000010},{"id":"bm_0011","title":"Bill_Shortage Correction","url":"https://docs.google.com/forms/d/e/1FAIpQLScIjo_sNWn0zWe1jzR0DbCHFNgV21O796lQzxr--plo2JQpNQ/viewform","category":"Google Forms","kind":"form","createdAt":1761000000011},{"id":"bm_0012","title":"Billing_Complaint Form","url":"https://docs.google.com/forms/d/e/1FAIpQLSdRhz9Oh9vjKYmt2VxwjAqo8rLPHTI5ZfbVU3P1ZvhyTMtOPA/viewform","category":"Google Forms","kind":"form","createdAt":1761000000012},{"id":"bm_0013","title":"BMP MeCA SHEET-CHRISTOFIN","url":"https://docs.google.com/forms/d/e/1FAIpQLSe4bmUNFPqX3bNu_oSsCW4hteEF2LI0gs6V55hnmAa4rNrgvg/viewform","category":"Google Forms","kind":"form","createdAt":1761000000013},{"id":"bm_0014","title":"BMP MeCA SHEET-SEWA","url":"https://docs.google.com/forms/d/e/1FAIpQLSfNH9hHhGAfw6ViAOcPPjQYYVO5JYX23UnSxzU-4LuDdIGNGA/viewform","category":"Google Forms","kind":"form","createdAt":1761000000014},{"id":"bm_0015","title":"Christofin_FMS","url":"https://docs.google.com/forms/d/e/1FAIpQLSfWydkzwHG7yqd8oLe3TqZAg60TxTKLx6d1q_xmIQzQALqXBg/viewform","category":"Google Forms","kind":"form","createdAt":1761000000015},{"id":"bm_0016","title":"Clearance_Report","url":"https://docs.google.com/forms/d/e/1FAIpQLScdWWtzSJepAcfl6NCSycjiKDW82FshaAQax2ds7JDRv29dZw/viewform","category":"Google Forms","kind":"form","createdAt":1761000000016},{"id":"bm_0017","title":"CN_Tracking","url":"https://docs.google.com/forms/d/e/1FAIpQLSdSTBUYFvpylDW_CFZaJKrZ3coSfE27TNnNIpuPZkl8sKrTYA/viewform","category":"Google Forms","kind":"form","createdAt":1761000000017},{"id":"bm_0018","title":"Collection Verification System_Form","url":"https://docs.google.com/forms/d/e/1FAIpQLSdX1kl0EMZYxTwGlvkcVHmChfVmZSWfDKLaxBxpMLZ4ZzmVKQ/viewform","category":"Google Forms","kind":"form","createdAt":1761000000018},{"id":"bm_0019","title":"Cust_Repair_Service_SEWA","url":"https://docs.google.com/forms/d/e/1FAIpQLSeOD72cGAoUky55L4cyqZk1GiUp2XLOLxLfsEkPBibbpZwnww/viewform","category":"Google Forms","kind":"form","createdAt":1761000000019},{"id":"bm_0020","title":"Customer Database Enquiry Sheet_CHR","url":"https://docs.google.com/forms/d/e/1FAIpQLSclmiTI1FBw-5Z3p_YATaH8qHtnUsb1LdwJawRDz0g8wZJLbg/viewform","category":"Google Forms","kind":"form","createdAt":1761000000020},{"id":"bm_0021","title":"Dash_Board_Checklist__1","url":"https://docs.google.com/forms/d/e/1FAIpQLSe76ZZbKLiYklxpw5QaCya2QIsbwKnAmQ2_QRf9hwvE4tUuzw/viewform","category":"Google Forms","kind":"form","createdAt":1761000000021},{"id":"bm_0022","title":"Electric Complaint Register","url":"https://docs.google.com/forms/d/e/1FAIpQLScEvtzzmAGpsgJB-bmbxcok5Qe4BbUF7qNXPdx0GdOXJGvGuA/viewform","category":"Google Forms","kind":"form","createdAt":1761000000022},{"id":"bm_0023","title":"Order to Delivery_Christofin_Impex","url":"https://docs.google.com/forms/d/e/1FAIpQLSeN3WdIgAoS9lVEoxLGDm5Dbt6KJIRmzblRGhoq_D8VB5AybA/viewform","category":"Google Forms","kind":"form","createdAt":1761000000023},{"id":"bm_0024","title":"Payment_Follow-up","url":"https://docs.google.com/forms/d/e/1FAIpQLSd_42hHjNQZvma3hLOf41F3QpeEhcH2r3HtG5sl_drEa8jpNw/viewform","category":"Google Forms","kind":"form","createdAt":1761000000024},{"id":"bm_0025","title":"Purchase FMS CHR_Form","url":"https://docs.google.com/forms/d/e/1FAIpQLSeUMZ2decyxgmPPUGme7vEXACGl0VaRMG84YgFB_cz-W7fuYA/viewform","category":"Google Forms","kind":"form","createdAt":1761000000025},{"id":"bm_0026","title":"Purchase_Inward_FMS_Christofin","url":"https://docs.google.com/forms/d/e/1FAIpQLSeDiavU6ERBn7mE70XayrSmBxrUiMDlxoRzxzRKjE_X25WjVQ/viewform","category":"Google Forms","kind":"form","createdAt":1761000000026},{"id":"bm_0027","title":"Purchase_Inward_Form_Sewa","url":"https://docs.google.com/forms/d/e/1FAIpQLSdVys20LltOE_-KuBAUVHpGs6Q5qV7YbxHKSeOvEN8tsAnQtw/viewform","category":"Google Forms","kind":"form","createdAt":1761000000027},{"id":"bm_0028","title":"Ranjeet_Copy of Copy of The Ultimate Checklist v6.1","url":"https://docs.google.com/forms/d/e/1FAIpQLSe5hxGOsnMnCrOuWOyA25fOKOAnErxqtdgRW6Q6wIAxvJ2lfg/viewform","category":"Google Forms","kind":"form","createdAt":1761000000028},{"id":"bm_0029","title":"Ranjeet_Copy of Copy of The Ultimate Checklist v6.1 For Link","url":"https://docs.google.com/forms/d/1rlD_gK47eceQiMdVjFeFqYdCsuSXEINJN8ZqYF1ZiUQ/prefill","category":"Google Forms","kind":"form","createdAt":1761000000029},{"id":"bm_0030","title":"Salary_Sewa_ Nov_2025_sheet.xlsx","url":"https://docs.google.com/forms/u/0/d/e/1FAIpQLSc_SpfaWVZ0jtMQJPP_WwOfufmkdt_pyPNqz4ossW8mkSr7qA/formResponse","category":"Google Forms","kind":"form","createdAt":1761000000030},{"id":"bm_0031","title":"Salary_Sewa_ Nov_2025_sheet.xlsx","url":"https://docs.google.com/forms/d/1davOWPhsPmIDLGbX6Bav2eO_zwQYc-2KmfcHlg19JCM/edit","category":"Google Forms","kind":"form","createdAt":1761000000031},{"id":"bm_0032","title":"Section Wise Order Placed.","url":"https://docs.google.com/forms/u/0/d/e/1FAIpQLSfkJrULZrpgTuJl8HKWGINIjldd29MYOjiFnjhaCdfuntgiXA/formResponse","category":"Google Forms","kind":"form","createdAt":1761000000032},{"id":"bm_0033","title":"Sewa Expenses Sheet","url":"https://docs.google.com/forms/d/e/1FAIpQLSerzDtKjxlJh964WYk7k644IJ3Ox5jlkvfH7ti11EybOhQXfg/viewform","category":"Google Forms","kind":"form","createdAt":1761000000033},{"id":"bm_0034","title":"SEWA_Cust. Experience_Ratings","url":"https://docs.google.com/forms/d/e/1FAIpQLSfN9WrRiAJshZvzKCinHeVR-CsamASI1RBaQS4AmpQtLJpeNw/viewform?usp=send_form","category":"Google Forms","kind":"form","createdAt":1761000000034},{"id":"bm_0035","title":"Sewa_Help Ticket","url":"https://docs.google.com/forms/d/e/1FAIpQLSftuOVcNsNsLb6ocejYpbpZVx-k3x29EpuBp6EHKk5zI1qKEg/viewform","category":"Google Forms","kind":"form","createdAt":1761000000035},{"id":"bm_0036","title":"Sewa_Old Utensils Form","url":"https://docs.google.com/forms/d/e/1FAIpQLSevWOqaPS9WupmWymu5hRd75y32RwPI3U7u8v-GWpSPx-l42Q/viewform","category":"Google Forms","kind":"form","createdAt":1761000000036},{"id":"bm_0037","title":"Sewa_Old Utensils Form-Edit","url":"https://docs.google.com/forms/d/1t0w-_RoQoJwpUF-eAC8fWlCxGZQzRq8G2RceKYZHELw/edit#responses","category":"Google Forms","kind":"form","createdAt":1761000000037},{"id":"bm_0038","title":"Sewa_Salary Advance_Form","url":"https://docs.google.com/forms/d/e/1FAIpQLSdy-4ZB36xAqyLChcr0s08RvqWjF0Vv8ZphHP_FLk03aHl8mw/viewform","category":"Google Forms","kind":"form","createdAt":1761000000038},{"id":"bm_0039","title":"Sewa_Stock_Taking","url":"https://docs.google.com/forms/d/e/1FAIpQLSeK-OEIgYEVIoHjFIBlX_1MU9fwq5IqverLaqka7HlgUQyABg/viewform","category":"Google Forms","kind":"form","createdAt":1761000000039},{"id":"bm_0040","title":"SEWA_Whatsapp_Sales_Fms","url":"https://docs.google.com/forms/d/e/1FAIpQLSeB4wC_OtyPgBhf2Slly9yQ9CloYflIyfuFSOnubBkSZylCUw/viewform","category":"Google Forms","kind":"form","createdAt":1761000000040},{"id":"bm_0041","title":"1Month Purchase-Products_Reorder_March-26","url":"https://docs.google.com/spreadsheets/d/18mmloiRppB6ad0YpURBaUXugdxkZruvNrIbL59w8SGE/edit?gid=2038563401#gid=2038563401","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000041},{"id":"bm_0042","title":"1Month Purchase-Products_Reorder_May-26","url":"https://docs.google.com/spreadsheets/d/1Q66zG0ipKDGsZa53STSvoTf7UheNaY9VBUhYNGNoudQ/edit?gid=1124129733#gid=1124129733","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000042},{"id":"bm_0043","title":"Ageing report","url":"https://docs.google.com/spreadsheets/d/1H2pAySX4muX1b9LW3W4R4UW54e0r6Fh7p15tAmpAZ-s/edit?gid=1252350048#gid=1252350048","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000043},{"id":"bm_0044","title":"April_2026_ IMS_ Sewa_Sheet.","url":"https://docs.google.com/spreadsheets/d/1CXPNPHNNU1SbBq6ayaggmlkt7uxEYzzBj_m6ENeSj-s/edit?gid=238473931#gid=238473931","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000044},{"id":"bm_0045","title":"April_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/19lp4Cv6gkKQAI347BNic4HNu5Ogo8ynJZKsvbi_uQzs/edit?gid=2143643320#gid=2143643320","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000045},{"id":"bm_0046","title":"Asif_Stock","url":"https://docs.google.com/spreadsheets/d/1DUvUNlq0skfLvIicZkQ9DvK-4YmDgoA9zWyJyhxDy1U/edit?gid=542763802#gid=542763802","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000046},{"id":"bm_0047","title":"Christofin Impex — Stock Dashboard · IMS Live","url":"https://dynamic-dodol-11b39e.netlify.app/","category":"IMS & Inventory","kind":"web","createdAt":1761000000047},{"id":"bm_0048","title":"Clearance_Report","url":"https://docs.google.com/spreadsheets/d/1g0Rm1NC782xFpT3sh_whmu2gxCZ8DLnTny0l-Pm7T2Q/edit?gid=1015113712#gid=1015113712","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000048},{"id":"bm_0049","title":"Copy of Copy of June_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1pPPazO_Rot-QKqLtiLTvGdPeGePTLBUM8Rri2850Rqc/edit?gid=1058088704#gid=1058088704","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000049},{"id":"bm_0050","title":"Copy of Copy of June_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1mCTQdolJgYdG_L4cuTit6IP0872QcNb5fSscjnAvFmk/edit?gid=2143643320#gid=2143643320","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000050},{"id":"bm_0051","title":"Copy of Jan_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1csUHt8pmZ06b-TSTE9mEnrZY-v7rB4GPz0WL1-8zBR4/edit?gid=174725053#gid=174725053","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000051},{"id":"bm_0052","title":"Copy of June_2026_ IMS_ Sewa_Sheet.","url":"https://docs.google.com/spreadsheets/d/14q3RufJyyMvh_OERY1B8B1sWv5YYhSPHUidvAuo-ZHA/edit?gid=1508765207#gid=1508765207","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000052},{"id":"bm_0053","title":"Copy of March_2026_ IMS_ for Sale IMS DashBoard","url":"https://docs.google.com/spreadsheets/d/1OOyYd3Cfu0e__3xQSgMZcWEa7Iy85myZPUL2fb65eWQ/edit?gid=238473931#gid=238473931","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000053},{"id":"bm_0054","title":"Copy of Sewa_Stock_Taking","url":"https://docs.google.com/spreadsheets/d/1Jw80WPFnpJ-Hjso-RL9NaZPYKOjb4AvLPhWpNxCkb_Y/edit?gid=1396525463#gid=1396525463","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000054},{"id":"bm_0055","title":"Copy of Ultimate IMS v2-sanchit","url":"https://docs.google.com/spreadsheets/d/1_Tc_g24ojlTtwEsdMQxB7m2yLUz0BBsW73x5rLVZZFY/edit?gid=1105757494#gid=1105757494","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000055},{"id":"bm_0056","title":"Dead items from May_2026_ IMS_ Sewa_Sheet","url":"https://docs.google.com/spreadsheets/d/1n08Ft4C0KEMveB4EfoHqFoda8cbxVkH1UoXXSVcc35w/edit?gid=0#gid=0","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000056},{"id":"bm_0057","title":"Dec_2025_ IMS Sheet..xlsx","url":"https://docs.google.com/spreadsheets/d/19Vzrv_TKs2VLABI3G04OGr9zEdGPSiXL/edit?gid=839061086#gid=839061086","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000057},{"id":"bm_0058","title":"Dec_2025_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1DA4ksYiC0hQS7iw1kk388CYfY2pIlhCIx9VpmP5Ka1I/edit?gid=174725053#gid=174725053","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000058},{"id":"bm_0059","title":"Dummy IMS_ Sewa_Sheet.","url":"https://docs.google.com/spreadsheets/d/1ns2qLQuLndEVckGl8TfKzScDGV1HONGHS_YhwyeBEIo/edit?gid=1508765207#gid=1508765207","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000059},{"id":"bm_0060","title":"Feb_2026_ IMS_ Sewa_Sheet..xlsx","url":"https://docs.google.com/spreadsheets/d/1MVtA5yTKFj_XC9teZhbHF-SeyinNNZY_/edit?gid=839061086#gid=839061086","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000060},{"id":"bm_0061","title":"Feb_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1b68rmaGbIYBR94vg4L5gNoqnRfcrlMpjnFu-qM97iG4/edit?gid=1295866095#gid=1295866095","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000061},{"id":"bm_0062","title":"Flat 50% Barcode between 100-112","url":"https://docs.google.com/spreadsheets/d/160SRjS7G12k44SfAqHS2y_CaTbH0hgdcczREHXEI_jQ/edit?gid=0#gid=0","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000062},{"id":"bm_0063","title":"Handloom_Data","url":"https://docs.google.com/spreadsheets/d/1_-El85-fQRc-puTHHSv3uLC1MNRRC05do3zTJOfkndE/edit?gid=1266084740#gid=1266084740","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000063},{"id":"bm_0064","title":"IemDept_Wise_SKU's","url":"https://docs.google.com/spreadsheets/d/1Us-BjeVgafSEg2HFdLCtIX27vyLcbznn8YFRQmszKLc/edit?gid=362772724#gid=362772724","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000064},{"id":"bm_0065","title":"IMS Sheet..xlsx","url":"https://docs.google.com/spreadsheets/d/1QPIfkhKncZZevzcgdnEAkW_1K2QKOWVy/edit?gid=839061086#gid=839061086","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000065},{"id":"bm_0066","title":"IMS_ Sewa_2026_Sheet.","url":"https://docs.google.com/spreadsheets/d/1pKJ3vBepekFkTcD8FkszVEfozFMs-0QchHtLcKsy7b8/edit?pli=1&gid=1508765207#gid=1508765207","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000066},{"id":"bm_0067","title":"IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1lVischtdkTplkrtpVPOYhxqidYvLkeW_MdT3d5VwEfQ/edit?gid=174725053#gid=174725053","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000067},{"id":"bm_0068","title":"IMS_Christofin_2026","url":"https://docs.google.com/spreadsheets/d/1TAS4dP91g11ulOudUin-oM1iAgrk_ocGKKNZtNvm8R8/edit?gid=2143643320#gid=2143643320","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000068},{"id":"bm_0069","title":"IMS_Christofin_Aug_2026","url":"https://docs.google.com/spreadsheets/d/150Uf-2YX-gqQO3UbUh_tPqHC9DI61FZJnv5HPaW7B9E/edit?gid=2143643320#gid=2143643320","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000069},{"id":"bm_0070","title":"Inventory Strategy Explorer","url":"https://docs.google.com/spreadsheets/d/1v055ZwLyzDMIli3G3ZO2hJNrRkWEoUISuH94sFZtWTU/copy","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000070},{"id":"bm_0071","title":"Inventory Turns Report_21/5/26","url":"https://docs.google.com/spreadsheets/d/1iJ3x9CrMvf55bPw-1y2jILTJCD1WRsa34dE4tVcu6PA/edit?gid=869989088#gid=869989088","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000071},{"id":"bm_0072","title":"Inventory-Sale_ Sewa_2026_Sheet.","url":"https://docs.google.com/spreadsheets/d/1a757NogKAc7NtXpdSfFyqJY6GwjT91lRwyy4-7S9eg0/edit?gid=1508765207#gid=1508765207","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000072},{"id":"bm_0073","title":"IRD_F","url":"https://docs.google.com/spreadsheets/d/1BaTOiCQeTsLNAv4udHZAGfDHaW9jyK7MlkSVJ0uzmOA/edit?gid=1982768852#gid=1982768852","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000073},{"id":"bm_0074","title":"IRD_Inventory rupee days","url":"https://docs.google.com/spreadsheets/d/1BaTOiCQeTsLNAv4udHZAGfDHaW9jyK7MlkSVJ0uzmOA/edit?gid=1612041985#gid=1612041985","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000074},{"id":"bm_0075","title":"Jan_2026_ IMS_ Sewa_Sheet..xlsx","url":"https://docs.google.com/spreadsheets/d/1nE9pNKmE-w_bsrryDGjmxKzZCa7wo4QD/edit?gid=839061086#gid=839061086","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000075},{"id":"bm_0076","title":"Jan_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1n-pW8rIGRK_oxaqbYrW8M4cN46slikKdFjc1hHard44/edit?gid=174725053#gid=174725053","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000076},{"id":"bm_0077","title":"June_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1sERZcI0Lr5OPs5ypfd5TqHn-yDJz4ga70qS5HaRgzuA/edit?gid=2143643320#gid=2143643320","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000077},{"id":"bm_0078","title":"March_2026_ IMS_ Sewa_Sheet.","url":"https://docs.google.com/spreadsheets/d/1QI4oTsB9N1A2_fuThxJ-mrKJsF5T4iKkwV07xSERnAY/edit?gid=238473931#gid=238473931","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000078},{"id":"bm_0079","title":"March_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1iaXuJ4Gz62CTC_Qtjx5cEuFhcsBAGIINN5-Hk5Wuuw0/edit?gid=2143643320#gid=2143643320","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000079},{"id":"bm_0080","title":"May_2026_ IMS_ Sewa_Sheet. (3)","url":"https://docs.google.com/spreadsheets/d/17mfiuJtvGvCc0_-dN4Uazslk9RVAsicgiBNMdlLCdJU/edit?gid=1508765207#gid=1508765207","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000080},{"id":"bm_0081","title":"May_2026_IMS_Christofin","url":"https://docs.google.com/spreadsheets/d/1o4FHV7Iuegg0SrVR6EUuS60Jl7S5D2O0QwAVvibqKlI/edit?gid=2143643320#gid=2143643320","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000081},{"id":"bm_0082","title":"Rocket-Product_Reorder_March-26","url":"https://docs.google.com/spreadsheets/d/1xbu3CK4jT4EznwaC57lgfrSTfpFaSzOzGOpqNviUXHs/edit?gid=147842980#gid=147842980","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000082},{"id":"bm_0083","title":"Rocket-Product_Reorder_May-26","url":"https://docs.google.com/spreadsheets/d/1D0KsN58ZoZjllMsUgp4vjTHG6g62vVvGx9a1V42SkU0/edit?gid=1222477473#gid=1222477473","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000083},{"id":"bm_0084","title":"Salesman_Barcode_Tracker","url":"https://docs.google.com/spreadsheets/d/1bLytA4j7yNMWoqUNJLHLGCUV7d_rnyKvAM5XZp9183s/edit?gid=954421686#gid=954421686","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000084},{"id":"bm_0085","title":"Sewa Gift Palace — Inventory Dashboard----2","url":"https://dancing-syrniki-d20c35.netlify.app/","category":"IMS & Inventory","kind":"web","createdAt":1761000000085},{"id":"bm_0086","title":"Sewa Gift Palace — Stock Dashboard","url":"https://cheerful-sable-c9f9dd.netlify.app/","category":"IMS & Inventory","kind":"web","createdAt":1761000000086},{"id":"bm_0087","title":"SEWA_IMS_NEW","url":"https://docs.google.com/spreadsheets/d/111eptinQ9zDsOWqRxneuK1mKHwsZXLM6Zu5LhOb263E/edit?gid=1105757494#gid=1105757494","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000087},{"id":"bm_0088","title":"Sewa_Stock_Taking","url":"https://docs.google.com/spreadsheets/d/1UN4kDMoIh03357VrlNgMVmOSoN50udFSOuz8zYSLzyw/edit?gid=663292535#gid=663292535","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000088},{"id":"bm_0089","title":"SEWA_Ultimate IMS v1.1","url":"https://docs.google.com/spreadsheets/d/1h7u6E-Ng9cB9JveSveEL3KL3ajsrmiTwmr3TRItUzeg/edit?gid=1525898616#gid=1525898616","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000089},{"id":"bm_0090","title":"SKU's Sale qty_OCT-NOV-DEC-2025_JAN-2026","url":"https://docs.google.com/spreadsheets/d/1RPKmsdqgrEBCFZ0NlSYAl-_q5USFstYJwcZ_xQ08wB0/edit?gid=315710329#gid=315710329","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000090},{"id":"bm_0091","title":"Stock_Ageing Report(29/08/2026)","url":"https://docs.google.com/spreadsheets/d/1kPt7tQ0Ask0OSY0XleloL9j_1IhyzEthul0RQxVlZps/edit?gid=0#gid=0","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000091},{"id":"bm_0092","title":"Ultimate IMS v1.1","url":"https://docs.google.com/spreadsheets/d/1LQHMHQtmwUCYvJaZJD0lKj6x0D1W_FJSYqNgDHTR_IQ/copy","category":"IMS & Inventory","kind":"sheet","createdAt":1761000000092},{"id":"bm_0093","title":"Christofin impex","url":"https://www.popover.co.in/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000093},{"id":"bm_0094","title":"Sewa Admin","url":"https://gentle-syrniki-b8ebe3.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000094},{"id":"bm_0095","title":"Sewa Gift Palace","url":"https://luminous-trifle-6df564.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000095},{"id":"bm_0096","title":"Sewa Gift Palace Portal","url":"https://sites.google.com/d/1CsYlGHhj4NtwCBcABGlz_HG_cRAbLJBs/p/1MOmLa14vP8aS0ZJ3ncU4va85-6oxeWo7/edit","category":"Dashboards & Apps","kind":"web","createdAt":1761000000096},{"id":"bm_0097","title":"Sewa Gift Palace Pvt. Ltd.(Rani Bagh)","url":"https://sewa.catalog.to/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000097},{"id":"bm_0098","title":"Sewa Gift Palace — Rani Bagh, Delhi | Live Store Catalogue","url":"https://sweet-pony-b03901.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000098},{"id":"bm_0099","title":"Sewa Gift Palace — Rani Bagh, Delhi | Live Store Catalogue","url":"https://wondrous-biscotti-0e27be.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000099},{"id":"bm_0100","title":"Sewa Gift Palace_BMP_Dashboard","url":"https://ephemeral-puffpuff-6ddda6.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000100},{"id":"bm_0101","title":"Sewa Ops_Dashboard","url":"https://claude.ai/code/artifact/24795c0b-b21b-4a3d-8a9d-7dd6d087c729","category":"Dashboards & Apps","kind":"web","createdAt":1761000000101},{"id":"bm_0102","title":"Sewa Snap","url":"https://roaring-chimera-c043fd.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000102},{"id":"bm_0103","title":"Sewa TaskBoard","url":"https://glistening-fenglisu-df4e7a.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000103},{"id":"bm_0104","title":"Vendor PO Creator","url":"https://astounding-cat-9e39f2.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000104},{"id":"bm_0105","title":"Vendor PO Creator — Sewa Gift Palace","url":"https://chic-gnome-725149.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000105},{"id":"bm_0106","title":"Vendor Price Comparison","url":"https://incredible-praline-2875b0.netlify.app/","category":"Dashboards & Apps","kind":"web","createdAt":1761000000106},{"id":"bm_0107","title":"Christofin-Checklist Task","url":"https://datastudio.google.com/u/0/reporting/fee30a98-f623-485d-b4f3-83b73a889a1c/page/6YrrF","category":"Looker Studio Reports","kind":"studio","createdAt":1761000000107},{"id":"bm_0108","title":"SEWA Checklist Task","url":"https://datastudio.google.com/reporting/4cad963e-549e-4eaf-95cb-5889932df1e6/page/6YrrF","category":"Looker Studio Reports","kind":"studio","createdAt":1761000000108},{"id":"bm_0109","title":"Sewa_Checklist_EA","url":"https://lookerstudio.google.com/u/0/reporting/aab8a8a1-2743-4aac-a848-a726142be0a3/page/EexqF","category":"Looker Studio Reports","kind":"studio","createdAt":1761000000109},{"id":"bm_0110","title":"Sewa_IRD_Report","url":"https://datastudio.google.com/u/0/reporting/0f4f9635-4e68-4bb5-8c4a-d9bb78e5b2a6/page/mpRrF","category":"Looker Studio Reports","kind":"studio","createdAt":1761000000110},{"id":"bm_0111","title":"Sewa_My Systems","url":"https://lookerstudio.google.com/reporting/3a097d07-e268-4707-8cc4-cb06a7bfd981/page/8dBuF","category":"Looker Studio Reports","kind":"studio","createdAt":1761000000111},{"id":"bm_0112","title":"Sewa_Purchase Order(PO)","url":"https://datastudio.google.com/reporting/0540800b-428c-43bc-8403-d997c8ecd3c3/page/mpRrF","category":"Looker Studio Reports","kind":"studio","createdAt":1761000000112},{"id":"bm_0113","title":"Sewa_Sale_IMS","url":"https://lookerstudio.google.com/reporting/0540800b-428c-43bc-8403-d997c8ecd3c3/page/mpRrF","category":"Looker Studio Reports","kind":"studio","createdAt":1761000000113},{"id":"bm_0114","title":"Akib_Work_Flow (Responses)","url":"https://docs.google.com/spreadsheets/d/1FTle_iUNG7gBQzUqOMDv8POLN8fyzdm1UxMaE0ahXeY/edit?resourcekey=&gid=1585060193#gid=1585060193","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000114},{"id":"bm_0115","title":"BMP MeCA SHEET-CHRISTOFIN (Responses)","url":"https://docs.google.com/spreadsheets/d/1xp8YjpgzhD3CukejHMyh0dU_ZRwrlvqGUGmKq-_2JKo/edit?resourcekey=&gid=1301256832#gid=1301256832","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000115},{"id":"bm_0116","title":"BMP MeCA SHEET-SEWA","url":"https://docs.google.com/spreadsheets/d/1zcLfl0IFA91g3LO94KWWt9xhsTGgeYtu35LH1DBbKpE/edit?gid=1916134127#gid=1916134127","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000116},{"id":"bm_0117","title":"CheckList_MIS Summary Sheet Wizard Lite v3","url":"https://docs.google.com/spreadsheets/d/1L0Xy_ObzOtnCD1SynQwvTUuZ4PY0yTcY6d9fO4El3yw/edit?gid=0#gid=0","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000117},{"id":"bm_0118","title":"Christofin Checklist_29-06-26","url":"https://docs.google.com/spreadsheets/d/12ieCblupKsdJnVEG1U3Z9Ulp7fBUWftnuBGugDgUxh4/edit?gid=2024362810#gid=2024362810","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000118},{"id":"bm_0119","title":"Christofin Checklist_29-06-26","url":"https://docs.google.com/spreadsheets/d/12ieCblupKsdJnVEG1U3Z9Ulp7fBUWftnuBGugDgUxh4/edit?resourcekey=&gid=2092959791#gid=2092959791","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000119},{"id":"bm_0120","title":"Copy of My Systems","url":"https://docs.google.com/spreadsheets/d/1r9LieOfojxfVzOknww4tMF9rz4xf0jq4sx2Vj-Wl0bM/edit?gid=2060650046#gid=2060650046","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000120},{"id":"bm_0121","title":"Dash_Board_Checklist__1","url":"https://docs.google.com/spreadsheets/d/1cTXlxnrZxKe7MQYonXTI0odhTpBduETrtbtTLyVj4Lw/edit?resourcekey=&gid=1457792599#gid=1457792599","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000121},{"id":"bm_0122","title":"Final Checklist_11-03-26","url":"https://docs.google.com/spreadsheets/d/1kornCvYRvFlZZ2SNnZ-sstjiUn1gE2U3lkLlU6vg_n8/edit?gid=2092959791#gid=2092959791","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000122},{"id":"bm_0123","title":"MASTER DELEGATION","url":"https://docs.google.com/spreadsheets/d/1sLth7iNzyt4ocKjr1fQ9oQYzrQrNe_XWcUnqs6DJaOE/edit?gid=1184708924#gid=1184708924","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000123},{"id":"bm_0124","title":"My Systems","url":"https://docs.google.com/spreadsheets/d/1w7JCyStlVGaBuBcN-altrkT2GHu13m-fLNXaJKALya0/copy","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000124},{"id":"bm_0125","title":"Ranjeet_Copy of Copy of The Ultimate Checklist v6.1","url":"https://docs.google.com/spreadsheets/d/1OY5sACrRD7zNuTveuWOps9iDRBSIlWmrLzQZU5tZry8/edit?gid=2092959791#gid=2092959791","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000125},{"id":"bm_0126","title":"The Ultimate Checklist v6.1","url":"https://docs.google.com/spreadsheets/d/1vRbSKUrh3jLJlkvDYt8DK5WOwCjACVGqdOVrf4mjTtk/edit?gid=541354850#gid=541354850","category":"Checklists & MIS","kind":"sheet","createdAt":1761000000126},{"id":"bm_0127","title":"6months sale report(16-03_16-09_2026","url":"https://docs.google.com/spreadsheets/d/1Dch6TnlXPuafa6Ziv3EfQ0rsgOS_4FGCxNh5i2Uxymg/edit?gid=0#gid=0","category":"Sales & Customers","kind":"sheet","createdAt":1761000000127},{"id":"bm_0128","title":"BMP SEWA CUSTOMERS DATA","url":"https://docs.google.com/spreadsheets/d/1LsdpVkD32w2RgAEEe5s0upnvfbE1VAe39OfX-HkJfwY/edit?gid=1553719297#gid=1553719297","category":"Sales & Customers","kind":"sheet","createdAt":1761000000128},{"id":"bm_0129","title":"BMP SEWA NEW CUSTOMERS DATA","url":"https://docs.google.com/spreadsheets/d/1LsdpVkD32w2RgAEEe5s0upnvfbE1VAe39OfX-HkJfwY/edit?pli=1&gid=1326624855#gid=1326624855","category":"Sales & Customers","kind":"sheet","createdAt":1761000000129},{"id":"bm_0130","title":"Cust_Repair_Service_SEWA","url":"https://docs.google.com/spreadsheets/d/1n5c4FfAFWSrZx4WBZuR5_AKEkeDWd_jROq33DkdA--s/edit?resourcekey=&gid=663292535#gid=663292535","category":"Sales & Customers","kind":"sheet","createdAt":1761000000130},{"id":"bm_0131","title":"Customer Database Enquiry Sheet_CHR","url":"https://docs.google.com/spreadsheets/d/1GuUM8wBkBXkD3pDZO5VOuE2wVZvTVn5k_iIhn5YtcXQ/edit?gid=663292535#gid=663292535","category":"Sales & Customers","kind":"sheet","createdAt":1761000000131},{"id":"bm_0132","title":"Loss Summary_Items-Dec to 27-Dec_2025","url":"https://docs.google.com/spreadsheets/d/1soDgD5RbuZ2Ce3QjtTNIPODN4EnK5mqV6iryurdYfR4/edit?gid=1632478920#gid=1632478920","category":"Sales & Customers","kind":"sheet","createdAt":1761000000132},{"id":"bm_0133","title":"Monthly report for Managing Director MD","url":"https://docs.google.com/spreadsheets/d/1kHE6j6kQDHiA6A98UOIwGcbco5IF_NG778fYIwsjXlM/edit?gid=0#gid=0","category":"Sales & Customers","kind":"sheet","createdAt":1761000000133},{"id":"bm_0134","title":"Monthly report for Managing Director MD","url":"https://docs.google.com/spreadsheets/d/1kHE6j6kQDHiA6A98UOIwGcbco5IF_NG778fYIwsjXlM/edit?gid=1075662528#gid=1075662528","category":"Sales & Customers","kind":"sheet","createdAt":1761000000134},{"id":"bm_0135","title":"Monthly_SALE_Performance_Report","url":"https://docs.google.com/spreadsheets/d/1r22AzIsV_b8aYLF5COJZ9aW4M2Fl6omo4LbCHWAWZxI/edit?gid=1576206587#gid=1576206587","category":"Sales & Customers","kind":"sheet","createdAt":1761000000135},{"id":"bm_0136","title":"Sale Growth","url":"https://docs.google.com/spreadsheets/d/1PAKlxgXTuWCWmFgiRy2pPguihVYcl0OsL_0lSPQaZU0/edit?gid=892885358#gid=892885358","category":"Sales & Customers","kind":"sheet","createdAt":1761000000136},{"id":"bm_0137","title":"Sales_Rep_MIS_CHR","url":"https://docs.google.com/spreadsheets/d/1xUQHVzzDc1sAYsZgAfAxPJKLxwi22eWu2BWPGUzWLww/edit?gid=11696461#gid=11696461","category":"Sales & Customers","kind":"sheet","createdAt":1761000000137},{"id":"bm_0138","title":"Sewa Sales Tracker","url":"https://cheery-begonia-2188d9.netlify.app/","category":"Sales & Customers","kind":"web","createdAt":1761000000138},{"id":"bm_0139","title":"SEWA_Cust. Experience_Ratings","url":"https://docs.google.com/spreadsheets/d/1yhJkFmPgasVLClv5WzHHp6Mg9tZQjUBOjklMyJ-lcXo/edit?resourcekey=&gid=359187065#gid=359187065","category":"Sales & Customers","kind":"sheet","createdAt":1761000000139},{"id":"bm_0140","title":"SEWA_weekly_Sales","url":"https://docs.google.com/spreadsheets/d/1fPUDWUHIB4x3FsGth3Ap6XPpyM94EUTu8UPWmWq-d8A/edit?gid=0#gid=0","category":"Sales & Customers","kind":"sheet","createdAt":1761000000140},{"id":"bm_0141","title":"Bank OD interest calculation","url":"https://docs.google.com/spreadsheets/d/1xan9xTGKer5hGreFROIEQPS9_qbrFyXT_V-L45ksx-o/edit?gid=0#gid=0","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000141},{"id":"bm_0142","title":"Bill_Shortage Correction","url":"https://docs.google.com/spreadsheets/d/1W1YGUJRDqWOn3yGxjVGeMLEV9s9dWpPWfEOQJKVdzog/edit?gid=663292535#gid=663292535","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000142},{"id":"bm_0143","title":"Billing_Complaint Form (Responses)","url":"https://docs.google.com/spreadsheets/d/1MS9wgsbMe8CiinOtUAwbzXqNPasqxHH0-9_q8hNNNoc/edit?resourcekey=&gid=969655557#gid=969655557","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000143},{"id":"bm_0144","title":"Cash Flow Dashboard — Sewa Gift Palace","url":"https://silly-axolotl-cf5a8b.netlify.app/","category":"Finance & Accounts","kind":"web","createdAt":1761000000144},{"id":"bm_0145","title":"Christofin expenses sheet (Responses)(anuj)","url":"https://docs.google.com/spreadsheets/d/1Q92GgpKcfyy3L2K8yUstjAG22sXidx0NzBYnp9uLsz0/edit?gid=744040775#gid=744040775","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000145},{"id":"bm_0146","title":"Christofin_Daily_Net Profit_Report","url":"https://docs.google.com/spreadsheets/d/1O7yTGsTf0iCmiO8zxr0fHJMBPILDjuLIn1OQ4i2ugGk/edit?gid=62182970#gid=62182970","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000146},{"id":"bm_0147","title":"Christofin_GP SHEET","url":"https://docs.google.com/spreadsheets/d/1ToM1tAzmxq6I8h0bDkUD6RzQhFJNODpypG4mNIPi8jM/edit?gid=604982132#gid=604982132","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000147},{"id":"bm_0148","title":"Christofin_GP SHEET","url":"https://docs.google.com/spreadsheets/d/1ToM1tAzmxq6I8h0bDkUD6RzQhFJNODpypG4mNIPi8jM/edit?gid=2086488589#gid=2086488589","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000148},{"id":"bm_0149","title":"Collection Verification System_Form (Responses)","url":"https://docs.google.com/spreadsheets/d/1OKGd4xQhGzH2_WTxP1R35IQTSE-Y49uAhGrq2NYELq4/edit?resourcekey=&gid=1768276388#gid=1768276388","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000149},{"id":"bm_0150","title":"Daily_Net Profit_Report","url":"https://docs.google.com/spreadsheets/d/12BRsnxptsBOmKPt5FvdM9poeK_EiQB-59Qoz4kO0jPs/edit?gid=62182970#gid=62182970","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000150},{"id":"bm_0151","title":"OUTSTANDING Christofin_Dashboard","url":"https://docs.google.com/spreadsheets/d/1l922bHo3lshqKUImqPPw_sqXUh0qTznE03NDmR5MmvQ/edit?gid=174653718#gid=174653718","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000151},{"id":"bm_0152","title":"Payment_Follow-up_Christofin","url":"https://docs.google.com/spreadsheets/d/1DErpHZ43Oneu4pQZKCUW_foQjMB1VkNXg00kEDeM5kA/edit?gid=663292535#gid=663292535","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000152},{"id":"bm_0153","title":"Purchase-Max-Amount_Details_SectionWise","url":"https://docs.google.com/spreadsheets/d/1v6SCT_0QWzZYK8S45Mwrr5BT7eRP_UlpxgeuWdCrK68/edit?gid=1332389090#gid=1332389090","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000153},{"id":"bm_0154","title":"rani bagh discount file","url":"https://docs.google.com/spreadsheets/d/1cPNrCn3Grrvt0s5eU3yssNJGKpg6PI6Bzq3NZcrF1TY/edit?gid=0#gid=0","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000154},{"id":"bm_0155","title":"Refund_SEWA","url":"https://docs.google.com/spreadsheets/d/1cLQOW_uJ9rXpmpgIugY5GJF4iTpHbv2YrQzVh1nFazc/edit?gid=0#gid=0","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000155},{"id":"bm_0156","title":"sewa expenses sheet","url":"https://docs.google.com/spreadsheets/d/1Jge1SSRWiwmDPRU1N1Vr7NEf9-d-NPlsKZ557x3Q5nA/edit?gid=890292566#gid=890292566","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000156},{"id":"bm_0157","title":"SEWA_Cash&Bank_Inflow_Sheet","url":"https://docs.google.com/spreadsheets/d/16ngi38HR-9o4FOJleo_7JfgGhslw6eKEEsQyWseyjoc/edit?gid=2097644729#gid=2097644729","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000157},{"id":"bm_0158","title":"SEWA_Cash_Flow(In_Out)_Jan_2026","url":"https://docs.google.com/spreadsheets/d/14hFKe7NNqFkj9H_FqBeILX6TaQFWjLzDggd4MXDgJlk/edit?gid=1383201014#gid=1383201014","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000158},{"id":"bm_0159","title":"SEWA_Purchase_Limit_50Lac","url":"https://docs.google.com/spreadsheets/d/1e9nxB4iZiG2BYbAM63UO9DlbaCO3wYNiISuKrXpPzAo/edit?gid=772243411#gid=772243411","category":"Finance & Accounts","kind":"sheet","createdAt":1761000000159},{"id":"bm_0160","title":"Anita_Rozy_Sale-Purchase_Report","url":"https://docs.google.com/spreadsheets/d/1eWAUM4JLtQXKVYzTRqXXGl0fWXbetMTjtYOVTMIfqr0/edit?gid=851814834#gid=851814834","category":"Staff & HR","kind":"sheet","createdAt":1761000000160},{"id":"bm_0161","title":"Cashier Incentive Tracker","url":"https://splendid-platypus-77a249.netlify.app/","category":"Staff & HR","kind":"web","createdAt":1761000000161},{"id":"bm_0162","title":"Copy2 of Salary_Sewa_ Nov_2025_sheet.xlsx","url":"https://docs.google.com/spreadsheets/d/1ELel5lOYOkoycdc9vtDE5BNxf7grp1Mzd0708TR-7Uw/edit?gid=1550727321#gid=1550727321","category":"Staff & HR","kind":"sheet","createdAt":1761000000162},{"id":"bm_0163","title":"Cust_Revisit_Data(Kavita)","url":"https://docs.google.com/spreadsheets/d/18nsw_ZJ1-BBdaKqXsREwPeLXMr9P8Ls8E-Y_nUQujSg/edit?gid=975949054#gid=975949054","category":"Staff & HR","kind":"sheet","createdAt":1761000000163},{"id":"bm_0164","title":"Employee Attendance","url":"https://startling-tanuki-71f36a.netlify.app/","category":"Staff & HR","kind":"web","createdAt":1761000000164},{"id":"bm_0165","title":"Incentive-Driven Upselling","url":"https://docs.google.com/spreadsheets/d/1bHLzmrzavGTaYKWJo9rz1QLCQBUvoILhm2FmTvZzixQ/edit?gid=1666519101#gid=1666519101","category":"Staff & HR","kind":"sheet","createdAt":1761000000165},{"id":"bm_0166","title":"Salary_Sewa_ Nov_2025_sheet.xlsx","url":"https://docs.google.com/spreadsheets/d/1cPwGF5Drw-jO-BME8jov8QC532OctnezcBoSB7iimlI/edit?gid=1461939894#gid=1461939894","category":"Staff & HR","kind":"sheet","createdAt":1761000000166},{"id":"bm_0167","title":"Sewa_Employee Attendance","url":"https://docs.google.com/spreadsheets/d/11609o2SbeCs0fT4bZ10p7XHSaNEJkxa2Gt7MnULQ2Bo/edit?gid=2107721112#gid=2107721112","category":"Staff & HR","kind":"sheet","createdAt":1761000000167},{"id":"bm_0168","title":"Sewa_PO_Creator_F","url":"https://ranjeetjenasewa-svg.github.io/sewa-gift-palace/","category":"Staff & HR","kind":"web","createdAt":1761000000168},{"id":"bm_0169","title":"Sewa_Salary Advance_Form (Responses)","url":"https://docs.google.com/spreadsheets/d/1dlgI9HyV2YTZNAoBDw6gC5mB67ba_eAoF7wjnmRUZzM/edit?resourcekey=&gid=863690814#gid=863690814","category":"Staff & HR","kind":"sheet","createdAt":1761000000169},{"id":"bm_0170","title":"CHR_Stock_DashBoard","url":"https://script.google.com/home/projects/1r4rR2wgAHa-m_08q1Sa4NqQ_X4yr4LcWHql3rVCglXUtLtw7kfriCKrQ/edit","category":"Apps Script Projects","kind":"script","createdAt":1761000000170},{"id":"bm_0171","title":"E-comerce_SEWA","url":"https://script.google.com/home/projects/1AuK4gTvxZnL-BLau8JTaVw4R5uGQgXlGvIV8Lm1x6KwiVRe9ehEm2Fcf/edit","category":"Apps Script Projects","kind":"script","createdAt":1761000000171},{"id":"bm_0172","title":"Enquiry Pipeline — Sewa Gift Palace","url":"https://script.google.com/macros/s/AKfycbw3aKNwtMWnBLcZpAirgehTBrW9cNQF5IN_TAYo5QO92SfVN3tR450tQusKLYs1sp4/exec","category":"Apps Script Projects","kind":"script","createdAt":1761000000172},{"id":"bm_0173","title":"Incentive-Driven Upselling","url":"https://script.google.com/u/0/home/projects/1tTSBus6v3tt2J_T9wy-trZqoJN6MQttFEIHjQapF-8q3xuRwJ8zK6Z7W/edit","category":"Apps Script Projects","kind":"script","createdAt":1761000000173},{"id":"bm_0174","title":"Promo Admin — Sewa Gift Palace","url":"https://script.google.com/macros/s/AKfycbxOAmGQXQ2Ef6xkRdtP2f87wo5cP0d_kOz0pbBLwsSQOifVPgKub38DKJOdvJLNQS7C/exec?page=admin","category":"Apps Script Projects","kind":"script","createdAt":1761000000174},{"id":"bm_0175","title":"script.google.com/macros/s/AKfycbwBvBgirdjdcC0YsFtakAlwSKyOtna7YwzdXUvKDjnMUHioiiMaPt66k8iKpGcNUu47/exec","url":"https://script.google.com/macros/s/AKfycbwBvBgirdjdcC0YsFtakAlwSKyOtna7YwzdXUvKDjnMUHioiiMaPt66k8iKpGcNUu47/exec","category":"Apps Script Projects","kind":"script","createdAt":1761000000175},{"id":"bm_0176","title":"Sewa Gift Palace – Reward Points","url":"https://script.google.com/macros/s/AKfycbxOAmGQXQ2Ef6xkRdtP2f87wo5cP0d_kOz0pbBLwsSQOifVPgKub38DKJOdvJLNQS7C/exec","category":"Apps Script Projects","kind":"script","createdAt":1761000000176},{"id":"bm_0177","title":"Sewa Scanner_Salesman_Sale_Tracking","url":"https://script.google.com/macros/s/AKfycbypX3N9MzuHO3CkbjAlGVp13Nw80kkW2uYEli-g8txwiFcthftvD02Z89aijQzSsEos8g/exec","category":"Apps Script Projects","kind":"script","createdAt":1761000000177},{"id":"bm_0178","title":"Sewa Stock API","url":"https://script.google.com/home/projects/19GkGi7g3R11dojif9u7qx-v1O7RZFIoX5l6epN7hOGQM7aVasHJ_tu5J/edit","category":"Apps Script Projects","kind":"script","createdAt":1761000000178},{"id":"bm_0179","title":"Sewa TaskBoard","url":"https://script.google.com/home/projects/1shmOsoNWqdCL7wo238uA-ahSnzuWNEeLv5JkgWZLseoxQnzq8pVu1tG2/edit","category":"Apps Script Projects","kind":"script","createdAt":1761000000179},{"id":"bm_0180","title":"Sewa_Enquiry Pipeline","url":"https://script.google.com/home/projects/1mJJS7c8dAgn46ihb3iHAFzO0_oItYHngQc-o_A8HG3-7j84D5dS-je_9/edit","category":"Apps Script Projects","kind":"script","createdAt":1761000000180},{"id":"bm_0181","title":"(Reconciliation)Negative&Null_Product_Remove_Report.xlsx","url":"https://docs.google.com/spreadsheets/d/13ebiNjodf92YafwfIrumJmMuzw-38ThC2mD4aE-Zecs/edit?gid=1547692651#gid=1547692651","category":"Operations & Misc","kind":"sheet","createdAt":1761000000181},{"id":"bm_0182","title":">10000_RSP_Item_List","url":"https://docs.google.com/spreadsheets/d/11IG1Tg-4-LvJuYUZnBHDYAAtQa__qLJCMZjf850WDas/edit?gid=30394402#gid=30394402","category":"Operations & Misc","kind":"sheet","createdAt":1761000000182},{"id":"bm_0183","title":"All_URL's_Sheet","url":"https://docs.google.com/spreadsheets/d/14ejFAZsQeG-_bGpP1XqMaSZwjFKA5qUuw84UVCnQWUc/edit?gid=1302316313#gid=1302316313","category":"Operations & Misc","kind":"sheet","createdAt":1761000000183},{"id":"bm_0184","title":"BMP G.P. SHEET & Rocket Product","url":"https://docs.google.com/spreadsheets/d/1O8VmllaA7VoK_6wklxZ1OHzStrxaqdLHckMVfaAO83Y/edit?gid=0#gid=0","category":"Operations & Misc","kind":"sheet","createdAt":1761000000184},{"id":"bm_0185","title":"Christofin On time delivery sheet","url":"https://docs.google.com/spreadsheets/d/171ketwA5OYPrZjqtc3-djPTDPLhEUEs_O-c1eWjTaCw/edit?gid=0#gid=0","category":"Operations & Misc","kind":"sheet","createdAt":1761000000185},{"id":"bm_0186","title":"Electric Complaint Register","url":"https://docs.google.com/spreadsheets/d/1c4TfOu-iBqN3-t-pasSM0tc0bICBfc7wOFK7d3DqYDI/edit?gid=663292535#gid=663292535","category":"Operations & Misc","kind":"sheet","createdAt":1761000000186},{"id":"bm_0187","title":"Sanchit_Inv_Trn_Rotation.xlsx","url":"https://docs.google.com/spreadsheets/d/1GMqNyMzas5GwYJ7HZqqnhNpYlUAscpCs/edit?gid=25432316#gid=25432316","category":"Operations & Misc","kind":"sheet","createdAt":1761000000187},{"id":"bm_0188","title":"Scan & Check Your Reward Points","url":"https://docs.google.com/spreadsheets/d/1Q1i8k0084b2W71L5ZZG0pk9ReoigRwE-jQmAEFqubaY/edit?gid=0#gid=0","category":"Operations & Misc","kind":"sheet","createdAt":1761000000188},{"id":"bm_0189","title":"Section Wise Order Placed.(Responses)","url":"https://docs.google.com/spreadsheets/d/1gkc6GrMEX6vISI6oTnC3gojqmV-GhYNadXlTPsEZh8I/edit?resourcekey=&gid=2117562851#gid=2117562851","category":"Operations & Misc","kind":"sheet","createdAt":1761000000189},{"id":"bm_0190","title":"Sewa Plan the year BMP","url":"https://docs.google.com/spreadsheets/d/1YfKhvjSajrqpwSYjHRcrymoKoDWzkZufU5c7IcZ9cDg/edit?gid=0#gid=0","category":"Operations & Misc","kind":"sheet","createdAt":1761000000190},{"id":"bm_0191","title":"Sewa TaskBoard","url":"https://docs.google.com/spreadsheets/d/1pqQSU6tXJCJCnpKI2x0iU2S9EeRej2rYJMnNQjL0P5g/edit?gid=718785117#gid=718785117","category":"Operations & Misc","kind":"sheet","createdAt":1761000000191},{"id":"bm_0192","title":"Sewa_Old Utensils Form (Responses)","url":"https://docs.google.com/spreadsheets/d/1757srTGFEizdKk-HoYE-rlD9Ec2s2O0PyA5Gw3PCnUI/edit?resourcekey=&gid=219350251#gid=219350251","category":"Operations & Misc","kind":"sheet","createdAt":1761000000192},{"id":"bm_0193","title":"Sold crockery items placed back in section for sample display","url":"https://docs.google.com/spreadsheets/d/1PEmca885uKeZ-_508Jnj4SMSIMpb1vipVpPSfUW6Xds/edit?gid=1155874361#gid=1155874361","category":"Operations & Misc","kind":"sheet","createdAt":1761000000193},{"id":"bm_0194","title":"testing","url":"https://docs.google.com/spreadsheets/d/111eptinQ9zDsOWqRxneuK1mKHwsZXLM6Zu5LhOb263E/edit?gid=1525898616#gid=1525898616","category":"Operations & Misc","kind":"sheet","createdAt":1761000000194},{"id":"bm_0195","title":"Vendor PO_Creater","url":"https://docs.google.com/spreadsheets/d/1-rQpJMhTdlzjUfLl0xeZmhSJiuyF6k14aEhJooXHveM/edit?gid=1480924230#gid=1480924230","category":"Operations & Misc","kind":"sheet","createdAt":1761000000195},{"id":"bm_0196","title":"aic.alippo.com/app/collections","url":"https://aic.alippo.com/app/collections","category":"Reference & Learning","kind":"web","createdAt":1761000000196},{"id":"bm_0197","title":"aistudiogoogle.com","url":"https://aistudiogoogle.com/","category":"Reference & Learning","kind":"web","createdAt":1761000000197},{"id":"bm_0198","title":"Bada Business Community","url":"https://badabusinesscommunity.akamai.net.in/new-courses/135/content?activeTab=Content","category":"Reference & Learning","kind":"web","createdAt":1761000000198},{"id":"bm_0199","title":"courses.buisnesindia.com","url":"http://courses.buisnesindia.com/","category":"Reference & Learning","kind":"web","createdAt":1761000000199},{"id":"bm_0202","title":"Drop | Netlify","url":"https://app.netlify.com/drop","category":"Reference & Learning","kind":"web","createdAt":1761000000202},{"id":"bm_0203","title":"Google Flow - Aug 06, 01:56 PM","url":"https://labs.google/fx/tools/flow/project/94ce514c-91e9-4a73-a8fd-92c26d26354e","category":"Reference & Learning","kind":"web","createdAt":1761000000203},{"id":"bm_0206","title":"MIS setup Video of Feb 2025 30 08 2025 - YouTube","url":"https://www.youtube.com/watch?v=5wTojowMcwY","category":"Reference & Learning","kind":"web","createdAt":1761000000206},{"id":"bm_0207","title":"Sewa Gift Palace Private Limited - Dashboard Sanchit | Business Coaching India","url":"https://courses.businesscoachingindia.com/dashboard/student?check_logged_in=1#","category":"Reference & Learning","kind":"web","createdAt":1761000000207},{"id":"bm_0209","title":"Website_Image_URL","url":"https://docs.google.com/spreadsheets/d/1bLW1o-nHXKDQ6g5Vm6S-b8a-GRuo_Z5E0K0o_qFqvts/edit?gid=0#gid=0","category":"Reference & Learning","kind":"sheet","createdAt":1761000000209}];
+  var KEY = "sewaLinkHub.v1";
+
+  function load(){
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw){
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.items)) return s;
+      }
+    } catch(e){}
+    return null;
+  }
+  function persist(){
+    try { localStorage.setItem(KEY, JSON.stringify({ items: items, meta: catMeta })); }
+    catch(e){ toast("This browser won't save changes"); }
+  }
+  function byId(id){ for (var i=0;i<items.length;i++) if (items[i].id === id) return i; return -1; }
+
+  /* a tiny stand-in for the hosted store, so the rest of the page is unchanged */
+  db = {
+    collection: function(name){
+      return { doc: function(id){
+        return {
+          set: function(data){
+            if (name === "meta"){
+              catMeta = { icons: data.icons || {}, custom: data.custom || [] };
+            } else {
+              var i = byId(id);
+              var rec = { id: id, title: data.title, url: data.url, category: data.category,
+                          kind: data.kind, createdAt: data.createdAt };
+              if (i > -1) items[i] = rec; else items.push(rec);
+            }
+            persist(); render();
+            return Promise.resolve();
+          },
+          update: function(patch){
+            var i = byId(id);
+            if (i > -1){ for (var k in patch) items[i][k] = patch[k]; }
+            persist(); render();
+            return Promise.resolve();
+          },
+          delete: function(){
+            var i = byId(id);
+            if (i > -1) items.splice(i, 1);
+            persist(); render();
+            return Promise.resolve();
+          }
+        };
+      }};
+    }
+  };
+
+  function resetToOriginal(){
+    items = SEED.map(function(b){ return JSON.parse(JSON.stringify(b)); });
+    catMeta = { icons:{}, custom:[] };
+    persist(); render();
+    toast("Restored all " + items.length + " original links");
+  }
+  window.sewaResetLinks = resetToOriginal;
+
+  function boot(){
+    var saved = load();
+    items = saved ? saved.items : SEED.map(function(b){ return JSON.parse(JSON.stringify(b)); });
+    if (saved && saved.meta) catMeta = { icons: saved.meta.icons || {}, custom: saved.meta.custom || [] };
+    canWrite = true;
+    loaded = true;
+    if (!saved) persist();
+    render();
+  }
+  boot();
+})();
+</script>
+
+</body>
+</html>
