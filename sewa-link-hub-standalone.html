@@ -724,6 +724,13 @@ main{padding-block:24px 72px}
   }
   function byId(id){ for (var i=0;i<items.length;i++) if (items[i].id === id) return i; return -1; }
 
+  function newId(){ return "bm_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8); }
+  function add(rec){ return db.collection("bookmarks").doc(newId()).set(rec); }
+  function remove(item){
+    pendingDel = null;
+    db.collection("bookmarks").doc(item.id).delete().then(function(){ toast("Removed"); });
+  }
+
   /* a tiny stand-in for the hosted store, so the rest of the page is unchanged */
   db = {
     collection: function(name){
