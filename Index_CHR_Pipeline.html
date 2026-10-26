@@ -229,6 +229,8 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
   border-left:3px solid #dc2626; border-radius:var(--radius);
   padding:10px 14px; display:none;
 }
+.cancelled-card{ opacity:0.55; border-left:3px solid #dc2626 !important; pointer-events:auto; }
+.cancelled-card .status-pill{ background:#fca5a5 !important; color:#7f1d1d !important; }
 .cancelled-panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
 .cancelled-panel-head span{ font-size:0.72rem; font-weight:700; color:#dc2626; letter-spacing:.05em; text-transform:uppercase; }
 .cancelled-list{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -774,7 +776,7 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
     var visibleRecords = activeSource
       ? liveRecords.filter(function(r){ return r.sourceChannel === activeSource; })
       : liveRecords;
-    var cancelledRecords = liveRecords.filter(function(r){ return r.cancelled; });
+    var cancelledRecords = visibleRecords.filter(function(r){ return r.cancelled; });
     // Apply stat bucket filter
     var activeRecords = visibleRecords.filter(function(r){ return !r.cancelled; });
     if(activeStatFilter === 'inprogress'){
@@ -784,7 +786,7 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
     } else if(activeStatFilter === 'delivered'){
       activeRecords = activeRecords.filter(function(r){ return r.stageIdx===10; });
     } else if(activeStatFilter === 'cancelled'){
-      activeRecords = []; // hide main board, show only cancelled panel
+      activeRecords = cancelledRecords; // show cancelled records in the board
     }
     // 'total' or null = show all active
 
@@ -854,7 +856,9 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
       board.appendChild(col);
     });
 
-    renderStats(activeRecords);
+    // Stats always show real totals, not the filtered subset
+    var statsBase = visibleRecords.filter(function(r){ return !r.cancelled; });
+    renderStats(statsBase);
     renderCancelledPanel(cancelledRecords);
 
     board.scrollLeft = savedBoardScroll;
@@ -865,9 +869,9 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
 
   function buildLiveCard(rec,idx){
     var card=document.createElement('div');
-    card.className='card'+(rec.id===selectedCardId?' selected':''); card.draggable=true; card.dataset.recId=rec.id;
-    var pillClass=rec.status==='delivered'?'ok':rec.status==='overdue'?'late':'ok';
-    var pillLabel=idx===0?'Received':rec.status==='delivered'?'Done':rec.status==='overdue'?'Overdue':'In progress';
+    card.className='card'+(rec.id===selectedCardId?' selected':'')+(rec.cancelled?' cancelled-card':''); card.draggable=!rec.cancelled; card.dataset.recId=rec.id;
+    var pillClass=rec.cancelled?'late':rec.status==='delivered'?'ok':rec.status==='overdue'?'late':'ok';
+    var pillLabel=rec.cancelled?'Cancelled':idx===0?'Received':rec.status==='delivered'?'Done':rec.status==='overdue'?'Overdue':'In progress';
     var chipsHtml='<span class="chip src">CI enquiry</span>';
     if(rec.enquiryType) chipsHtml+='<span class="chip chip-type">'+escapeHtml(rec.enquiryType)+'</span>';
     if(rec.sourceChannel) chipsHtml+='<span class="chip chip-src">'+escapeHtml(rec.sourceChannel)+'</span>';
