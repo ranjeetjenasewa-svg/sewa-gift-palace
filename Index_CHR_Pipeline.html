@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Christofin Impex — Enquiry Pipeline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#f0fdf9;
+  --surface:#ffffff;
+  --surface-raise:#ffffff;
+  --border:#ccf0e8;
+  --text:#0f2922;
+  --text-dim:#4a7266;
+  --text-faint:#8ab8ad;
+  --accent:#0d9488;
+  --accent-soft:#ccfbf1;
+  --accent-text:#0f766e;
+  --warn:#d97706;
+  --warn-soft:#fef3c7;
+  --danger:#dc2626;
+  --danger-soft:#fee2e2;
+  --shadow: 0 1px 3px rgba(10,50,40,0.08), 0 8px 24px -12px rgba(10,50,40,0.16);
+  --radius: 12px;
+  --col-w: 272px;
+  --c0:#0d9488; --c0s:#f0fdfa;
+  --c1:#0891b2; --c1s:#ecfeff;
+  --c2:#2563eb; --c2s:#eff6ff;
+  --c3:#7c3aed; --c3s:#f5f3ff;
+  --c4:#db2777; --c4s:#fdf2f8;
+  --c5:#ea580c; --c5s:#fff7ed;
+  --c6:#ca8a04; --c6s:#fefce8;
+  --c7:#16a34a; --c7s:#f0fdf4;
+  --c8:#0284c7; --c8s:#f0f9ff;
+  --c9:#9333ea; --c9s:#faf5ff;
+  --c10:#0f766e; --c10s:#f0fdfa;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#051410; --surface:#0a1f1c; --surface-raise:#0f2822; --border:#1a3d35;
+    --text:#ccfbf1; --text-dim:#5fb8a6; --text-faint:#2a6658;
+    --accent:#2dd4bf; --accent-soft:#0d2e28; --accent-text:#5eead4;
+    --warn:#fbbf24; --warn-soft:#3a2e10; --danger:#f87171; --danger-soft:#3a1212;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 28px -12px rgba(0,0,0,0.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#051410; --surface:#0a1f1c; --surface-raise:#0f2822; --border:#1a3d35;
+  --text:#ccfbf1; --text-dim:#5fb8a6; --text-faint:#2a6658;
+  --accent:#2dd4bf; --accent-soft:#0d2e28; --accent-text:#5eead4;
+  --warn:#fbbf24; --warn-soft:#3a2e10; --danger:#f87171; --danger-soft:#3a1212;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 28px -12px rgba(0,0,0,0.6);
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(13,148,136,0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(8,145,178,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 35% at 60% 50%, rgba(22,163,74,0.06) 0%, transparent 50%);
+  color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;
+  min-height:100%;
+}
+.wrap{ padding:20px 20px 32px; max-width:100%; }
+header.top{
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:16px; flex-wrap:wrap; margin-bottom:18px;
+  position:sticky; top:0; z-index:50;
+  background:var(--bg); padding:10px 0 10px; border-bottom:1px solid var(--border);
+}
+.title-block h1{
+  font-family:'Fraunces',serif; font-weight:600; font-size:1.7rem;
+  margin:0 0 4px; letter-spacing:-0.01em;
+}
+.title-block .brand-badge{
+  display:inline-block; background:var(--accent); color:#fff;
+  font-size:0.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  border-radius:5px; padding:2px 7px; margin-right:8px; vertical-align:middle;
+  font-family:'IBM Plex Mono',monospace; position:relative; top:-2px;
+}
+.title-block p{ margin:0; color:var(--text-dim); font-size:0.88rem; max-width:60ch; }
+.top-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+button.primary{
+  background:var(--accent); color:#fff; border:none;
+  padding:9px 16px; border-radius:8px; font-weight:600; font-size:0.86rem;
+  cursor:pointer; box-shadow:var(--shadow);
+}
+button.primary:hover{ filter:brightness(1.08); }
+button.ghost{
+  background:transparent; color:var(--text-dim); border:1px solid var(--border);
+  padding:8px 14px; border-radius:8px; font-size:0.86rem; cursor:pointer;
+}
+button.ghost:hover{ color:var(--text); border-color:var(--text-faint); }
+.sync-bar{
+  display:flex; align-items:center; gap:8px;
+  font-size:0.78rem; color:var(--text-dim); margin-bottom:8px; flex-wrap:wrap;
+}
+.sync-dot{ width:7px; height:7px; border-radius:50%; background:var(--text-faint); flex-shrink:0; }
+.sync-dot.live{ background:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.sync-dot.err{ background:var(--danger); box-shadow:0 0 0 3px var(--danger-soft); }
+.sync-summary{ font-size:0.74rem; color:var(--text-dim); margin-bottom:10px; font-variant-numeric:tabular-nums; }
+.sync-summary b{ color:var(--text); font-family:'IBM Plex Mono',monospace; font-weight:600; }
+.sync-error{ color:var(--danger); background:var(--danger-soft); border-radius:8px; padding:10px 12px; font-size:0.82rem; margin-bottom:10px; }
+.sync-note{ font-size:0.72rem; color:var(--text-faint); margin-bottom:10px; }
+.stats{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+.stat{
+  background:var(--surface); border:1px solid var(--border);
+  border-top:3px solid var(--sc, var(--accent));
+  border-radius:var(--radius); padding:10px 14px; min-width:108px; box-shadow:var(--shadow);
+}
+.stat:nth-child(1){ --sc:#0d9488; } .stat:nth-child(2){ --sc:#16a34a; }
+.stat:nth-child(3){ --sc:#dc2626; } .stat:nth-child(4){ --sc:#0f766e; }
+.stat .n{ font-family:'IBM Plex Mono',monospace; font-size:1.25rem; font-weight:500; font-variant-numeric:tabular-nums; line-height:1.1; color: var(--sc, var(--accent)); }
+.stat .l{ font-size:0.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em; margin-top:2px; }
+.stat.flag .n{ color:var(--danger); }
+.stat{ cursor:pointer; transition:box-shadow .15s,transform .1s; }
+.stat:hover{ box-shadow:0 0 0 2px var(--sc,var(--accent)); transform:translateY(-1px); }
+.stat.active-filter{ box-shadow:0 0 0 2.5px var(--sc,var(--accent)); background:var(--accent-soft); }
+.stat.active-filter .l::after{ content:' ✕'; font-size:0.65rem; opacity:.7; }
+.board{ display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; align-items:flex-start; }
+.column{
+  flex:0 0 var(--col-w); width:var(--col-w);
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); display:flex; flex-direction:column;
+  max-height:calc(100vh - 210px); min-height:160px; box-shadow:var(--shadow);
+}
+.column.dragover{ outline:2px solid var(--accent); outline-offset:-2px; background:var(--accent-soft); }
+.column[data-col="0"]  { --cc:var(--c0);  --ccs:var(--c0s);  }
+.column[data-col="1"]  { --cc:var(--c1);  --ccs:var(--c1s);  }
+.column[data-col="2"]  { --cc:var(--c2);  --ccs:var(--c2s);  }
+.column[data-col="3"]  { --cc:var(--c3);  --ccs:var(--c3s);  }
+.column[data-col="4"]  { --cc:var(--c4);  --ccs:var(--c4s);  }
+.column[data-col="5"]  { --cc:var(--c5);  --ccs:var(--c5s);  }
+.column[data-col="6"]  { --cc:var(--c6);  --ccs:var(--c6s);  }
+.column[data-col="7"]  { --cc:var(--c7);  --ccs:var(--c7s);  }
+.column[data-col="8"]  { --cc:var(--c8);  --ccs:var(--c8s);  }
+.column[data-col="9"]  { --cc:var(--c9);  --ccs:var(--c9s);  }
+.column[data-col="10"] { --cc:var(--c10); --ccs:var(--c10s); }
+.col-head{
+  padding:12px 12px 10px; border-bottom:3px solid var(--cc, var(--border));
+  background: var(--ccs, var(--surface)); position:sticky; top:0;
+  border-radius:var(--radius) var(--radius) 0 0; cursor:pointer; transition:filter .15s ease;
+}
+.col-head:hover{ filter:brightness(0.96); }
+.col-head .step-no{ font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--text-faint); font-weight:700; }
+.col-head h2{ margin:2px 0 0; font-size:0.82rem; font-weight:600; letter-spacing:0.01em; color:var(--cc, var(--text)); }
+.col-head .row1{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.col-head .count{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--text-dim); background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:1px 8px; font-variant-numeric:tabular-nums; }
+.cards{ padding:10px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; flex:1; min-height:80px; }
+.cards:empty::after{ content:"No enquiries here"; color:var(--text-faint); font-size:0.76rem; text-align:center; padding:14px 4px; display:block; }
+.card{
+  background:var(--surface-raise); border:1px solid var(--border);
+  border-left:3px solid var(--cc, var(--accent)); border-radius:8px;
+  padding:10px 11px; cursor:grab;
+  box-shadow: 0 1px 3px rgba(10,50,40,0.07), 0 4px 12px -6px rgba(10,50,40,0.12);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.card:active{ cursor:grabbing; }
+.card.dragging{ opacity:0.4; }
+.card.selected{ outline:3px solid var(--accent); outline-offset:3px; box-shadow:0 0 0 8px rgba(13,148,136,.18), var(--shadow); }
+.card:hover{ transform:translateY(-2px); box-shadow: 0 4px 16px -4px rgba(10,50,40,0.18); }
+.card .top-row{ display:flex; justify-content:space-between; gap:6px; align-items:flex-start; }
+.card .contact{ font-weight:600; font-size:0.86rem; }
+.card .qty{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--accent-text); background:var(--accent-soft); border-radius:5px; padding:1px 6px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.card .product{ font-size:0.78rem; color:var(--text-dim); margin-top:3px; line-height:1.3; }
+.card .meta{ display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.chip{ font-size:0.68rem; color:var(--text-dim); background:var(--bg); border:1px solid var(--border); border-radius:5px; padding:2px 6px; }
+.chip.src{ color:var(--accent-text); background:var(--accent-soft); border-color:transparent; }
+.chip.chip-type{ color:var(--warn); background:var(--warn-soft); border-color:transparent; }
+.chip.chip-src{ color:var(--text-dim); background:var(--bg); border-color:var(--border); font-style:italic; }
+.card .fc-stage{ margin-top:7px; font-size:0.68rem; font-weight:600; text-transform:uppercase; letter-spacing:0.03em; color:var(--text-dim); }
+.card .fc-planned{ color:var(--accent-text); margin-top:3px; font-size:0.72rem; font-family:'IBM Plex Mono',monospace; }
+.card .footer{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:0.68rem; color:var(--text-faint); }
+.status-pill{ font-family:'IBM Plex Mono',monospace; border-radius:5px; padding:1px 6px; font-variant-numeric:tabular-nums; }
+.status-pill.ok{ color:var(--accent-text); background:var(--accent-soft); }
+.status-pill.late{ color:var(--danger); background:var(--danger-soft); }
+/* modal */
+.overlay{ position:fixed; inset:0; background:rgba(5,20,16,0.45); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50; }
+.overlay[hidden]{ display:none; }
+.modal{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; width:100%; max-width:420px; box-shadow:var(--shadow); }
+.modal h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 14px; font-size:1.15rem; }
+.field{ margin-bottom:12px; }
+.field label{ display:block; font-size:0.74rem; color:var(--text-dim); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.03em; }
+.field input, .field select{ width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:inherit; font-size:0.86rem; }
+.field input:focus, .field select:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.two-col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
+footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
+/* drawer */
+.drawer-overlay{ position:fixed; inset:0; background:rgba(5,20,16,0.4); display:flex; align-items:flex-end; justify-content:flex-end; z-index:60; padding:0; }
+.drawer-overlay[hidden]{ display:none; }
+.drawer{ background:var(--surface); border-left:1px solid var(--border); width:min(420px, 100vw); height:100vh; overflow-y:auto; padding:0; box-shadow:-4px 0 32px rgba(0,0,0,0.18); display:flex; flex-direction:column; animation: slideIn .18s ease; }
+@keyframes slideIn{ from{ transform:translateX(100%); } to{ transform:translateX(0); } }
+.drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px 14px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); z-index:1; }
+.drawer-head h3{ font-family:'Fraunces',serif; font-weight:600; font-size:1.1rem; margin:0; }
+.drawer-close{ background:none; border:none; color:var(--text-faint); cursor:pointer; font-size:1.2rem; padding:4px 8px; border-radius:6px; line-height:1; }
+.drawer-close:hover{ color:var(--text); background:var(--bg); }
+.drawer-body{ padding:20px; flex:1; }
+.drow{ display:flex; gap:8px; align-items:flex-start; border-bottom:1px solid var(--border); padding:10px 0; }
+.drow:last-child{ border-bottom:none; }
+.drow .dl{ font-size:0.72rem; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.04em; min-width:90px; padding-top:2px; }
+.drow .dv{ font-size:0.88rem; color:var(--text); flex:1; word-break:break-word; }
+.drow .dv.mono{ font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
+.drawer-stage{ margin:0 0 16px; padding:10px 14px; background:var(--accent-soft); border-radius:8px; font-size:0.82rem; color:var(--accent-text); font-weight:600; }
+.drawer-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+.drawer-actions{ padding:16px 20px; border-top:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; }
+@media (max-width:600px){ .stats{ overflow-x:auto; flex-wrap:nowrap; } }
+/* ── Cancel drop zone ──────────────────────────────────────────────────────── */
+.cancel-zone{
+  display:flex; align-items:center; gap:10px;
+  border:2px dashed #dc2626; border-radius:10px;
+  padding:14px 36px; background:rgba(220,38,38,.04);
+  color:#dc2626; font-size:0.88rem; font-weight:700;
+  cursor:default; transition:.15s; min-width:260px; min-height:56px; justify-content:center;
+  user-select:none; letter-spacing:0.01em;
+}
+.cancel-zone.dragover{ background:rgba(220,38,38,.16); border-style:solid; border-width:3px; box-shadow:0 0 0 5px rgba(220,38,38,.18); transform:scale(1.03); }
+.cancel-zone .cz-icon{ font-size:1.3rem; flex-shrink:0; }
+.card.cancelled{ border-left-color:#dc2626!important; opacity:0.6; }
+/* Cancelled list panel */
+.cancelled-panel{
+  margin:0 0 14px; background:var(--surface); border:1px solid #fca5a5;
+  border-left:3px solid #dc2626; border-radius:var(--radius);
+  padding:10px 14px; display:none;
+}
+.cancelled-panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.cancelled-panel-head span{ font-size:0.72rem; font-weight:700; color:#dc2626; letter-spacing:.05em; text-transform:uppercase; }
+.cancelled-list{ display:flex; flex-wrap:wrap; gap:8px; }
+.cancelled-chip{ background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; padding:6px 10px; font-size:0.78rem; }
+.cancelled-chip .cc-name{ font-weight:600; color:#991b1b; }
+.cancelled-chip .cc-note{ color:#b91c1c; font-size:0.72rem; margin-top:2px; }
+/* ── Source filter ───────────────────────────────────────────────────────── */
+.src-filter-bar{ margin:0 0 14px; position:relative; }
+.src-filter-btn{
+  display:inline-flex; align-items:center; gap:7px;
+  border:1px solid var(--border); border-radius:8px;
+  background:var(--surface); padding:8px 14px;
+  font-size:0.82rem; font-weight:600; color:var(--text);
+  cursor:pointer; transition:.12s; user-select:none;
+}
+.src-filter-btn:hover{ border-color:var(--accent); color:var(--accent-text); }
+.src-filter-btn.has-filter{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent-text); }
+.src-filter-btn .sfb-badge{ background:var(--accent); color:#fff; border-radius:20px; padding:1px 7px; font-size:0.7rem; font-family:'IBM Plex Mono',monospace; }
+.src-filter-btn .sfb-arrow{ font-size:0.7rem; color:var(--text-faint); margin-left:2px; transition:.15s; }
+.src-filter-btn.open .sfb-arrow{ transform:rotate(180deg); }
+.src-dropdown{
+  display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:40;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:14px 16px; min-width:320px; max-width:min(720px, 90vw);
+}
+.src-dropdown.open{ display:block; }
+.src-dropdown-label{ font-size:0.7rem; font-weight:700; color:var(--text-dim); letter-spacing:.06em; text-transform:uppercase; margin-bottom:10px; }
+.src-filter-pills{ display:flex; gap:7px; flex-wrap:wrap; }
+.src-pill{
+  padding:4px 11px; border-radius:20px; border:1px solid var(--border);
+  background:var(--bg); color:var(--text-dim); font-size:0.76rem; font-weight:500;
+  cursor:pointer; transition:.12s; user-select:none; white-space:nowrap;
+}
+.src-pill:hover{ border-color:var(--accent); color:var(--accent-text); }
+.src-pill.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.src-stage-grid{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); }
+.src-stage-bucket{
+  background:var(--bg); border:1px solid var(--border); border-radius:8px;
+  padding:8px 12px; cursor:pointer; transition:.12s; min-width:72px;
+}
+.src-stage-bucket:hover{ border-color:var(--accent); box-shadow:var(--shadow); }
+.src-stage-bucket .ssb-count{ font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; color:var(--accent); }
+.src-stage-bucket .ssb-label{ font-size:0.68rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.03em; margin-top:2px; }
+/* ── Cancel remarks modal ─────────────────────────────────────────────────── */
+.field textarea{ width:100%; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:inherit; font-size:0.86rem; resize:vertical; min-height:80px; }
+.field textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+/* ── Source task list modal ──────────────────────────────────────────────── */
+.src-task-list{ max-height:55vh; overflow-y:auto; margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+.src-task-item{ background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; cursor:pointer; }
+.src-task-item:hover{ border-color:var(--accent); }
+.src-task-item .sti-name{ font-weight:600; font-size:0.86rem; }
+.src-task-item .sti-meta{ font-size:0.74rem; color:var(--text-dim); margin-top:3px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="title-block">
+      <h1>
+        <span class="brand-badge">CHR</span>Enquiry Pipeline
+      </h1>
+      <p>Christofin Impex — Wholesale Stationery, Bags &amp; Hair Accessories</p>
+    </div>
+    <div class="top-actions">
+      <!-- Cancel drop zone — always visible, drag any card here -->
+      <div class="cancel-zone" id="cancelZone" title="Drag any card here to cancel it">
+        <span class="cz-icon">🚫</span>
+        <span id="cancelZoneLabel">Cancel Enquiry</span>
+      </div>
+      <button class="primary" id="newBtn">+ New enquiry</button>
+    </div>
+  </header>
+
+  <div class="sync-bar" id="syncBar">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncStatusText">Loading…</span>
+    <button class="ghost" id="refreshBtn" style="padding:5px 10px;font-size:0.76rem;">Refresh now</button>
+  </div>
+  <div class="sync-summary" id="syncSummary" hidden></div>
+  <div class="sync-error" id="syncError" hidden></div>
+  <div class="sync-note" id="syncNote" hidden></div>
+
+  <div class="stats" id="stats"></div>
+
+  <!-- Cancelled cards panel -->
+  <div class="cancelled-panel" id="cancelledPanel">
+    <div class="cancelled-panel-head">
+      <span>🚫 Cancelled Enquiries</span>
+      <button class="ghost" id="cancelledPanelClose" style="padding:3px 8px;font-size:0.74rem;">Hide</button>
+    </div>
+    <div class="cancelled-list" id="cancelledList"></div>
+  </div>
+
+  <!-- Source-wise filter — collapsed bucket -->
+  <div class="src-filter-bar" id="srcFilterBar" style="display:none;">
+    <div class="src-filter-btn" id="srcFilterBtn">
+      <span>🔍 Filter by Source</span>
+      <span class="sfb-badge" id="srcFilterBadge">All</span>
+      <span class="sfb-arrow">▾</span>
+    </div>
+    <div class="src-dropdown" id="srcDropdown">
+      <div class="src-dropdown-label">Select a source to filter the board</div>
+      <div class="src-filter-pills" id="srcPills"></div>
+      <div class="src-stage-grid" id="srcStageGrid"></div>
+    </div>
+  </div>
+
+  <!-- Recent stage changes strip -->
+  <div id="recentStrip" style="display:none;margin:0 0 10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="font-size:0.72rem;font-weight:600;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;">Recent changes</span>
+    </div>
+    <div id="recentList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <footer class="note">Christofin Impex pipeline — all data lives in your Google Sheet. "+ New enquiry" saves directly to the form responses sheet. Drag a tile to mark that FMS stage Done. Open this page's URL in any browser on any device — no login required.</footer>
+</div>
+
+<!-- new enquiry modal -->
+<div class="overlay" id="overlay" hidden>
+  <div class="modal">
+    <h3>New enquiry — Christofin</h3>
+    <div class="field">
+      <label for="f-contact">Customer contact no.</label>
+      <input id="f-contact" type="text" placeholder="98xxxxxxxx" inputmode="tel">
+    </div>
+    <div class="field">
+      <label for="f-product">Product / item</label>
+      <input id="f-product" type="text" placeholder="e.g. Classmate notebooks, hair clips">
+    </div>
+    <div class="two-col">
+      <div class="field">
+        <label for="f-qty">Qty</label>
+        <input id="f-qty" type="number" min="1" placeholder="1">
+      </div>
+      <div class="field">
+        <label for="f-location">Location</label>
+        <input id="f-location" type="text" placeholder="Delhi NCR">
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="field">
+        <label for="f-who">Handled by</label>
+        <input id="f-who" type="text" placeholder="e.g. Anuj">
+      </div>
+      <div class="field">
+        <label for="f-how">Channel</label>
+        <select id="f-how">
+          <option>WhatsApp</option><option>Call</option>
+          <option>In-person</option><option>Quicksell</option><option>Email</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-stage">Stage</label>
+      <select id="f-stage"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" id="cancelBtn">Cancel</button>
+      <button class="primary" id="saveBtn">Save enquiry</button>
+    </div>
+  </div>
+</div>
+
+<!-- cancel remarks modal -->
+<div class="overlay" id="cancelOverlay" hidden>
+  <div class="modal">
+    <h3>🚫 Cancel Enquiry</h3>
+    <div id="cancelCardInfo" style="background:var(--danger-soft);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:0.84rem;color:var(--danger);font-weight:600;"></div>
+    <div class="field">
+      <label for="cancelRemarks">Remarks <span style="color:var(--danger);">*</span></label>
+      <textarea id="cancelRemarks" placeholder="Cancellation reason (required)…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" id="cancelModalClose">Back</button>
+      <button class="primary" id="cancelConfirmBtn" style="background:var(--danger);">Confirm Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- source stage task list modal -->
+<div class="overlay" id="srcTaskOverlay" hidden>
+  <div class="modal" style="max-width:480px;">
+    <h3 id="srcTaskTitle">Tasks</h3>
+    <div id="srcTaskStageLabel" style="font-size:0.8rem;color:var(--text-dim);margin:-8px 0 10px;"></div>
+    <div class="src-task-list" id="srcTaskList"></div>
+    <div class="modal-actions">
+      <button class="ghost" id="srcTaskClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- detail drawer -->
+<div class="drawer-overlay" id="drawerOverlay" hidden>
+  <div class="drawer">
+    <div class="drawer-head">
+      <h3 id="drawerTitle">Enquiry details</h3>
+      <button class="drawer-close" id="drawerClose">✕</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-actions" id="drawerActions"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STAGES = [
+    "Enquiry received","Understand requirement","Suggest photos","Share prices",
+    "Answer objections","Follow up 1","Follow up 2","Follow up 3",
+    "Order received","Payment received","Delivery done"
+  ];
+
+  // ── Christofin Impex spreadsheet ─────────────────────────────────────────
+  var FILE_ID = "12gQ0dACbuwbzE9Ftb7G_wR10SMutxTijVaWbCght0ao";
+  var FMS_GID = "663292535";
+
+  // ── Apps Script exec URL for standalone / Netlify hosting ────────────────
+  // Paste your Apps Script exec URL here when hosting outside Apps Script:
+  var SCRIPT_URL = '/gas-api'; // Netlify proxies this → Apps Script (no CORS)
+
+  var USE_GAS = (typeof google !== 'undefined' && google.script && google.script.run);
+
+  function _fetch(params, onDone, onFail){
+    var url = SCRIPT_URL;
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, 15000); // 15s timeout
+    var opts = { method: 'GET', redirect: 'follow', signal: controller.signal };
+    if(params.method === 'POST'){
+      opts.method = 'POST';
+      opts.body = JSON.stringify(params.body);
+      opts.headers = {'Content-Type':'text/plain'}; // text/plain avoids CORS preflight
+    } else {
+      url += '?action=' + params.action;
+    }
+    fetch(url, opts)
+      .then(function(r){
+        clearTimeout(timer);
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(text){
+        try { return JSON.parse(text); }
+        catch(e){ throw new Error('Bad JSON from Apps Script. Redeploy with latest Code.gs first.'); }
+      })
+      .then(function(d){ if(onDone) onDone(d); })
+      .catch(function(e){
+        clearTimeout(timer);
+        var msg = e.name === 'AbortError' ? 'Request timed out (15s). Check SCRIPT_URL or redeploy Apps Script.' : (e.message || String(e));
+        if(onFail) onFail(msg);
+      });
+  }
+
+  // ── server wrappers (work in both Apps Script and standalone mode) ─────────
+  function scriptGetData(onDone, onFail){
+    if(USE_GAS){
+      google.script.run
+        .withSuccessHandler(onDone)
+        .withFailureHandler(function(e){ if(onFail) onFail(e.message || String(e)); })
+        .getData();
+    } else {
+      _fetch({action:'getData'}, onDone, onFail);
+    }
+  }
+
+  function scriptAddEnquiry(body, onDone, onFail){
+    if(USE_GAS){
+      google.script.run
+        .withSuccessHandler(function(){ if(onDone) onDone(); })
+        .withFailureHandler(function(e){ if(onFail) onFail(e.message || String(e)); })
+        .addEnquiry(body);
+    } else {
+      _fetch({method:'POST', body: Object.assign({action:'addEnquiry'}, body)}, onDone, onFail);
+    }
+  }
+
+  function scriptUpdateStage(body, onDone, onFail){
+    if(USE_GAS){
+      google.script.run
+        .withSuccessHandler(function(r){ if(onDone) onDone(r); })
+        .withFailureHandler(function(e){ if(onFail) onFail(e.message || String(e)); })
+        .updateStage(body);
+    } else {
+      _fetch({method:'POST', body: Object.assign({action:'updateStage'}, body)}, onDone, onFail);
+    }
+  }
+
+  function scriptCancelEnquiry(body, onDone, onFail){
+    if(USE_GAS){
+      google.script.run
+        .withSuccessHandler(function(r){ if(onDone) onDone(r); })
+        .withFailureHandler(function(e){ if(onFail) onFail(e.message || String(e)); })
+        .cancelEnquiry(body);
+    } else {
+      _fetch({method:'POST', body: Object.assign({action:'cancelEnquiry'}, body)}, onDone, onFail);
+    }
+  }
+
+  // ── date helpers ──────────────────────────────────────────────────────────
+  function asDate(v){
+    if(v instanceof Date) return isNaN(v.getTime()) ? null : v;
+    if(typeof v === 'string' && v.trim()){
+      var d = new Date(v);
+      if(!isNaN(d.getTime())) return d;
+    }
+    return null;
+  }
+  function formatDateCell(v){
+    if(typeof v === 'string' && v.trim()){
+      var d = asDate(v);
+      if(d) return d.toLocaleDateString(undefined, {day:'2-digit', month:'2-digit', year:'numeric'});
+    }
+    return (v === '' || v === null || v === undefined) ? '' : String(v);
+  }
+  function formatDateTime(d){
+    if(!d) return '';
+    return d.toLocaleDateString(undefined,{day:'2-digit',month:'2-digit'}) + ' ' +
+      d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+  }
+
+  // ── UI state ──────────────────────────────────────────────────────────────
+  var liveRecords     = [];
+  var selectedCardId  = null;
+  var activeSource    = null;
+  var activeStatFilter = null; // 'total'|'inprogress'|'stuck'|'delivered'|'cancelled'
+  var cancelPending   = null;
+  var board    = document.getElementById('board');
+  var statsEl  = document.getElementById('stats');
+  var dot      = document.getElementById('syncDot');
+  var statusText = document.getElementById('syncStatusText');
+  var summaryEl  = document.getElementById('syncSummary');
+  var errorEl    = document.getElementById('syncError');
+  var noteEl     = document.getElementById('syncNote');
+
+  var stageSelect = document.getElementById('f-stage');
+  STAGES.forEach(function(s){ var o=document.createElement('option'); o.value=s; o.textContent=s; stageSelect.appendChild(o); });
+
+  function setStatus(cls, text){ dot.className='sync-dot'+(cls?' '+cls:''); statusText.textContent=text; }
+  function showSyncError(msg){ errorEl.hidden=false; errorEl.textContent=msg; }
+  function hideSyncError(){ errorEl.hidden=true; }
+  function showNote(msg){ noteEl.hidden=false; noteEl.textContent=msg; }
+  function hideNote(){ noteEl.hidden=true; }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  // ── detail drawer ─────────────────────────────────────────────────────────
+  var drawerOverlay = document.getElementById('drawerOverlay');
+  var drawerBody    = document.getElementById('drawerBody');
+  var drawerTitle   = document.getElementById('drawerTitle');
+  var drawerActions = document.getElementById('drawerActions');
+  document.getElementById('drawerClose').addEventListener('click', function(){ drawerOverlay.hidden=true; });
+  drawerOverlay.addEventListener('click', function(e){ if(e.target===drawerOverlay) drawerOverlay.hidden=true; });
+
+  function drow(label,value,mono){
+    if(!value||value==='—'||value==='na'||value==='NA') return '';
+    return '<div class="drow"><span class="dl">'+label+'</span><span class="dv'+(mono?' mono':'')+'">'+escapeHtml(String(value))+'</span></div>';
+  }
+
+  function openLiveDrawer(rec){
+    drawerTitle.textContent = rec.contact;
+    var stageLabel = STAGES[rec.stageIdx]||'—';
+    var statusLabel = rec.status==='delivered'?'✅ Delivered':rec.status==='overdue'?'⚠️ Overdue':'🔄 In progress';
+    drawerBody.innerHTML =
+      '<div class="drawer-stage">📍 Step '+(rec.stageIdx+1)+' — '+escapeHtml(stageLabel)+' &nbsp;·&nbsp; '+statusLabel+'</div>'+
+      '<div class="drawer-chips"><span class="chip src">CI enquiry</span>'+
+        (rec.enquiryType?'<span class="chip chip-type">'+escapeHtml(rec.enquiryType)+'</span>':'')+
+        (rec.sourceChannel?'<span class="chip chip-src">'+escapeHtml(rec.sourceChannel)+'</span>':'')+
+      '</div>'+
+      drow('Contact No.',rec.contact,true)+drow('Product',rec.product)+drow('Qty',rec.qty)+
+      drow('Date',rec.date)+drow('Location',rec.location)+drow('Enquiry type',rec.enquiryType)+
+      drow('Source',rec.sourceChannel)+drow('Handled by',rec.who)+
+      drow('Planned',rec.plannedAt?rec.plannedAt.toLocaleString():null);
+    drawerActions.innerHTML =
+      '<a href="https://docs.google.com/spreadsheets/d/'+FILE_ID+'/edit#gid='+FMS_GID+'" target="_blank" rel="noopener" style="text-decoration:none;">'+
+        '<button class="ghost" style="font-size:0.82rem;">Open Sheet ↗</button></a>';
+    drawerOverlay.hidden=false;
+  }
+
+  // ── FMS lookup ────────────────────────────────────────────────────────────
+  function normalizeContact(s){ return s.replace(/\D/g,'').slice(-10); }
+
+  function buildFMSLookup(fmsRows){
+    var byPos={}, byC={};
+    if(!fmsRows||fmsRows.length<7) return {byPos:byPos,byC:byC};
+    var whoRow=fmsRows[2]||[];
+    var WHO_COLS=[1,5,10,14,18,22,26,30,34,38,42];
+    for(var r=6;r<fmsRows.length;r++){
+      var row=fmsRows[r];
+      if(!row) continue;
+      var contact=String(row[1]||'').trim();
+      var product=String(row[2]||'').trim().toLowerCase();
+      var normC=normalizeContact(contact);
+      var completed=0;
+      var lastActivity=asDate(row[0])||new Date();
+      for(var i=0;i<10;i++){
+        var base=6+i*4;
+        var actual=row[base+1];
+        if(actual){ completed=i+1; var ad=asDate(actual); if(ad) lastActivity=ad; } else { break; }
+      }
+      var stageIdx,status,plannedAt,assignee;
+      if(completed>=10){
+        stageIdx=10; status='delivered'; assignee=String(whoRow[WHO_COLS[10]]||'').trim(); plannedAt=null;
+      } else {
+        stageIdx=completed;
+        var baseCol=6+completed*4;
+        plannedAt=asDate(row[baseCol]);
+        status=(plannedAt&&plannedAt.getTime()<Date.now())?'overdue':'pending';
+        assignee=String(whoRow[WHO_COLS[stageIdx]]||'').trim();
+      }
+      var cancelVal = String(row[46]||'').trim();
+      var isCancelled = cancelVal.length > 0;
+      var entry={product:product,stageIdx:stageIdx,status:status,plannedAt:plannedAt,
+                 who:assignee,rowNum:r,lastActivity:lastActivity,
+                 cancelled:isCancelled, cancelRemarks:isCancelled?cancelVal:null};
+      byPos[r]=entry;
+      if(normC){ if(!byC[normC]) byC[normC]=[]; byC[normC].push(entry); }
+    }
+    return {byPos:byPos,byC:byC};
+  }
+
+  function buildFormRecords(formRows,fmsMap){
+    var records=[]; var meta={totalRows:0,matched:0,unmatched:0,skippedBlank:0};
+    if(!formRows||formRows.length<2) return {records:records,meta:meta};
+    var byPos=fmsMap.byPos||{}; var byC=fmsMap.byC||{};
+    for(var r=1;r<formRows.length;r++){
+      var row=formRows[r];
+      if(!row||(!row[0]&&!row[1])) continue;
+      meta.totalRows++;
+      var contact=String(row[1]||'').trim();
+      var enquiryType=String(row[2]||'').trim();
+      var sourceChannel=String(row[3]||'').trim();
+      var product=String(row[4]||'').trim();
+      if(!contact&&!product){ meta.skippedBlank++; continue; }
+      var qty=row[5]||1;
+      var dateStr=formatDateCell(row[6]);
+      var location=String(row[7]||'').trim();
+
+      var fmsEntry=byPos[r+5]||null;
+      if(!fmsEntry){
+        var normC=normalizeContact(contact);
+        var arr=normC?(byC[normC]||[]):[];
+        if(arr.length===1){ fmsEntry=arr[0]; }
+        else if(arr.length>1){
+          var prodLow=product.toLowerCase(); var prodFirst=prodLow.split(/\s+/)[0];
+          for(var j=0;j<arr.length;j++){
+            if(arr[j].product&&arr[j].product.indexOf(prodFirst)!==-1){ fmsEntry=arr[j]; break; }
+          }
+          if(!fmsEntry) fmsEntry=arr[arr.length-1];
+        }
+      }
+
+      var stageIdx=fmsEntry?fmsEntry.stageIdx:0;
+      var status=fmsEntry?fmsEntry.status:'pending';
+      var who=fmsEntry?fmsEntry.who:'—';
+      var plannedAt=fmsEntry?fmsEntry.plannedAt:null;
+      var lastActivity=asDate(row[0])||new Date();
+      if(fmsEntry) meta.matched++; else meta.unmatched++;
+      records.push({
+        id:'form-'+r, source:'form', contact:contact||'—', product:product||'—',
+        qty:qty, date:dateStr, location:location, enquiryType:enquiryType,
+        sourceChannel:sourceChannel, stageIdx:stageIdx, status:status,
+        who:who||'—', plannedAt:plannedAt, lastActivity:lastActivity,
+        fmsRowNum:fmsEntry?(fmsEntry.rowNum+1):null,
+        cancelled:fmsEntry?fmsEntry.cancelled:false,
+        cancelRemarks:fmsEntry?fmsEntry.cancelRemarks:null
+      });
+    }
+    return {records:records,meta:meta};
+  }
+
+  // ── recent changes strip ──────────────────────────────────────────────────
+  var recentChanges = [];
+  var recentStrip   = document.getElementById('recentStrip');
+  var recentList    = document.getElementById('recentList');
+
+  function addRecentChange(rec, fromIdx, toIdx) {
+    recentChanges = recentChanges.filter(function(c){ return c.id !== rec.id; });
+    recentChanges.unshift({
+      id:       rec.id,
+      contact:  rec.contact,
+      product:  rec.product,
+      fromStage: STAGES[fromIdx] || '?',
+      toStage:   STAGES[toIdx]   || '?',
+      stageIdx:  toIdx,
+      time:      new Date()
+    });
+    if(recentChanges.length > 10) recentChanges.length = 10;
+    renderRecent();
+  }
+
+  function renderRecent() {
+    if(!recentChanges.length){ recentStrip.style.display='none'; return; }
+    recentStrip.style.display='';
+    recentList.innerHTML = recentChanges.map(function(c, i){
+      var arrow = c.fromStage !== c.toStage ? (c.stageIdx > (STAGES.indexOf(c.fromStage)) ? '→' : '↩') : '→';
+      var timeStr = c.time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      return '<div class="recent-chip" data-idx="'+i+'" title="Click to jump to this card" style="'+
+        'cursor:pointer;display:flex;align-items:center;gap:6px;background:var(--accent-soft);'+
+        'border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:0.78rem;'+
+        'color:var(--text);white-space:nowrap;transition:box-shadow .15s;"'+
+        ' onmouseover="this.style.boxShadow=\'0 2px 8px rgba(13,148,136,.18)\'"'+
+        ' onmouseout="this.style.boxShadow=\'none\'"'+
+        '>'+
+        '<span style="font-weight:600;color:var(--accent-text);">'+escapeHtml(c.contact)+'</span>'+
+        '<span style="color:var(--text-dim);">'+escapeHtml(c.product.length>18?c.product.slice(0,16)+'…':c.product)+'</span>'+
+        '<span style="color:var(--text-faint);">'+arrow+'</span>'+
+        '<span style="font-weight:600;font-size:0.74rem;color:var(--c'+(c.stageIdx%11)+')">'+'Step '+(c.stageIdx+1)+'</span>'+
+        '<span style="color:var(--text-faint);font-size:0.7rem;">'+timeStr+'</span>'+
+        '</div>';
+    }).join('');
+    recentList.querySelectorAll('.recent-chip').forEach(function(el){
+      el.addEventListener('click', function(){
+        var c = recentChanges[+el.dataset.idx];
+        if(!c) return;
+        var boardEl  = document.getElementById('board');
+        var colEls   = boardEl.querySelectorAll('.column');
+        var colEl    = colEls[c.stageIdx];
+        var cardEl   = document.querySelector('[data-rec-id="'+c.id+'"]');
+        if(!colEl || !cardEl) return;
+        var boardW   = boardEl.clientWidth;
+        var colLeft  = colEl.offsetLeft;
+        var colW     = colEl.offsetWidth;
+        boardEl.scrollTo({ left: colLeft - (boardW / 2) + (colW / 2), behavior: 'smooth' });
+        selectedCardId = c.id;
+        render();
+        setTimeout(function(){
+          var freshCard = document.querySelector('[data-rec-id="'+c.id+'"]');
+          var freshCol  = document.getElementById('board').querySelectorAll('.column')[c.stageIdx];
+          if(freshCol && freshCard){
+            var cardsDiv = freshCol.querySelector('.cards');
+            if(cardsDiv){
+              var offset = (freshCard.getBoundingClientRect().top - cardsDiv.getBoundingClientRect().top)
+                + cardsDiv.scrollTop - (cardsDiv.clientHeight / 2) + (freshCard.offsetHeight / 2);
+              cardsDiv.scrollTo({ top: offset, behavior: 'smooth' });
+            }
+          }
+        }, 420);
+      });
+    });
+  }
+
+  // ── render ────────────────────────────────────────────────────────────────
+  function render(){
+    var savedBoardScroll = board.scrollLeft;
+    var savedColScrolls  = [];
+    board.querySelectorAll('.cards').forEach(function(c){ savedColScrolls.push(c.scrollTop); });
+
+    var visibleRecords = activeSource
+      ? liveRecords.filter(function(r){ return r.sourceChannel === activeSource; })
+      : liveRecords;
+    var cancelledRecords = liveRecords.filter(function(r){ return r.cancelled; });
+    // Apply stat bucket filter
+    var activeRecords = visibleRecords.filter(function(r){ return !r.cancelled; });
+    if(activeStatFilter === 'inprogress'){
+      activeRecords = activeRecords.filter(function(r){ return r.stageIdx!==10; });
+    } else if(activeStatFilter === 'stuck'){
+      activeRecords = activeRecords.filter(function(r){ return r.stageIdx!==10&&r.status==='overdue'; });
+    } else if(activeStatFilter === 'delivered'){
+      activeRecords = activeRecords.filter(function(r){ return r.stageIdx===10; });
+    } else if(activeStatFilter === 'cancelled'){
+      activeRecords = []; // hide main board, show only cancelled panel
+    }
+    // 'total' or null = show all active
+
+    board.innerHTML='';
+    STAGES.forEach(function(stage,idx){
+      var col=document.createElement('div');
+      col.className='column'; col.dataset.stage=stage; col.dataset.col=idx;
+      var items=activeRecords.filter(function(r){ return r.stageIdx===idx; });
+
+      var head=document.createElement('div');
+      head.className='col-head';
+      head.innerHTML='<div class="row1"><span class="step-no">STEP '+(idx+1).toString().padStart(2,'0')+'</span>'+
+        '<span class="count">'+items.length+'</span></div><h2>'+escapeHtml(stage)+'</h2>';
+      head.title='Click to refresh';
+      head.addEventListener('click', fetchFresh);
+      col.appendChild(head);
+
+      col.addEventListener('dragenter',function(e){ e.preventDefault(); col.classList.add('dragover'); });
+      col.addEventListener('dragover',function(e){ e.preventDefault(); col.classList.add('dragover'); });
+      col.addEventListener('dragleave',function(e){
+        if(!col.contains(e.relatedTarget)) col.classList.remove('dragover');
+      });
+      col.addEventListener('drop',function(e){
+        e.preventDefault(); col.classList.remove('dragover');
+        var id=e.dataTransfer.getData('text/plain');
+        if(!id) return;
+        var liveRec=liveRecords.find(function(r){ return r.id===id; });
+        if(!liveRec) return;
+        if(idx<0||idx>10){ showNote('Cannot drop here.'); return; }
+        if(idx===liveRec.stageIdx){ return; }
+        var isForward = idx > liveRec.stageIdx;
+        if(idx===0 && isForward){ showNote('Cannot drop here.'); return; }
+        if (!liveRec.fmsRowNum) {
+          showNote('❌ Is enquiry ka FMS mein koi row nahi mila — sheet mein manually match karo.');
+          return;
+        }
+        var stageToUpdate = isForward ? idx : idx + 1;
+        var prevStageIdx = liveRec.stageIdx;
+        liveRec.stageIdx = idx;
+        render();
+        showNote('Saving…');
+        scriptUpdateStage({
+          action:'update_stage',
+          rowNum:   liveRec.fmsRowNum,
+          stageIdx: stageToUpdate,
+          status:   isForward ? 'done' : 'pending',
+          formData: null
+        },
+        function(){
+          var dirLabel = isForward ? '✅ Step '+(idx+1)+' par move ho gaya' : '↩️ Step '+(idx+1)+' pe wapas';
+          showNote(dirLabel+' · Syncing…');
+          addRecentChange(liveRec, prevStageIdx, idx);
+          setTimeout(fetchFresh, 500);
+        },
+        function(err){
+          liveRec.stageIdx = prevStageIdx;
+          render();
+          showNote('❌ Error: '+err);
+        });
+      });
+
+      var cardsEl=document.createElement('div');
+      cardsEl.className='cards';
+      items.sort(function(a,b){ return b.lastActivity-a.lastActivity; })
+        .forEach(function(rec){ cardsEl.appendChild(buildLiveCard(rec,idx)); });
+      col.appendChild(cardsEl);
+      board.appendChild(col);
+    });
+
+    renderStats(activeRecords);
+    renderCancelledPanel(cancelledRecords);
+
+    board.scrollLeft = savedBoardScroll;
+    board.querySelectorAll('.cards').forEach(function(c, i){
+      if(savedColScrolls[i] != null) c.scrollTop = savedColScrolls[i];
+    });
+  }
+
+  function buildLiveCard(rec,idx){
+    var card=document.createElement('div');
+    card.className='card'+(rec.id===selectedCardId?' selected':''); card.draggable=true; card.dataset.recId=rec.id;
+    var pillClass=rec.status==='delivered'?'ok':rec.status==='overdue'?'late':'ok';
+    var pillLabel=idx===0?'Received':rec.status==='delivered'?'Done':rec.status==='overdue'?'Overdue':'In progress';
+    var chipsHtml='<span class="chip src">CI enquiry</span>';
+    if(rec.enquiryType) chipsHtml+='<span class="chip chip-type">'+escapeHtml(rec.enquiryType)+'</span>';
+    if(rec.sourceChannel) chipsHtml+='<span class="chip chip-src">'+escapeHtml(rec.sourceChannel)+'</span>';
+    if(rec.location&&rec.location!=='na'&&rec.location!=='NA'&&rec.location!=='—')
+      chipsHtml+='<span class="chip">'+escapeHtml(rec.location)+'</span>';
+    var bodyHtml='<div class="top-row"><span class="contact">'+escapeHtml(rec.contact)+'</span>'+
+      '<span class="qty">x'+escapeHtml(String(rec.qty))+'</span></div>'+
+      '<div class="product">'+escapeHtml(rec.product)+'</div>'+
+      '<div class="meta">'+chipsHtml+'</div>';
+    if(idx===0){
+      bodyHtml+='<div class="fc-planned">Received '+escapeHtml(rec.date||'—')+'</div>'+
+        '<div class="fc-stage">Now at: '+escapeHtml(STAGES[rec.stageIdx]||'—')+'</div>';
+    } else {
+      var plannedText=rec.plannedAt?formatDateTime(rec.plannedAt):'—';
+      bodyHtml+='<div class="fc-stage">'+escapeHtml(STAGES[idx])+'</div>'+
+        '<div class="fc-planned">Planned '+escapeHtml(plannedText)+'</div>';
+    }
+    card.innerHTML=bodyHtml+'<div class="footer"><span>'+escapeHtml(rec.who)+'</span>'+
+      '<span class="status-pill '+pillClass+'">'+pillLabel+'</span></div>';
+    var dragging=false;
+    card.addEventListener('dragstart',function(e){
+      dragging=true; card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain',rec.id);
+      e.dataTransfer.effectAllowed='move';
+    });
+    card.addEventListener('dragend',function(){ card.classList.remove('dragging'); setTimeout(function(){ dragging=false; },50); });
+    card.addEventListener('click',function(){ if(!dragging) openLiveDrawer(rec); });
+    return card;
+  }
+
+  function renderStats(live){
+    var total=live.length;
+    var delivered=live.filter(function(r){ return r.stageIdx===10; }).length;
+    var stuck=live.filter(function(r){ return r.stageIdx!==10&&r.status==='overdue'; }).length;
+    var cancelled=liveRecords.filter(function(r){ return r.cancelled; }).length;
+
+    function sHtml(key,n,label,extra){
+      var cls='stat'+(extra?' '+extra:'')+(activeStatFilter===key?' active-filter':'');
+      return '<div class="'+cls+'" data-stat="'+key+'"><div class="n">'+n+'</div><div class="l">'+label+'</div></div>';
+    }
+    statsEl.innerHTML=
+      sHtml('total',    total,          'Total enquiries')+
+      sHtml('inprogress',total-delivered,'In progress')+
+      sHtml('stuck',    stuck,          'Stuck / overdue','flag')+
+      sHtml('delivered',delivered,      'Delivered')+
+      (cancelled?sHtml('cancelled',cancelled,'Cancelled'):'');
+    // cancelled card needs custom colour
+    var cEl=statsEl.querySelector('[data-stat="cancelled"]');
+    if(cEl) cEl.style.setProperty('--sc','#dc2626');
+
+    statsEl.querySelectorAll('.stat').forEach(function(el){
+      el.addEventListener('click',function(){
+        var key=el.dataset.stat;
+        activeStatFilter=(activeStatFilter===key)?null:key;
+        render();
+      });
+    });
+    renderSourceFilter();
+  }
+
+  // ── Cancelled panel ───────────────────────────────────────────────────────
+  function renderCancelledPanel(cancelledRecords){
+    var panel  = document.getElementById('cancelledPanel');
+    var listEl = document.getElementById('cancelledList');
+    var zoneLabel = document.getElementById('cancelZoneLabel');
+    var cnt = cancelledRecords.length;
+    zoneLabel.textContent = cnt ? 'Cancel ('+cnt+' cancelled)' : 'Cancel Enquiry';
+    if(!cnt){ panel.style.display='none'; return; }
+    panel.style.display='';
+    listEl.innerHTML = cancelledRecords.map(function(rec){
+      return '<div class="cancelled-chip">'+
+        '<div class="cc-name">'+escapeHtml(rec.contact)+'</div>'+
+        '<div class="cc-note">'+escapeHtml(rec.product)+'</div>'+
+        (rec.cancelRemarks?'<div class="cc-note" style="font-style:italic;">'+escapeHtml(rec.cancelRemarks)+'</div>':'')+
+      '</div>';
+    }).join('');
+  }
+  document.getElementById('cancelledPanelClose').addEventListener('click', function(){
+    document.getElementById('cancelledPanel').style.display='none';
+  });
+
+  // ── Source filter — collapsed dropdown ────────────────────────────────────
+  var srcDropdownOpen = false;
+  document.getElementById('srcFilterBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    srcDropdownOpen = !srcDropdownOpen;
+    document.getElementById('srcDropdown').classList.toggle('open', srcDropdownOpen);
+    document.getElementById('srcFilterBtn').classList.toggle('open', srcDropdownOpen);
+  });
+  document.addEventListener('click', function(){
+    if(srcDropdownOpen){
+      srcDropdownOpen = false;
+      document.getElementById('srcDropdown').classList.remove('open');
+      document.getElementById('srcFilterBtn').classList.remove('open');
+    }
+  });
+  document.getElementById('srcDropdown').addEventListener('click', function(e){ e.stopPropagation(); });
+
+  function renderSourceFilter(){
+    var sourceCounts = {};
+    liveRecords.filter(function(r){ return !r.cancelled; }).forEach(function(r){
+      var s = r.sourceChannel || 'Unknown';
+      sourceCounts[s] = (sourceCounts[s]||0) + 1;
+    });
+    var sources = Object.keys(sourceCounts).sort();
+    var srcFilterBar = document.getElementById('srcFilterBar');
+    if(!sources.length){ srcFilterBar.style.display='none'; return; }
+    srcFilterBar.style.display='';
+
+    var btn   = document.getElementById('srcFilterBtn');
+    var badge = document.getElementById('srcFilterBadge');
+    if(activeSource){
+      badge.textContent = activeSource + ' (' + (sourceCounts[activeSource]||0) + ')';
+      btn.classList.add('has-filter');
+    } else {
+      badge.textContent = 'All (' + liveRecords.filter(function(r){ return !r.cancelled; }).length + ')';
+      btn.classList.remove('has-filter');
+    }
+
+    var pillsEl = document.getElementById('srcPills');
+    pillsEl.innerHTML = '';
+    var allPill = document.createElement('div');
+    allPill.className = 'src-pill' + (!activeSource?' active':'');
+    allPill.textContent = 'All (' + liveRecords.filter(function(r){ return !r.cancelled; }).length + ')';
+    allPill.addEventListener('click', function(){
+      activeSource = null;
+      srcDropdownOpen = false;
+      document.getElementById('srcDropdown').classList.remove('open');
+      btn.classList.remove('open');
+      renderSourceFilter(); render();
+    });
+    pillsEl.appendChild(allPill);
+    sources.forEach(function(src){
+      var pill = document.createElement('div');
+      pill.className = 'src-pill' + (activeSource===src?' active':'');
+      pill.textContent = src + ' (' + sourceCounts[src] + ')';
+      pill.addEventListener('click', function(){
+        activeSource = (activeSource===src) ? null : src;
+        renderSourceFilter(); render();
+      });
+      pillsEl.appendChild(pill);
+    });
+
+    var gridEl = document.getElementById('srcStageGrid');
+    gridEl.innerHTML = '';
+    if(!activeSource){ return; }
+    var filtered = liveRecords.filter(function(r){ return r.sourceChannel===activeSource && !r.cancelled; });
+    STAGES.forEach(function(stage, idx){
+      var cnt = filtered.filter(function(r){ return r.stageIdx===idx; }).length;
+      var bucket = document.createElement('div');
+      bucket.className = 'src-stage-bucket';
+      bucket.innerHTML = '<div class="ssb-count">'+cnt+'</div><div class="ssb-label">Step '+(idx+1)+'</div>'+
+        '<div style="font-size:0.64rem;color:var(--text-faint);margin-top:2px;max-width:72px;line-height:1.2;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">'+escapeHtml(stage)+'</div>';
+      if(cnt > 0){
+        bucket.style.borderTop = '3px solid var(--c'+idx+')';
+        bucket.addEventListener('click', function(){ openSourceTaskList(activeSource, idx, stage); });
+      } else {
+        bucket.style.opacity='0.45'; bucket.style.cursor='default';
+      }
+      gridEl.appendChild(bucket);
+    });
+  }
+
+  // ── Cancel zone drop wiring ───────────────────────────────────────────────
+  (function(){
+    var zone = document.getElementById('cancelZone');
+    zone.addEventListener('dragenter', function(e){ e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragover',  function(e){ e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', function(e){ if(!zone.contains(e.relatedTarget)) zone.classList.remove('dragover'); });
+    zone.addEventListener('drop', function(e){
+      e.preventDefault(); zone.classList.remove('dragover');
+      var id = e.dataTransfer.getData('text/plain');
+      if(!id) return;
+      var liveRec = liveRecords.find(function(r){ return r.id === id; });
+      if(!liveRec || liveRec.cancelled) return;
+      if(!liveRec.fmsRowNum){ showNote('❌ FMS row not found — cannot cancel.'); return; }
+      cancelPending = liveRec;
+      document.getElementById('cancelCardInfo').textContent = liveRec.contact + ' · ' + liveRec.product;
+      document.getElementById('cancelRemarks').value = '';
+      document.getElementById('cancelOverlay').hidden = false;
+      document.getElementById('cancelRemarks').focus();
+    });
+  })();
+
+  function openSourceTaskList(src, stageIdx, stageName){
+    var tasks = liveRecords.filter(function(r){
+      return r.sourceChannel===src && r.stageIdx===stageIdx && !r.cancelled;
+    });
+    document.getElementById('srcTaskTitle').textContent = src + ' — ' + tasks.length + ' enquir'+(tasks.length===1?'y':'ies');
+    document.getElementById('srcTaskStageLabel').textContent = 'Step '+(stageIdx+1)+': '+stageName;
+    var listEl = document.getElementById('srcTaskList');
+    listEl.innerHTML = '';
+    tasks.forEach(function(rec){
+      var item = document.createElement('div');
+      item.className = 'src-task-item';
+      item.innerHTML = '<div class="sti-name">'+escapeHtml(rec.contact)+'</div>'+
+        '<div class="sti-meta">'+escapeHtml(rec.product)+'</div>'+
+        '<div class="sti-meta" style="margin-top:4px;">'+
+          '<span style="color:var(--text-faint);">Assignee:</span> '+escapeHtml(rec.who)+
+          (rec.status==='overdue'?' · <span style="color:var(--danger);">⚠️ Overdue</span>':'')+
+          (rec.plannedAt?' · Planned: '+formatDateTime(rec.plannedAt):'')+
+        '</div>';
+      item.addEventListener('click', function(){
+        document.getElementById('srcTaskOverlay').hidden = true;
+        openLiveDrawer(rec);
+      });
+      listEl.appendChild(item);
+    });
+    document.getElementById('srcTaskOverlay').hidden = false;
+  }
+
+  document.getElementById('srcTaskClose').addEventListener('click', function(){
+    document.getElementById('srcTaskOverlay').hidden = true;
+  });
+  document.getElementById('srcTaskOverlay').addEventListener('click', function(e){
+    if(e.target===document.getElementById('srcTaskOverlay'))
+      document.getElementById('srcTaskOverlay').hidden = true;
+  });
+
+  // ── Cancel modal logic ────────────────────────────────────────────────────
+  document.getElementById('cancelModalClose').addEventListener('click', function(){
+    document.getElementById('cancelOverlay').hidden = true; cancelPending = null;
+  });
+  document.getElementById('cancelOverlay').addEventListener('click', function(e){
+    if(e.target===document.getElementById('cancelOverlay')){
+      document.getElementById('cancelOverlay').hidden = true; cancelPending = null;
+    }
+  });
+  document.getElementById('cancelConfirmBtn').addEventListener('click', function(){
+    var remarks = document.getElementById('cancelRemarks').value.trim();
+    if(!remarks){
+      document.getElementById('cancelRemarks').focus();
+      document.getElementById('cancelRemarks').style.border = '2px solid var(--danger)';
+      return;
+    }
+    document.getElementById('cancelRemarks').style.border = '';
+    if(!cancelPending) return;
+    var rec = cancelPending;
+    cancelPending = null;
+    document.getElementById('cancelOverlay').hidden = true;
+    rec.cancelled = true;
+    rec.cancelRemarks = remarks;
+    render();
+    showNote('Cancelling…');
+    scriptCancelEnquiry({
+      action: 'cancel_enquiry',
+      rowNum: rec.fmsRowNum,
+      remarks: remarks
+    }, function(){
+      showNote('🚫 '+rec.contact+' cancelled. Syncing…');
+      setTimeout(fetchFresh, 800);
+    }, function(err){
+      rec.cancelled = false; rec.cancelRemarks = null;
+      render();
+      showNote('❌ Cancel failed: '+err);
+    });
+  });
+
+  // ── data loading ──────────────────────────────────────────────────────────
+  function handleSheetData(json){
+    try{
+      var fmsMap=buildFMSLookup(json.fmsRows||[]);
+      var built=buildFormRecords(json.formRows||[],fmsMap);
+      var prevCancelled = {};
+      liveRecords.forEach(function(r){ if(r.cancelled) prevCancelled[r.id] = r.cancelRemarks; });
+      liveRecords=built.records;
+      liveRecords.forEach(function(r){
+        if(prevCancelled[r.id] !== undefined){ r.cancelled = true; r.cancelRemarks = prevCancelled[r.id]; }
+      });
+      hideSyncError(); hideNote();
+      summaryEl.hidden=false;
+      var m=built.meta;
+      summaryEl.innerHTML='<b>'+m.totalRows+'</b> enquiries · <b>'+m.matched+'</b> matched to FMS stage'+(m.unmatched?' · '+m.unmatched+' in Enquiry received':'')+(m.skippedBlank?' · '+m.skippedBlank+' blank rows ignored':'');
+      render();
+      setStatus('live','Synced '+new Date().toLocaleTimeString()+' · '+m.totalRows+' enquiries');
+    }catch(e){
+      setStatus('err','Parse error');
+      showSyncError('Could not read sheet data: '+e.message);
+    }
+  }
+
+  function fetchFresh(){
+    setStatus('','Loading…');
+    hideSyncError();
+    scriptGetData(
+      function(data){ handleSheetData(data); },
+      function(err){ setStatus('err','Sync failed'); showSyncError('Could not load data: '+err); }
+    );
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', fetchFresh);
+
+  document.getElementById('board').addEventListener('click', function(e){
+    if(!e.target.closest('.card') && selectedCardId){ selectedCardId = null; render(); }
+  });
+
+  // ── "+ New enquiry" modal ─────────────────────────────────────────────────
+  var overlay=document.getElementById('overlay');
+  document.getElementById('newBtn').addEventListener('click',function(){
+    ['f-contact','f-product','f-qty','f-location','f-who'].forEach(function(id){ document.getElementById(id).value=''; });
+    document.getElementById('f-how').value='WhatsApp';
+    stageSelect.value=STAGES[0];
+    overlay.hidden=false;
+    document.getElementById('f-contact').focus();
+  });
+  document.getElementById('cancelBtn').addEventListener('click',function(){ overlay.hidden=true; });
+  overlay.addEventListener('click',function(e){ if(e.target===overlay) overlay.hidden=true; });
+
+  document.getElementById('saveBtn').addEventListener('click',function(){
+    var contact=document.getElementById('f-contact').value.trim();
+    var product=document.getElementById('f-product').value.trim();
+    if(!contact||!product){ document.getElementById(contact?'f-product':'f-contact').focus(); return; }
+    var qty=Number(document.getElementById('f-qty').value)||1;
+    var location=document.getElementById('f-location').value.trim();
+    var how=document.getElementById('f-how').value;
+    var saveBtnEl=document.getElementById('saveBtn');
+    saveBtnEl.disabled=true; saveBtnEl.textContent='Saving…';
+    scriptAddEnquiry({
+      action:'add_enquiry', contact:contact, product:product, qty:qty,
+      date:new Date().toLocaleDateString('en-IN'), location:location||'',
+      enquiryType:'Product Enquiry', source:'CRM / '+how
+    },function(){
+      saveBtnEl.disabled=false; saveBtnEl.textContent='Save enquiry';
+      overlay.hidden=true;
+      showNote('✅ Enquiry saved. Refreshing board…');
+      setTimeout(fetchFresh,2000);
+    },function(err){
+      saveBtnEl.disabled=false; saveBtnEl.textContent='Save enquiry';
+      overlay.hidden=true;
+      showNote('Error saving enquiry: '+err);
+    });
+  });
+
+  // ── start ─────────────────────────────────────────────────────────────────
+  if(!USE_GAS && !SCRIPT_URL){
+    setStatus('err', 'SCRIPT_URL not set');
+    showSyncError('Set the SCRIPT_URL constant in the HTML to your Apps Script exec URL to use standalone mode.');
+    render();
+    return;
+  }
+  render();
+  fetchFresh();
+  setInterval(fetchFresh, 5000);
+})();
+</script>
+</body>
+</html>
