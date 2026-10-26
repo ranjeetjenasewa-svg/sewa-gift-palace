@@ -829,7 +829,6 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
         render();
         showNote('Saving…');
         scriptUpdateStage({
-          action:'update_stage',
           rowNum:   liveRec.fmsRowNum,
           stageIdx: stageToUpdate,
           status:   isForward ? 'done' : 'pending',
@@ -1117,7 +1116,6 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
     render();
     showNote('Cancelling…');
     scriptCancelEnquiry({
-      action: 'cancel_enquiry',
       rowNum: rec.fmsRowNum,
       remarks: remarks
     }, function(){
@@ -1190,7 +1188,7 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
     var saveBtnEl=document.getElementById('saveBtn');
     saveBtnEl.disabled=true; saveBtnEl.textContent='Saving…';
     scriptAddEnquiry({
-      action:'add_enquiry', contact:contact, product:product, qty:qty,
+      contact:contact, product:product, qty:qty,
       date:new Date().toLocaleDateString('en-IN'), location:location||'',
       enquiryType:'Product Enquiry', source:'CRM / '+how
     },function(){
