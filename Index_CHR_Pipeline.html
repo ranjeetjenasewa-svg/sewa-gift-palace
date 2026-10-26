@@ -448,25 +448,19 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
   var FILE_ID = "12gQ0dACbuwbzE9Ftb7G_wR10SMutxTijVaWbCght0ao";
   var FMS_GID = "663292535";
 
-  // ── Apps Script exec URL for standalone / Netlify hosting ────────────────
-  // Paste your Apps Script exec URL here when hosting outside Apps Script:
-  var SCRIPT_URL = '/gas-api'; // Netlify proxies this → Apps Script (no CORS)
+  // ── Apps Script exec URL (GitHub Pages / any static host) ───────────────
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4CNc4zJrBjfs5Q0e1ul3dy1QwNw15ki13IHmiVddBkmaWALzDY7lYWQhWHxWEbiaziw/exec';
 
   var USE_GAS = (typeof google !== 'undefined' && google.script && google.script.run);
 
+  // All requests use GET params — no POST, no preflight, CORS-safe with Apps Script
   function _fetch(params, onDone, onFail){
-    var url = SCRIPT_URL;
     var controller = new AbortController();
-    var timer = setTimeout(function(){ controller.abort(); }, 15000); // 15s timeout
-    var opts = { method: 'GET', redirect: 'follow', signal: controller.signal };
-    if(params.method === 'POST'){
-      opts.method = 'POST';
-      opts.body = JSON.stringify(params.body);
-      opts.headers = {'Content-Type':'text/plain'}; // text/plain avoids CORS preflight
-    } else {
-      url += '?action=' + params.action;
-    }
-    fetch(url, opts)
+    var timer = setTimeout(function(){ controller.abort(); }, 15000);
+    var qs = Object.keys(params).map(function(k){
+      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k] == null ? '' : params[k]);
+    }).join('&');
+    fetch(SCRIPT_URL + '?' + qs, { redirect: 'follow', signal: controller.signal })
       .then(function(r){
         clearTimeout(timer);
         if(!r.ok) throw new Error('HTTP ' + r.status);
@@ -474,17 +468,17 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
       })
       .then(function(text){
         try { return JSON.parse(text); }
-        catch(e){ throw new Error('Bad JSON from Apps Script. Redeploy with latest Code.gs first.'); }
+        catch(e){ throw new Error('Bad JSON — redeploy Apps Script with latest Code.gs'); }
       })
       .then(function(d){ if(onDone) onDone(d); })
       .catch(function(e){
         clearTimeout(timer);
-        var msg = e.name === 'AbortError' ? 'Request timed out (15s). Check SCRIPT_URL or redeploy Apps Script.' : (e.message || String(e));
+        var msg = e.name === 'AbortError' ? 'Request timed out (15s).' : (e.message || String(e));
         if(onFail) onFail(msg);
       });
   }
 
-  // ── server wrappers (work in both Apps Script and standalone mode) ─────────
+  // ── server wrappers (Apps Script runtime OR GitHub Pages fetch) ───────────
   function scriptGetData(onDone, onFail){
     if(USE_GAS){
       google.script.run
@@ -503,7 +497,7 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
         .withFailureHandler(function(e){ if(onFail) onFail(e.message || String(e)); })
         .addEnquiry(body);
     } else {
-      _fetch({method:'POST', body: Object.assign({action:'addEnquiry'}, body)}, onDone, onFail);
+      _fetch(Object.assign({action:'addEnquiry'}, body), onDone, onFail);
     }
   }
 
@@ -514,7 +508,7 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
         .withFailureHandler(function(e){ if(onFail) onFail(e.message || String(e)); })
         .updateStage(body);
     } else {
-      _fetch({method:'POST', body: Object.assign({action:'updateStage'}, body)}, onDone, onFail);
+      _fetch(Object.assign({action:'updateStage'}, body), onDone, onFail);
     }
   }
 
@@ -525,7 +519,7 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
         .withFailureHandler(function(e){ if(onFail) onFail(e.message || String(e)); })
         .cancelEnquiry(body);
     } else {
-      _fetch({method:'POST', body: Object.assign({action:'cancelEnquiry'}, body)}, onDone, onFail);
+      _fetch(Object.assign({action:'cancelEnquiry'}, body), onDone, onFail);
     }
   }
 
