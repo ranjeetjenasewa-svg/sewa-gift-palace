@@ -299,6 +299,21 @@ select.tf-sel:focus{border-color:var(--blue);}
 .action-header h2{font-size:14px;font-weight:800;}
 .action-count{background:#fff;color:var(--red-deep);border-radius:20px;padding:2px 12px;font-size:14px;font-weight:900;}
 .action-tbl-wrap{border-radius:0 0 10px 10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+/* ── APPROVE BUTTON / BADGE / ROW ── */
+.approve-btn{background:var(--green);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-ui);transition:opacity .15s;white-space:nowrap;}
+.approve-btn:hover{opacity:.82;transform:scale(1.03);}
+.approved-badge{display:inline-flex;align-items:center;gap:3px;color:var(--green);font-weight:800;font-size:12px;}
+.approval-cell{min-width:120px;vertical-align:middle;}
+.approved-row td{background:var(--green-dim)!important;}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .approved-row td{background:rgba(22,163,74,.12)!important;}}
+:root[data-theme="dark"] .approved-row td{background:rgba(22,163,74,.12)!important;}
+/* ── SCRIPT SETUP MODAL ── */
+#scriptModal{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;}
+#scriptModal.open{display:flex;}
+.script-box{background:var(--surface);border-radius:14px;padding:28px 32px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.script-box h3{margin:0 0 10px;font-size:16px;font-weight:800;color:var(--navy);}
+.script-box pre{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11px;overflow-x:auto;line-height:1.5;color:var(--fg);}
+.script-close{margin-top:18px;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-weight:700;cursor:pointer;font-family:var(--font-ui);font-size:13px;}
 
 /* ── OVERVIEW SPLIT ── */
 .ov-split{display:grid;gap:14px;grid-template-columns:1fr;}
@@ -326,6 +341,48 @@ select.tf-sel:focus{border-color:var(--blue);}
 </head>
 <body>
 
+<!-- SCRIPT SETUP MODAL -->
+<div id="scriptModal">
+  <div class="script-box">
+    <h3>⚙️ Google Apps Script Setup</h3>
+    <p style="font-size:13px;color:var(--fg-2);margin:0 0 14px">Deploy this script as a Web App so the Approved button can write back to your Google Sheet.</p>
+    <b style="font-size:12px">Steps:</b>
+    <ol style="font-size:12px;color:var(--fg-2);line-height:1.8;margin:6px 0 14px 18px">
+      <li>Open <a href="https://script.google.com" target="_blank" style="color:var(--blue)">script.google.com</a> → New Project</li>
+      <li>Paste the code below, replacing all existing content</li>
+      <li>Click <b>Deploy → New deployment</b> → Type: <b>Web App</b></li>
+      <li>Execute as: <b>Me</b> &nbsp;|&nbsp; Who has access: <b>Anyone</b></li>
+      <li>Click <b>Deploy</b> → Copy the <b>Web App URL</b></li>
+      <li>Paste that URL in the Apps Script URL field in Reconfigure</li>
+    </ol>
+    <pre id="scriptCode">function doPost(e) {
+  try {
+    var p = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.openById(p.sheetId);
+    var sheets = ss.getSheets();
+    var sheet = sheets[0];
+    for (var i = 0; i &lt; sheets.length; i++) {
+      if (String(sheets[i].getSheetId()) === String(p.gid)) {
+        sheet = sheets[i]; break;
+      }
+    }
+    // rowNum from dashboard is gviz index+2; actual sheet row = rowNum+1
+    var sheetRow = parseInt(p.rowNum) + 1;
+    var chkbyCol = 12; // Column L = "Total expenses Checked By"
+    sheet.getRange(sheetRow, chkbyCol).setValue('Approved');
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:true, row:sheetRow}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ok:false, err:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+    <button class="script-close" onclick="document.getElementById('scriptModal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
 <!-- SETUP SCREEN -->
 <div id="setupScreen" style="display:none">
   <div class="setup-box">
@@ -350,6 +407,16 @@ select.tf-sel:focus{border-color:var(--blue);}
     <div class="setup-note">
       No "Publish to web" needed. Just share the sheet as "Anyone with link can view".<br>
       Your URL is saved only in this browser's localStorage — never sent to any server.
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:var(--fg);margin-bottom:4px">Apps Script URL <span style="font-weight:400;color:var(--fg-2)">(optional — enables Approved button sync)</span></div>
+      <div class="setup-input-row" style="margin-bottom:0">
+        <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/…/exec" style="flex:1">
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--fg-2)">
+        Allows the Approved button to auto-update your Google Sheet.
+        <a href="#" onclick="document.getElementById('scriptModal').classList.add('open');return false" style="color:var(--blue);font-weight:600;margin-left:4px">How to set up →</a>
+      </div>
     </div>
   </div>
 </div>
@@ -546,9 +613,9 @@ select.tf-sel:focus{border-color:var(--blue);}
     </div>
     <div class="action-tbl-wrap">
       <table>
-        <thead><tr><th>Rank</th><th>Date</th><th class="r">Collected</th><th class="r">Expenses</th><th class="r">Available</th><th class="r">Deposited</th><th class="r">Shortfall</th><th>Severity</th><th>Account</th><th>Staff</th><th>Note</th><th>Source</th></tr></thead>
+        <thead><tr><th>Rank</th><th>Date</th><th class="r">Collected</th><th class="r">Expenses</th><th class="r">To be Deposited</th><th class="r">Extra Deposit</th><th class="r">Deposited</th><th class="r">Shortfall</th><th>Severity</th><th>Account</th><th>Staff</th><th>Approval</th><th>Source</th></tr></thead>
         <tbody id="acTbl"></tbody>
-        <tfoot><tr><td colspan="6">TOTAL SHORTFALL</td><td class="r f-red" id="acFooter">–</td><td colspan="5"></td></tr></tfoot>
+        <tfoot><tr><td colspan="7">TOTAL SHORTFALL</td><td class="r f-red" id="acFooter">–</td><td colspan="5"></td></tr></tfoot>
       </table>
     </div>
   </div>
@@ -563,6 +630,20 @@ const DEFAULT_SHEET_ID = '1OKGd4xQhGzH2_WTxP1R35IQTSE-Y49uAhGrq2NYELq4';
 const DEFAULT_GID      = '1768276388';
 const REFRESH_SECS     = 60;
 const LS_KEY           = 'sewa_sheet_id_gid'; // stores "SHEET_ID|GID"
+const LS_SCRIPT_KEY    = 'sewa_script_url';
+const LS_APPROVED_KEY  = 'sewa_approved';     // prefix; full key includes sheetId
+
+// ── APPROVAL STATE ─────────────────────────────────────────────────────
+let APPS_SCRIPT_URL = '';
+let approvedRows    = {};  // { rowNum: true } — optimistic client-side approval
+
+function loadApproved(){
+  try { approvedRows = JSON.parse(localStorage.getItem(LS_APPROVED_KEY+'_'+sheetId)||'{}'); }
+  catch(e){ approvedRows = {}; }
+}
+function saveApproved(){
+  try { localStorage.setItem(LS_APPROVED_KEY+'_'+sheetId, JSON.stringify(approvedRows)); } catch(e){}
+}
 
 // ── STATE ──────────────────────────────────────────────────────────────
 let ROWS = [];
@@ -836,7 +917,15 @@ function updateCd(){
 }
 
 // ── SETUP ──────────────────────────────────────────────────────────────
-function showSetup(){ document.getElementById('setupScreen').style.display='flex'; }
+function showSetup(){
+  document.getElementById('setupScreen').style.display='flex';
+  // Pre-fill Apps Script URL if saved
+  try {
+    const saved = localStorage.getItem(LS_SCRIPT_KEY)||'';
+    const el = document.getElementById('scriptUrlInput');
+    if(el) el.value = saved;
+  } catch(e){}
+}
 function hideSetup(){ document.getElementById('setupScreen').style.display='none'; }
 
 function setupConnect(){
@@ -849,6 +938,18 @@ function setupConnect(){
   sheetId = info.sheetId;
   gid     = info.gid;
   try { localStorage.setItem(LS_KEY, sheetId+'|'+gid); } catch(e){}
+  // Save Apps Script URL if provided
+  try {
+    const scriptEl = document.getElementById('scriptUrlInput');
+    const scriptUrl = scriptEl ? scriptEl.value.trim() : '';
+    if(scriptUrl){
+      APPS_SCRIPT_URL = scriptUrl;
+      localStorage.setItem(LS_SCRIPT_KEY, scriptUrl);
+    } else if(scriptEl && scriptEl.value.trim()===''){
+      // User cleared it — keep existing APPS_SCRIPT_URL from init
+    }
+  } catch(e){}
+  loadApproved(); // re-load for new sheetId
   hideSetup();
   showLoading();
   fetchData();
@@ -1079,33 +1180,83 @@ function setFoot(c,e,td,ed,db,d,diff){
 
 // ── ACTION REQUIRED ────────────────────────────────────────────────────
 function renderAction(rows){
+  loadApproved(); // re-read from localStorage each render
   const alerts=[...rows].filter(r=>r[C.calc]<0).sort((a,b)=>a[C.calc]-b[C.calc]);
   document.getElementById('acCount').textContent=alerts.length;
   const total=alerts.reduce((s,r)=>s+r[C.calc],0);
   document.getElementById('acTotal').textContent='Total shortfall: '+inr(total,true);
   document.getElementById('acFooter').textContent=inr(total,true);
   const tbody=document.getElementById('acTbl');
-  if(!alerts.length){tbody.innerHTML='<tr class="empty-row"><td colspan="12">🎉 No shortfall entries in this date range!</td></tr>';return;}
+  if(!alerts.length){tbody.innerHTML='<tr class="empty-row"><td colspan="13">🎉 No shortfall entries in this date range!</td></tr>';return;}
   const maxAbs=Math.abs(alerts[0][C.calc]);
   tbody.innerHTML=alerts.map((r,i)=>{
     const pct=Math.min(100,Math.round(Math.abs(r[C.calc])/maxAbs*100));
     const sev=pct>80?'Critical':pct>40?'High':'Medium';
     const col=pct>80?'var(--red)':pct>40?'var(--orange)':'#b45309';
-    return`<tr class="neg">
-      <td style="font-weight:800;color:var(--red);font-size:13px">#${i+1}</td>
+    // Approved if sheet says so (after refresh) OR optimistic localStorage state
+    const isApproved = r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true;
+    return`<tr class="${isApproved?'approved-row':'neg'}">
+      <td style="font-weight:800;color:${isApproved?'var(--green)':'var(--red)'};font-size:13px">#${i+1}</td>
       <td><span class="dchip">${r[C.dt]}</span></td>
       <td class="r num">${inr(r[C.col])}</td>
       <td class="r num">${inr(r[C.exp])}</td>
       <td class="r num">${inr(r[C.td])}</td>
+      <td class="r num">${r[C.ed]?inr(r[C.ed]):'<span class="v-mute">—</span>'}</td>
       <td class="r num">${r[C.ad]===0?'<strong style="color:var(--red)">⚠ ₹0 — Not Deposited</strong>':inr(r[C.ad])}</td>
-      <td class="r num v-big">${inr(r[C.calc],true)}</td>
+      <td class="r num shortfall-cell ${isApproved?'':'v-big'}" data-row="${r[C.row]}"
+          style="${isApproved?'color:var(--green);font-weight:800;':''}">${inr(r[C.calc],true)}</td>
       <td><span style="font-size:10px;font-weight:700;color:${col}">${sev}</span>
           <div class="sev-bar"><div class="sev-fill" style="width:${pct}%;background:${col}"></div></div></td>
       <td style="font-size:12px">${r[C.acct]||'<span class="v-mute">—</span>'}</td>
       <td style="font-size:12px">${r[C.staff]==='Not Deposit'?'<span class="v-warn">❌ Not Deposited</span>':(r[C.staff]||'<span class="v-mute">—</span>')}</td>
-      <td style="font-size:11px;color:var(--fg-2)">${r[C.note]||'—'}</td>
+      <td class="approval-cell">
+        <div style="font-size:10px;color:var(--fg-2);margin-bottom:4px">Verified by Sanjay Sir</div>
+        ${isApproved
+          ? '<span class="approved-badge">✓ Approved</span>'
+          : `<button class="approve-btn" data-row="${r[C.row]}" onclick="approveEntry(${r[C.row]},this)">Approved</button>`
+        }
+      </td>
       <td><a class="src-btn" href="${srcLink(r)}" target="_blank">Row ${r[C.row]} ↗</a></td>
     </tr>`}).join('');
+}
+
+// ── APPROVE ENTRY ──────────────────────────────────────────────────────
+function approveEntry(rowNum, btn){
+  // 1. Mark approved optimistically in state + localStorage
+  approvedRows[rowNum] = true;
+  saveApproved();
+
+  // 2. Instant visual update — no full re-render needed
+  const tr = btn.closest('tr');
+  tr.classList.remove('neg');
+  tr.classList.add('approved-row');
+  const rankTd = tr.querySelector('td:first-child');
+  if(rankTd) rankTd.style.color = 'var(--green)';
+  const calcTd = tr.querySelector('.shortfall-cell[data-row="'+rowNum+'"]');
+  if(calcTd){
+    calcTd.style.color = 'var(--green)';
+    calcTd.style.fontWeight = '800';
+    calcTd.classList.remove('v-big');
+  }
+  const approvalCell = btn.closest('.approval-cell');
+  if(approvalCell){
+    approvalCell.innerHTML =
+      '<div style="font-size:10px;color:var(--fg-2);margin-bottom:4px">Verified by Sanjay Sir</div>' +
+      '<span class="approved-badge">✓ Approved</span>';
+  }
+
+  // 3. Write "Approved" to Google Sheet via Apps Script (fire-and-forget)
+  if(APPS_SCRIPT_URL){
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',           // no-cors: request goes through, we skip reading response
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ sheetId: sheetId, gid: gid, rowNum: rowNum })
+    }).catch(e => console.warn('Sheet write failed:', e));
+    console.log('✅ Approved: Row', rowNum, '→ updating Google Sheet…');
+  } else {
+    console.warn('⚠️ Apps Script URL not configured. Open ⚙ Reconfigure and add your Apps Script URL to enable auto-sync.');
+  }
 }
 
 // ── MONTHLY TABLE ──────────────────────────────────────────────────────
@@ -1427,6 +1578,10 @@ function exportPDF(){
       gid     = parts[1];
     }
   } catch(e){}
+  // Load Apps Script URL
+  try { APPS_SCRIPT_URL = localStorage.getItem(LS_SCRIPT_KEY)||''; } catch(e){}
+  // Load optimistic approved rows for this sheet
+  loadApproved();
   document.getElementById('sheetOpenLink').href = sheetEditUrl();
   showLoading();
   fetchData(); // auto-connect with default or saved sheet
