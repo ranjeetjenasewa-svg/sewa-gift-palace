@@ -1485,10 +1485,12 @@ function exportPDF(){
     kx += 34;
   });
 
-  // Table body data — raw numbers stored separately for styling hooks
-  const bodyRows = rows.map((r,i)=>{
-    const isApproved = r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true;
-    return [
+  // Split rows: high-action (negative, not approved) vs approved
+  const highRows      = rows.filter(r => r[C.calc]<0 && r[C.chkby]!=='Approved' && !approvedRows[r[C.row]]);
+  const approvedList  = rows.filter(r => r[C.calc]<0 && (r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true));
+
+  function buildTableCols(srcRows){
+    return srcRows.map((r,i)=>[
       i+1,
       r[C.dt],
       pf(r[C.col]),
@@ -1499,75 +1501,69 @@ function exportPDF(){
       r[C.ad]===0 ? '*** ZERO ***' : pf(r[C.ad]),
       pf(r[C.calc], true),
       r[C.acct]||'-',
-      r[C.staff]||'-',
-      r[C.chkby]||'-',
-      r[C.calc]<0 ? (isApproved ? 'APPROVED' : 'HIGH ACTION') : r[C.calc]===0 ? 'CHECK' : 'OK'
-    ];
-  });
+      r[C.staff]||'-'
+    ]);
+  }
 
+  const tblHead = [['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook Dep.','Bank Deposit','Shortfall','Acct No.','Dep. By']];
+  const tblColStyles = {
+    0:{cellWidth:5,  halign:'center'},
+    1:{cellWidth:16, halign:'center'},
+    2:{cellWidth:18, halign:'right'},
+    3:{cellWidth:15, halign:'right'},
+    4:{cellWidth:15, halign:'right'},
+    5:{cellWidth:12, halign:'right'},
+    6:{cellWidth:15, halign:'right'},
+    7:{cellWidth:18, halign:'right'},
+    8:{cellWidth:18, halign:'right'},
+    9:{cellWidth:16},
+    10:{cellWidth:14}
+  };
+
+  // ── SECTION 1: HIGH ACTION entries ──
   doc.autoTable({
     startY: 46,
-    head: [['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook Dep.','Bank Deposit','Calc Amt','Acct No.','Dep. By','Checked By','Status']],
-    body: bodyRows,
+    head: tblHead,
+    body: buildTableCols(highRows),
     styles:{ fontSize:6, cellPadding:1.5, overflow:'linebreak' },
-    headStyles:{ fillColor:[15,32,69], textColor:255, fontStyle:'bold', fontSize:6 },
-    alternateRowStyles:{ fillColor:[245,248,255] },
-    columnStyles:{
-      0:{cellWidth:5,  halign:'center'},
-      1:{cellWidth:14, halign:'center'},
-      2:{cellWidth:18, halign:'right'},
-      3:{cellWidth:15, halign:'right'},
-      4:{cellWidth:14, halign:'right'},
-      5:{cellWidth:12, halign:'right'},
-      6:{cellWidth:14, halign:'right'},
-      7:{cellWidth:17, halign:'right'},
-      8:{cellWidth:17, halign:'right'},
-      9:{cellWidth:14},
-      10:{cellWidth:14},
-      11:{cellWidth:15},
-      12:{cellWidth:13, halign:'center'}
-    },
-    // Red highlight for negative calc amounts (col 8) and status (col 12)
+    headStyles:{ fillColor:[180,0,0], textColor:255, fontStyle:'bold', fontSize:6 },
+    alternateRowStyles:{ fillColor:[255,245,245] },
+    columnStyles: tblColStyles,
     didParseCell: function(data){
       if(data.section!=='body') return;
-      const r = rows[data.row.index];
-      if(!r) return;
-      const isApproved = r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true;
-      const isNeg = r[C.calc] < 0 && !isApproved;
-      // Calc column (index 8)
-      if(data.column.index===8){
-        if(isNeg){
-          data.cell.styles.textColor = [200,0,0];
-          data.cell.styles.fontStyle = 'bold';
-        } else if(isApproved && r[C.calc]<0){
-          data.cell.styles.textColor = [0,140,0];
-          data.cell.styles.fontStyle = 'bold';
-        }
-      }
-      // Status column (index 12)
-      if(data.column.index===12){
-        if(isApproved && r[C.calc]<0){
-          data.cell.styles.fillColor = [220,255,220];
-          data.cell.styles.textColor = [0,120,0];
-          data.cell.styles.fontStyle = 'bold';
-        } else if(isNeg){
-          data.cell.styles.fillColor = [255,220,220];
-          data.cell.styles.textColor = [180,0,0];
-          data.cell.styles.fontStyle = 'bold';
-        } else if(r[C.calc]>0){
-          data.cell.styles.fillColor = [220,255,220];
-          data.cell.styles.textColor = [0,120,0];
-          data.cell.styles.fontStyle = 'bold';
-        }
-      }
-      // Zero actual deposited (col 7) — orange warning
-      if(data.column.index===7 && r[C.ad]===0){
-        data.cell.styles.textColor = [200,80,0];
-        data.cell.styles.fontStyle = 'bold';
-      }
+      const r = highRows[data.row.index]; if(!r) return;
+      if(data.column.index===8){ data.cell.styles.textColor=[200,0,0]; data.cell.styles.fontStyle='bold'; }
+      if(data.column.index===7 && r[C.ad]===0){ data.cell.styles.textColor=[200,80,0]; data.cell.styles.fontStyle='bold'; }
     },
     margin:{ left:14, right:14 }
   });
+
+  // ── SECTION 2: Approved entries (for reference) ──
+  if(approvedList.length>0){
+    const y2 = doc.lastAutoTable.finalY + 12;
+    // Section header
+    doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(0,120,0);
+    doc.text('Approved Entries — For Reference ('+approvedList.length+')', 14, y2);
+    doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
+    doc.text('These shortfall entries have been reviewed and approved by Sanjay Sir.', 14, y2+5);
+
+    doc.autoTable({
+      startY: y2+9,
+      head: tblHead,
+      body: buildTableCols(approvedList),
+      styles:{ fontSize:6, cellPadding:1.5, overflow:'linebreak' },
+      headStyles:{ fillColor:[0,100,50], textColor:255, fontStyle:'bold', fontSize:6 },
+      alternateRowStyles:{ fillColor:[240,255,245] },
+      columnStyles: tblColStyles,
+      didParseCell: function(data){
+        if(data.section!=='body') return;
+        const r = approvedList[data.row.index]; if(!r) return;
+        if(data.column.index===8){ data.cell.styles.textColor=[0,130,0]; data.cell.styles.fontStyle='bold'; }
+        if(data.column.index===7 && r[C.ad]===0){ data.cell.styles.textColor=[200,80,0]; data.cell.styles.fontStyle='bold'; }
+      },
+      margin:{ left:14, right:14 }
+    });
+  }
 
   // Page numbers
   const pageCount = doc.internal.getNumberOfPages();
