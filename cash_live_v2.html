@@ -1447,7 +1447,7 @@ function exportPDF(){
   const totalCol = filtered.reduce((s,r)=>s+r[C.col],0);
   const totalExp = filtered.reduce((s,r)=>s+r[C.exp],0);
   const totalDep = filtered.reduce((s,r)=>s+r[C.ad],0);
-  const alerts   = filtered.filter(r=>r[C.calc]<0).length;
+  const alerts   = filtered.filter(r=>r[C.calc]<0 && r[C.chkby]!=='Approved' && !approvedRows[r[C.row]]).length;
 
   // Date range label
   function numToDate(n){
@@ -1486,21 +1486,24 @@ function exportPDF(){
   });
 
   // Table body data — raw numbers stored separately for styling hooks
-  const bodyRows = rows.map((r,i)=>[
-    i+1,
-    r[C.dt],
-    pf(r[C.col]),
-    pf(r[C.exp]),
-    pf(r[C.td]),
-    r[C.ed] ? pf(r[C.ed]) : '-',
-    r[C.db] ? pf(r[C.db]) : '-',
-    r[C.ad]===0 ? '*** ZERO ***' : pf(r[C.ad]),
-    pf(r[C.calc], true),
-    r[C.acct]||'-',
-    r[C.staff]||'-',
-    r[C.chkby]||'-',
-    r[C.calc]<0 ? 'HIGH ACTION' : r[C.calc]===0 ? 'CHECK' : 'OK'
-  ]);
+  const bodyRows = rows.map((r,i)=>{
+    const isApproved = r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true;
+    return [
+      i+1,
+      r[C.dt],
+      pf(r[C.col]),
+      pf(r[C.exp]),
+      pf(r[C.td]),
+      r[C.ed] ? pf(r[C.ed]) : '-',
+      r[C.db] ? pf(r[C.db]) : '-',
+      r[C.ad]===0 ? '*** ZERO ***' : pf(r[C.ad]),
+      pf(r[C.calc], true),
+      r[C.acct]||'-',
+      r[C.staff]||'-',
+      r[C.chkby]||'-',
+      r[C.calc]<0 ? (isApproved ? 'APPROVED' : 'HIGH ACTION') : r[C.calc]===0 ? 'CHECK' : 'OK'
+    ];
+  });
 
   doc.autoTable({
     startY: 46,
@@ -1529,15 +1532,25 @@ function exportPDF(){
       if(data.section!=='body') return;
       const r = rows[data.row.index];
       if(!r) return;
-      const isNeg = r[C.calc] < 0;
-      // Calc column (index 8) — negative = red bold
-      if(data.column.index===8 && isNeg){
-        data.cell.styles.textColor = [200,0,0];
-        data.cell.styles.fontStyle = 'bold';
+      const isApproved = r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true;
+      const isNeg = r[C.calc] < 0 && !isApproved;
+      // Calc column (index 8)
+      if(data.column.index===8){
+        if(isNeg){
+          data.cell.styles.textColor = [200,0,0];
+          data.cell.styles.fontStyle = 'bold';
+        } else if(isApproved && r[C.calc]<0){
+          data.cell.styles.textColor = [0,140,0];
+          data.cell.styles.fontStyle = 'bold';
+        }
       }
       // Status column (index 12)
       if(data.column.index===12){
-        if(isNeg){
+        if(isApproved && r[C.calc]<0){
+          data.cell.styles.fillColor = [220,255,220];
+          data.cell.styles.textColor = [0,120,0];
+          data.cell.styles.fontStyle = 'bold';
+        } else if(isNeg){
           data.cell.styles.fillColor = [255,220,220];
           data.cell.styles.textColor = [180,0,0];
           data.cell.styles.fontStyle = 'bold';
