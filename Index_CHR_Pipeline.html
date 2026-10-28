@@ -283,6 +283,29 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
 .src-task-item:hover{ border-color:var(--accent); }
 .src-task-item .sti-name{ font-weight:600; font-size:0.86rem; }
 .src-task-item .sti-meta{ font-size:0.74rem; color:var(--text-dim); margin-top:3px; }
+/* ── Narration modal ─────────────────────────────────────────────────────── */
+.nar-modal{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; width:100%; max-width:480px; box-shadow:var(--shadow); }
+.nar-modal h3{ font-family:'Fraunces',serif; font-weight:600; margin:0 0 6px; font-size:1.1rem; }
+.nar-step-badge{ display:inline-block; background:var(--accent-soft); color:var(--accent-text); font-size:0.74rem; font-weight:600; border-radius:6px; padding:3px 10px; margin-bottom:14px; font-family:'IBM Plex Mono',monospace; }
+.nar-required{ color:var(--danger); font-size:0.8rem; margin:0 0 10px; }
+.nar-textarea{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:inherit; font-size:0.9rem; resize:vertical; min-height:110px; line-height:1.5; }
+.nar-textarea:focus{ outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+.nar-textarea.nar-error{ border-color:var(--danger); outline:2px solid var(--danger); }
+.nar-staff-row{ display:flex; gap:10px; margin-top:10px; }
+.nar-staff-row input{ flex:1; padding:8px 10px; border-radius:7px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:inherit; font-size:0.86rem; }
+.nar-staff-row input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.nar-char-count{ font-size:0.7rem; color:var(--text-faint); text-align:right; margin-top:4px; }
+/* ── Narration history in drawer ─────────────────────────────────────────── */
+.nar-history{ margin-top:18px; border-top:1px solid var(--border); padding-top:14px; }
+.nar-history-title{ font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+.nar-entry{ background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:8px; }
+.nar-entry:last-child{ margin-bottom:0; }
+.nar-entry-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:8px; }
+.nar-entry-step{ font-size:0.7rem; font-weight:700; color:var(--accent-text); background:var(--accent-soft); border-radius:5px; padding:2px 7px; font-family:'IBM Plex Mono',monospace; }
+.nar-entry-meta{ font-size:0.7rem; color:var(--text-faint); font-family:'IBM Plex Mono',monospace; }
+.nar-entry-text{ font-size:0.84rem; color:var(--text); line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+.nar-entry-staff{ font-size:0.7rem; color:var(--text-dim); margin-top:5px; }
+.nar-empty{ font-size:0.8rem; color:var(--text-faint); font-style:italic; text-align:center; padding:10px 0; }
 </style>
 </head>
 <body>
@@ -426,6 +449,27 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
   </div>
 </div>
 
+<!-- narration modal -->
+<div class="overlay" id="narOverlay" hidden>
+  <div class="nar-modal">
+    <h3>📝 Step Narration</h3>
+    <div class="nar-step-badge" id="narStepBadge">Step — → Step —</div>
+    <p class="nar-required">⚠️ Narration is mandatory before proceeding.</p>
+    <div class="field">
+      <label for="narText" style="font-size:0.74rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:4px;">What happened? <span style="color:var(--danger);">*</span></label>
+      <textarea class="nar-textarea" id="narText" placeholder="Describe the conversation, action taken, or follow-up details…"></textarea>
+      <div class="nar-char-count"><span id="narCharCount">0</span> characters</div>
+    </div>
+    <div class="nar-staff-row">
+      <input type="text" id="narStaff" placeholder="Your name (staff member)" autocomplete="name">
+    </div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="ghost" id="narCancelBtn">Cancel move</button>
+      <button class="primary" id="narConfirmBtn">Save &amp; Proceed ✓</button>
+    </div>
+  </div>
+</div>
+
 <!-- detail drawer -->
 <div class="drawer-overlay" id="drawerOverlay" hidden>
   <div class="drawer">
@@ -525,6 +569,17 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
     }
   }
 
+  function scriptSaveNarration(body, onDone, onFail){
+    if(USE_GAS){
+      google.script.run
+        .withSuccessHandler(function(r){ if(onDone) onDone(r); })
+        .withFailureHandler(function(e){ if(onFail) onFail(e.message || String(e)); })
+        .saveNarration(body);
+    } else {
+      _fetch(Object.assign({action:'saveNarration'}, body), onDone, onFail);
+    }
+  }
+
   // ── date helpers ──────────────────────────────────────────────────────────
   function asDate(v){
     if(v instanceof Date) return isNaN(v.getTime()) ? null : v;
@@ -553,6 +608,8 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
   var activeSource    = null;
   var activeStatFilter = null; // 'total'|'inprogress'|'stuck'|'delivered'|'cancelled'
   var cancelPending   = null;
+  var pendingDropData = null;   // holds drop info while narration modal is open
+  var lastStaffName   = '';     // remember last-used staff name across narrations
   var board    = document.getElementById('board');
   var statsEl  = document.getElementById('stats');
   var dot      = document.getElementById('syncDot');
@@ -588,6 +645,27 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
     drawerTitle.textContent = rec.contact;
     var stageLabel = STAGES[rec.stageIdx]||'—';
     var statusLabel = rec.status==='delivered'?'✅ Delivered':rec.status==='overdue'?'⚠️ Overdue':'🔄 In progress';
+
+    // Build narration history from column AV text embedded in rec.avNarration
+    var nars = parseAvNarration(rec.avNarration || '');
+    var narHtml = '<div class="nar-history"><div class="nar-history-title">📋 Narration History ('+nars.length+')</div>';
+    if(!nars.length){
+      narHtml += '<div class="nar-empty">No narrations yet — they will appear here as steps are completed.</div>';
+    } else {
+      // Already stored newest-first, so display in order
+      nars.forEach(function(n){
+        narHtml += '<div class="nar-entry">'+
+          '<div class="nar-entry-head">'+
+            '<span class="nar-entry-step">'+escapeHtml(n.stepInfo)+'</span>'+
+            '<span class="nar-entry-meta">'+escapeHtml(n.tsStr)+'</span>'+
+          '</div>'+
+          '<div class="nar-entry-text">'+escapeHtml(n.narration)+'</div>'+
+          (n.staff?'<div class="nar-entry-staff">👤 '+escapeHtml(n.staff)+'</div>':'')+
+        '</div>';
+      });
+    }
+    narHtml += '</div>';
+
     drawerBody.innerHTML =
       '<div class="drawer-stage">📍 Step '+(rec.stageIdx+1)+' — '+escapeHtml(stageLabel)+' &nbsp;·&nbsp; '+statusLabel+'</div>'+
       '<div class="drawer-chips"><span class="chip src">CI enquiry</span>'+
@@ -597,7 +675,8 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
       drow('Contact No.',rec.contact,true)+drow('Product',rec.product)+drow('Qty',rec.qty)+
       drow('Date',rec.date)+drow('Location',rec.location)+drow('Enquiry type',rec.enquiryType)+
       drow('Source',rec.sourceChannel)+drow('Handled by',rec.who)+
-      drow('Planned',rec.plannedAt?rec.plannedAt.toLocaleString():null);
+      drow('Planned',rec.plannedAt?rec.plannedAt.toLocaleString():null)+
+      narHtml;
     drawerActions.innerHTML =
       '<a href="https://docs.google.com/spreadsheets/d/'+FILE_ID+'/edit#gid='+FMS_GID+'" target="_blank" rel="noopener" style="text-decoration:none;">'+
         '<button class="ghost" style="font-size:0.82rem;">Open Sheet ↗</button></a>';
@@ -637,9 +716,11 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
       }
       var cancelVal = String(row[46]||'').trim();
       var isCancelled = cancelVal.length > 0;
+      var avNarration = String(row[47]||'').trim(); // column AV = index 47 (0-based)
       var entry={product:product,stageIdx:stageIdx,status:status,plannedAt:plannedAt,
                  who:assignee,rowNum:r,lastActivity:lastActivity,
-                 cancelled:isCancelled, cancelRemarks:isCancelled?cancelVal:null};
+                 cancelled:isCancelled, cancelRemarks:isCancelled?cancelVal:null,
+                 avNarration:avNarration};
       byPos[r]=entry;
       if(normC){ if(!byC[normC]) byC[normC]=[]; byC[normC].push(entry); }
     }
@@ -690,7 +771,8 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
         who:who||'—', plannedAt:plannedAt, lastActivity:lastActivity,
         fmsRowNum:fmsEntry?(fmsEntry.rowNum+1):null,
         cancelled:fmsEntry?fmsEntry.cancelled:false,
-        cancelRemarks:fmsEntry?fmsEntry.cancelRemarks:null
+        cancelRemarks:fmsEntry?fmsEntry.cancelRemarks:null,
+        avNarration:fmsEntry?(fmsEntry.avNarration||''):''
       });
     }
     return {records:records,meta:meta};
@@ -823,28 +905,8 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
           showNote('❌ Is enquiry ka FMS mein koi row nahi mila — sheet mein manually match karo.');
           return;
         }
-        var stageToUpdate = isForward ? idx : idx + 1;
-        var prevStageIdx = liveRec.stageIdx;
-        liveRec.stageIdx = idx;
-        render();
-        showNote('Saving…');
-        scriptUpdateStage({
-          rowNum:   liveRec.fmsRowNum,
-          stageIdx: stageToUpdate,
-          status:   isForward ? 'done' : 'pending',
-          formData: null
-        },
-        function(){
-          var dirLabel = isForward ? '✅ Step '+(idx+1)+' par move ho gaya' : '↩️ Step '+(idx+1)+' pe wapas';
-          showNote(dirLabel+' · Syncing…');
-          addRecentChange(liveRec, prevStageIdx, idx);
-          setTimeout(fetchFresh, 500);
-        },
-        function(err){
-          liveRec.stageIdx = prevStageIdx;
-          render();
-          showNote('❌ Error: '+err);
-        });
+        // Capture drop data and open narration modal before proceeding
+        openNarrationModal(liveRec, liveRec.stageIdx, idx, isForward);
       });
 
       var cardsEl=document.createElement('div');
@@ -1034,6 +1096,118 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
     });
   }
 
+  // ── Narration modal logic ─────────────────────────────────────────────────
+  var narOverlay    = document.getElementById('narOverlay');
+  var narText       = document.getElementById('narText');
+  var narStaff      = document.getElementById('narStaff');
+  var narStepBadge  = document.getElementById('narStepBadge');
+  var narCharCount  = document.getElementById('narCharCount');
+  var narCancelBtn  = document.getElementById('narCancelBtn');
+  var narConfirmBtn = document.getElementById('narConfirmBtn');
+
+  narText.addEventListener('input', function(){
+    narCharCount.textContent = narText.value.length;
+    if(narText.value.trim()) narText.classList.remove('nar-error');
+  });
+
+  function openNarrationModal(liveRec, prevStageIdx, toIdx, isForward){
+    var fromLabel = (prevStageIdx >= 0 && prevStageIdx < STAGES.length) ? 'Step '+(prevStageIdx+1)+' '+STAGES[prevStageIdx] : '—';
+    var toLabel   = (toIdx >= 0 && toIdx < STAGES.length) ? 'Step '+(toIdx+1)+' '+STAGES[toIdx] : '—';
+    narStepBadge.textContent = (isForward ? '→ ' : '↩ ') + toLabel;
+    narText.value = '';
+    narText.classList.remove('nar-error');
+    narCharCount.textContent = '0';
+    if(lastStaffName) narStaff.value = lastStaffName;
+    pendingDropData = { liveRec: liveRec, prevStageIdx: prevStageIdx, toIdx: toIdx, isForward: isForward };
+    narOverlay.hidden = false;
+    setTimeout(function(){ narText.focus(); }, 80);
+  }
+
+  function closeNarrationModal(cancelled){
+    narOverlay.hidden = true;
+    if(cancelled && pendingDropData){
+      // Revert the optimistic UI update if we already did one
+      pendingDropData = null;
+    }
+  }
+
+  narCancelBtn.addEventListener('click', function(){ closeNarrationModal(true); });
+  narOverlay.addEventListener('click', function(e){ if(e.target===narOverlay) closeNarrationModal(true); });
+
+  narConfirmBtn.addEventListener('click', function(){
+    var text = narText.value.trim();
+    if(!text){
+      narText.classList.add('nar-error');
+      narText.focus();
+      return;
+    }
+    if(!pendingDropData) return;
+
+    var d          = pendingDropData;
+    pendingDropData = null;
+    narOverlay.hidden = true;
+
+    var staff = narStaff.value.trim();
+    if(staff) lastStaffName = staff;
+
+    var stageToUpdate = d.isForward ? d.toIdx : d.toIdx + 1;
+
+    // Optimistic UI update
+    d.liveRec.stageIdx = d.toIdx;
+    render();
+    showNote('Saving narration & move…');
+
+    // First save narration, then update stage
+    // fromStep / toStep are 1-based for the narration header
+    scriptSaveNarration({
+      rowNum:   d.liveRec.fmsRowNum,
+      fromStep: d.prevStageIdx + 1,
+      toStep:   d.toIdx + 1,
+      narration:text,
+      staff:    staff,
+      contact:  d.liveRec.contact
+    },
+    function(){
+      // Narration saved — now update the stage
+      scriptUpdateStage({
+        rowNum:   d.liveRec.fmsRowNum,
+        stageIdx: stageToUpdate,
+        status:   d.isForward ? 'done' : 'pending'
+      },
+      function(){
+        var dirLabel = d.isForward ? '✅ Step '+(d.toIdx+1)+' par move ho gaya' : '↩️ Step '+(d.toIdx+1)+' pe wapas';
+        showNote(dirLabel+' · Syncing…');
+        addRecentChange(d.liveRec, d.prevStageIdx, d.toIdx);
+        setTimeout(fetchFresh, 500);
+      },
+      function(err){
+        d.liveRec.stageIdx = d.prevStageIdx;
+        render();
+        showNote('❌ Stage update error: '+err);
+      });
+    },
+    function(err){
+      // Narration save failed but proceed with stage update anyway (soft fail)
+      showNote('⚠️ Narration save failed ('+err+'), proceeding with move…');
+      scriptUpdateStage({
+        rowNum:   d.liveRec.fmsRowNum,
+        stageIdx: stageToUpdate,
+        status:   d.isForward ? 'done' : 'pending'
+      },
+      function(){
+        var dirLabel = d.isForward ? '✅ Step '+(d.toIdx+1)+' moved' : '↩️ Step '+(d.toIdx+1)+' reverted';
+        showNote(dirLabel+' (narration not saved)');
+        addRecentChange(d.liveRec, d.prevStageIdx, d.toIdx);
+        setTimeout(fetchFresh, 500);
+      },
+      function(err2){
+        d.liveRec.stageIdx = d.prevStageIdx;
+        render();
+        showNote('❌ Error: '+err2);
+      });
+    });
+  });
+
   // ── Cancel zone drop wiring ───────────────────────────────────────────────
   (function(){
     var zone = document.getElementById('cancelZone');
@@ -1129,6 +1303,33 @@ footer.note{ margin-top:16px; font-size:0.74rem; color:var(--text-faint); }
   });
 
   // ── data loading ──────────────────────────────────────────────────────────
+  // Parses column AV narration text into an array of entry objects.
+  // Each entry format (two lines):
+  //   Step 1 → Step 2 | 28-Oct-2026, 10:30 AM | Staff: Rahul
+  //   Narration: Customer enquired about the product price.
+  // Entries are separated by \n---\n, stored in chronological order (oldest first).
+  function parseAvNarration(avText){
+    var results = [];
+    if(!avText || !avText.trim()) return results;
+    var entries = avText.split('\n---\n');
+    for(var i=0;i<entries.length;i++){
+      var entry = entries[i].trim();
+      if(!entry) continue;
+      var lines    = entry.split('\n');
+      var header   = (lines[0] || '').trim();
+      // Remaining lines form the narration body; strip leading "Narration: " prefix
+      var bodyRaw  = lines.slice(1).join('\n').trim();
+      var narText  = bodyRaw.replace(/^Narration:\s*/i, '').trim() || entry;
+      // Parse header: "Step X → Step Y | timestamp | Staff: name"
+      var hm = header.match(/^(Step\s*\d+\s*[→\-]+\s*Step\s*\d+)\s*\|\s*([^|]+)\s*\|\s*Staff:\s*(.+)$/i);
+      var stepInfo = hm ? hm[1].trim() : header;
+      var tsStr    = hm ? hm[2].trim() : '';
+      var staff    = hm ? hm[3].trim() : '';
+      results.push({stepInfo:stepInfo, tsStr:tsStr, staff:staff, narration:narText});
+    }
+    return results;
+  }
+
   function handleSheetData(json){
     try{
       var fmsMap=buildFMSLookup(json.fmsRows||[]);
