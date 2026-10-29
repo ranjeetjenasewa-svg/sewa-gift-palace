@@ -1181,14 +1181,14 @@ function setFoot(c,e,td,ed,db,d,diff){
 // ── ACTION REQUIRED ────────────────────────────────────────────────────
 function renderAction(rows){
   loadApproved(); // re-read from localStorage each render
-  const alerts=[...rows].filter(r=>r[C.calc]<0).sort((a,b)=>a[C.calc]-b[C.calc]);
+  const alerts=[...rows].filter(r=>r[C.calc]<0).sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
   document.getElementById('acCount').textContent=alerts.length;
   const total=alerts.reduce((s,r)=>s+r[C.calc],0);
   document.getElementById('acTotal').textContent='Total shortfall: '+inr(total,true);
   document.getElementById('acFooter').textContent=inr(total,true);
   const tbody=document.getElementById('acTbl');
   if(!alerts.length){tbody.innerHTML='<tr class="empty-row"><td colspan="13">🎉 No shortfall entries in this date range!</td></tr>';return;}
-  const maxAbs=Math.abs(alerts[0][C.calc]);
+  const maxAbs=Math.abs(Math.min(...alerts.map(r=>r[C.calc])));
   tbody.innerHTML=alerts.map((r,i)=>{
     const pct=Math.min(100,Math.round(Math.abs(r[C.calc])/maxAbs*100));
     const sev=pct>80?'Critical':pct>40?'High':'Medium';
@@ -1485,9 +1485,21 @@ function exportPDF(){
     kx += 34;
   });
 
-  // Split rows: high-action (negative, not approved) vs approved
-  const highRows      = rows.filter(r => r[C.calc]<0 && r[C.chkby]!=='Approved' && !approvedRows[r[C.row]]);
-  const approvedList  = rows.filter(r => r[C.calc]<0 && (r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true));
+  // Split rows: high-action (negative, not approved) vs approved — both sorted newest first
+  const highRows     = rows.filter(r => r[C.calc]<0 && r[C.chkby]!=='Approved' && !approvedRows[r[C.row]])
+                           .sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
+  const approvedList = rows.filter(r => r[C.calc]<0 && (r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true))
+                           .sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
+
+  // Color helper for shortfall amount
+  function shortfallColor(calc){
+    const abs = Math.abs(calc);
+    if(calc >= 0)   return [0,140,0];          // green — positive
+    if(abs < 100)   return [180,130,0];        // dark yellow
+    if(abs <= 500)  return [230,100,0];        // orange
+    if(abs < 1000)  return [230,100,0];        // orange (501–999 gap)
+    return [200,0,0];                          // red ≥ 1000
+  }
 
   function buildTableCols(srcRows){
     return srcRows.map((r,i)=>[
@@ -1532,7 +1544,10 @@ function exportPDF(){
     didParseCell: function(data){
       if(data.section!=='body') return;
       const r = highRows[data.row.index]; if(!r) return;
-      if(data.column.index===8){ data.cell.styles.textColor=[200,0,0]; data.cell.styles.fontStyle='bold'; }
+      if(data.column.index===8){
+        data.cell.styles.textColor = shortfallColor(r[C.calc]);
+        data.cell.styles.fontStyle = 'bold';
+      }
       if(data.column.index===7 && r[C.ad]===0){ data.cell.styles.textColor=[200,80,0]; data.cell.styles.fontStyle='bold'; }
     },
     margin:{ left:14, right:14 }
@@ -1541,7 +1556,6 @@ function exportPDF(){
   // ── SECTION 2: Approved entries (for reference) ──
   if(approvedList.length>0){
     const y2 = doc.lastAutoTable.finalY + 12;
-    // Section header
     doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(0,120,0);
     doc.text('Approved Entries — For Reference ('+approvedList.length+')', 14, y2);
     doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(60,60,60);
@@ -1558,7 +1572,10 @@ function exportPDF(){
       didParseCell: function(data){
         if(data.section!=='body') return;
         const r = approvedList[data.row.index]; if(!r) return;
-        if(data.column.index===8){ data.cell.styles.textColor=[0,130,0]; data.cell.styles.fontStyle='bold'; }
+        if(data.column.index===8){
+          data.cell.styles.textColor = [0,130,0]; // approved always green
+          data.cell.styles.fontStyle = 'bold';
+        }
         if(data.column.index===7 && r[C.ad]===0){ data.cell.styles.textColor=[200,80,0]; data.cell.styles.fontStyle='bold'; }
       },
       margin:{ left:14, right:14 }
