@@ -1582,6 +1582,68 @@ function exportPDF(){
     });
   }
 
+  // ── SECTION 3: Missing dates ──
+  (function(){
+    // Build set of dates that have at least one entry in the filtered rows
+    const presentDates = new Set(rows.map(r => dnum(r[C.dt])));
+
+    // Determine range: use filterFrom/filterTo if set, else min–max of ROWS
+    const allNums = ROWS.map(r => dnum(r[C.dt])).filter(Boolean);
+    const rangeStart = filterFrom || Math.min(...allNums);
+    const rangeEnd   = filterTo   || Math.max(...allNums);
+
+    // Walk every calendar day in range and collect missing ones
+    function numToJs(n){ const s=String(n); return new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8)); }
+    function jsToNum(d){ return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); }
+
+    const missing = [];
+    const cur = numToJs(rangeStart);
+    const end = numToJs(rangeEnd);
+    while(cur <= end){
+      const n = jsToNum(cur);
+      if(!presentDates.has(n)){
+        missing.push(numToDate(n));
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+
+    if(!missing.length) return; // all dates covered — skip section
+
+    const lastY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 46;
+    let y3 = lastY + 14;
+
+    // Section header
+    doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(150,60,0);
+    doc.text('Missing Dates — No Data Available ('+missing.length+')', 14, y3);
+    y3 += 5;
+    doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+    doc.text('Entries pending for these dates — no data available. Please update.', 14, y3);
+    y3 += 6;
+
+    // Render as a compact wrapped grid: 6 dates per row
+    const perRow = 6;
+    const cellW  = (doc.internal.pageSize.width - 28) / perRow;
+    const cellH  = 7;
+    for(let i=0; i<missing.length; i++){
+      const col = i % perRow;
+      const row = Math.floor(i / perRow);
+      const x = 14 + col * cellW;
+      const y = y3 + row * cellH;
+      // Check page overflow
+      if(y + cellH > doc.internal.pageSize.height - 14){
+        doc.addPage();
+        y3 = 14 - row * cellH; // reset so next iteration lands at top
+      }
+      const cx = 14 + col * cellW;
+      const cy = y3 + row * cellH;
+      doc.setFillColor(255,245,230);
+      doc.setDrawColor(200,120,40);
+      doc.roundedRect(cx, cy, cellW-2, cellH-1, 1, 1, 'FD');
+      doc.setFontSize(6.5); doc.setFont('helvetica','bold'); doc.setTextColor(150,60,0);
+      doc.text(missing[i], cx + (cellW-2)/2, cy + 4, {align:'center'});
+    }
+  })();
+
   // Page numbers
   const pageCount = doc.internal.getNumberOfPages();
   for(let i=1;i<=pageCount;i++){
