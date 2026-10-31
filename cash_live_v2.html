@@ -1180,21 +1180,46 @@ function setFoot(c,e,td,ed,db,d,diff){
 
 // ── ACTION REQUIRED ────────────────────────────────────────────────────
 function renderAction(rows){
-  loadApproved(); // re-read from localStorage each render
-  const alerts=[...rows].filter(r=>r[C.calc]<0).sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
-  document.getElementById('acCount').textContent=alerts.length;
-  const total=alerts.reduce((s,r)=>s+r[C.calc],0);
-  document.getElementById('acTotal').textContent='Total shortfall: '+inr(total,true);
+  loadApproved();
+  // Show ALL rows sorted newest first — positive (surplus) + negative (shortfall)
+  const allSorted=[...rows].sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
+  const negAlerts=allSorted.filter(r=>r[C.calc]<0);
+  document.getElementById('acCount').textContent=negAlerts.length; // badge = action items
+  const total=negAlerts.reduce((s,r)=>s+r[C.calc],0);
+  document.getElementById('acTotal').textContent='Shortfall: '+inr(total,true)+'  |  Total entries: '+allSorted.length;
   document.getElementById('acFooter').textContent=inr(total,true);
   const tbody=document.getElementById('acTbl');
-  if(!alerts.length){tbody.innerHTML='<tr class="empty-row"><td colspan="13">🎉 No shortfall entries in this date range!</td></tr>';return;}
-  const maxAbs=Math.abs(Math.min(...alerts.map(r=>r[C.calc])));
-  tbody.innerHTML=alerts.map((r,i)=>{
+  if(!allSorted.length){tbody.innerHTML='<tr class="empty-row"><td colspan="13">No entries in this date range!</td></tr>';return;}
+  const maxAbs=negAlerts.length?Math.abs(Math.min(...negAlerts.map(r=>r[C.calc]))):1;
+  tbody.innerHTML=allSorted.map((r,i)=>{
+    const isNeg=r[C.calc]<0;
+    const isApproved=r[C.chkby]==='Approved'||approvedRows[r[C.row]]===true;
+    // ── Positive / Surplus row ──
+    if(!isNeg){
+      return`<tr class="pos">
+      <td style="font-weight:800;color:var(--green);font-size:13px">#${i+1}</td>
+      <td><span class="dchip">${r[C.dt]}</span></td>
+      <td class="r num">${inr(r[C.col])}</td>
+      <td class="r num">${inr(r[C.exp])}</td>
+      <td class="r num">${inr(r[C.td])}</td>
+      <td class="r num">${r[C.ed]?inr(r[C.ed]):'<span class="v-mute">—</span>'}</td>
+      <td class="r num">${r[C.ad]===0?'<strong style="color:var(--red)">⚠ ₹0 — Not Deposited</strong>':inr(r[C.ad])}</td>
+      <td class="r num shortfall-cell" data-row="${r[C.row]}" style="color:var(--green);font-weight:800">${inr(r[C.calc],true)}</td>
+      <td><span style="font-size:10px;font-weight:700;color:var(--green)">✓ Surplus</span>
+          <div class="sev-bar"><div class="sev-fill" style="width:100%;background:var(--green)"></div></div></td>
+      <td style="font-size:12px">${r[C.acct]||'<span class="v-mute">—</span>'}</td>
+      <td style="font-size:12px">${r[C.staff]==='Not Deposit'?'<span class="v-warn">❌ Not Deposited</span>':(r[C.staff]||'<span class="v-mute">—</span>')}</td>
+      <td class="approval-cell">
+        <div style="font-size:10px;color:var(--fg-2);margin-bottom:4px">Verified by Sanjay Sir</div>
+        <span class="approved-badge" style="background:var(--green-dim);color:var(--green)">✓ Surplus OK</span>
+      </td>
+      <td><a class="src-btn" href="${srcLink(r)}" target="_blank">Row ${r[C.row]} ↗</a></td>
+    </tr>`;
+    }
+    // ── Negative / Shortfall row ──
     const pct=Math.min(100,Math.round(Math.abs(r[C.calc])/maxAbs*100));
     const sev=pct>80?'Critical':pct>40?'High':'Medium';
     const col=pct>80?'var(--red)':pct>40?'var(--orange)':'#b45309';
-    // Approved if sheet says so (after refresh) OR optimistic localStorage state
-    const isApproved = r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true;
     return`<tr class="${isApproved?'approved-row':'neg'}">
       <td style="font-weight:800;color:${isApproved?'var(--green)':'var(--red)'};font-size:13px">#${i+1}</td>
       <td><span class="dchip">${r[C.dt]}</span></td>
@@ -1217,7 +1242,8 @@ function renderAction(rows){
         }
       </td>
       <td><a class="src-btn" href="${srcLink(r)}" target="_blank">Row ${r[C.row]} ↗</a></td>
-    </tr>`}).join('');
+    </tr>`;
+  }).join('');
 }
 
 // ── APPROVE ENTRY ──────────────────────────────────────────────────────
@@ -1485,10 +1511,10 @@ function exportPDF(){
     kx += 34;
   });
 
-  // Split rows: high-action (negative, not approved) vs approved — both sorted newest first
-  const highRows     = rows.filter(r => r[C.calc]<0 && r[C.chkby]!=='Approved' && !approvedRows[r[C.row]])
+  // Split rows: all non-approved (positive & negative) vs approved — both sorted newest first
+  const highRows     = rows.filter(r => r[C.chkby]!=='Approved' && !approvedRows[r[C.row]])
                            .sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
-  const approvedList = rows.filter(r => r[C.calc]<0 && (r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true))
+  const approvedList = rows.filter(r => (r[C.chkby]==='Approved' || approvedRows[r[C.row]]===true))
                            .sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
 
   // Color helper for shortfall amount
@@ -1532,14 +1558,21 @@ function exportPDF(){
     10:{cellWidth:14}
   };
 
-  // ── SECTION 1: HIGH ACTION entries ──
+  // ── SECTION 1: All daily entries (positive + negative) ──
+  const negCount = highRows.filter(r=>r[C.calc]<0).length;
+  const posCount = highRows.filter(r=>r[C.calc]>=0).length;
+  doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(15,40,90);
+  doc.text('All Daily Entries — Date-wise Report ('+highRows.length+')', 14, 41);
+  doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+  doc.text('Shortfall entries: '+negCount+' (action required)   |   Surplus entries: '+posCount+' (green)', 14, 45);
+
   doc.autoTable({
-    startY: 46,
+    startY: 49,
     head: tblHead,
     body: buildTableCols(highRows),
     styles:{ fontSize:6, cellPadding:1.5, overflow:'linebreak' },
-    headStyles:{ fillColor:[180,0,0], textColor:255, fontStyle:'bold', fontSize:6 },
-    alternateRowStyles:{ fillColor:[255,245,245] },
+    headStyles:{ fillColor:[15,40,90], textColor:255, fontStyle:'bold', fontSize:6 },
+    alternateRowStyles:{ fillColor:[245,247,252] },
     columnStyles: tblColStyles,
     didParseCell: function(data){
       if(data.section!=='body') return;
