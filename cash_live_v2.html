@@ -1495,18 +1495,21 @@ function exportPDF(){
   doc.text('Records: '+filtered.length+'   High Action Entries: '+alerts, 14, 27);
 
   // KPI row
+  const totalShortfall = filtered.filter(r=>r[C.calc]<0).reduce((s,r)=>s+r[C.calc],0);
   const kpis = [
     ['Total Collection', pf(totalCol)],
     ['Total Expenses',   pf(totalExp)],
     ['Bank Deposits',    pf(totalDep)],
     ['Net Cash',         pf(totalCol-totalExp)],
-    ['Alerts',           alerts+' entries'],
+    ['Total Shortfall',  pf(totalShortfall, true)],
   ];
   let kx = 14;
-  kpis.forEach(([label,val])=>{
+  kpis.forEach(([label,val],idx)=>{
     doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(80,80,80);
     doc.text(label, kx, 30);
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,0,0);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    // Total Shortfall in red, everything else black
+    if(idx===4) doc.setTextColor(180,0,0); else doc.setTextColor(0,0,0);
     doc.text(val, kx, 36);
     kx += 34;
   });
@@ -1549,7 +1552,7 @@ function exportPDF(){
     1:{cellWidth:16, halign:'center'},
     2:{cellWidth:18, halign:'right'},
     3:{cellWidth:15, halign:'right'},
-    4:{cellWidth:15, halign:'right'},
+    4:{cellWidth:20, halign:'right'},
     5:{cellWidth:17, halign:'right'},
     6:{cellWidth:15, halign:'right'},
     7:{cellWidth:18, halign:'right'},
