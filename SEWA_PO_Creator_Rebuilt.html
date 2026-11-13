@@ -1443,22 +1443,7 @@ function exportPDF(){
       '</thead><tbody>'+buildRows(arr,qClr)+'</tbody></table>';
   }
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+label+' PO '+poNum+'</title>'+
-    '<style>'+
-    '@page{size:210mm 297mm portrait;margin:8mm 8mm 10mm 8mm}'+
-    '*{box-sizing:border-box;margin:0;padding:0}'+
-    'html,body{width:210mm;font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#0f1923;background:#fff}'+
-    'body{padding:0}'+
-    '.page{width:100%;background:#fff}'+
-    'table{width:100%;border-collapse:collapse;table-layout:fixed}'+
-    'th,td{overflow:hidden;word-break:break-word}'+
-    /* col widths: S.No=5% Code=10% Dept=12% Name=28% RSP=9% MAX=7% Stock=9% Reorder=9% Value=9% Policy=4% (rounding to 100) */
-    '.c0{width:4%}.c1{width:9%}.c2{width:11%}.c3{width:28%}.c4{width:9%}.c5{width:7%}.c6{width:9%}.c7{width:9%}.c8{width:10%}.c9{width:4%}'+
-    '@media print{'+
-    'html,body{width:210mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
-    '.page{break-inside:auto}'+
-    'tr{break-inside:avoid}'+
-    '.section-hdr{break-before:avoid;break-after:avoid}'+
-    '}</style></head><body>'+
+    '<style>@page{size:A4 portrait;margin:8mm}*{box-sizing:border-box;margin:0;padding:0}html{width:100%}body{width:100%;font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#0f1923;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{width:100%}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{overflow:hidden;word-break:break-word}.c0{width:4%}.c1{width:9%}.c2{width:11%}.c3{width:27%}.c4{width:9%}.c5{width:7%}.c6{width:9%}.c7{width:9%}.c8{width:11%}.c9{width:4%}.no-print{display:none}@media print{html,body{width:100%}.page{break-inside:auto}tr{break-inside:avoid}.section-hdr{break-before:avoid;break-after:avoid}}</style></head><body style='margin:0;padding:0'>'+
     '<div class="page">'+
     '<div style="background:#1a2e4a;padding:10pt 16pt;text-align:center"><div style="font-size:16pt;font-weight:700;color:#fff;letter-spacing:.5px">SEWA GIFT PALACE</div><div style="font-size:8pt;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;margin-top:2px">Christofin Impex &middot; New Delhi</div></div>'+
     '<div style="background:#e87c1e;padding:5pt;text-align:center;font-size:11pt;font-weight:700;color:#fff;letter-spacing:.5px">PURCHASE ORDER &mdash; '+label.toUpperCase()+'</div>'+
@@ -1478,7 +1463,11 @@ function exportPDF(){
     '</div>'+
     '<div style="padding:6px 16px;border-top:1px solid #e8ecf0;font-size:8.5px;color:#aaa;text-align:center">SEWA GIFT PALACE / CHRISTOFIN IMPEX &middot; '+poNum+' &middot; '+genTime+'</div>'+
     '</div>'+
-    '<script>window.onload=function(){document.title="'+label.replace(/"/g,"'")+' PO '+poNum+'";setTimeout(function(){window.print();},800);};<\/script></body></html>';
+    '<div class="no-print" style="text-align:center;padding:12pt;background:#f0f4f8;border-top:1px solid #dde3ec">'+
+    '<button onclick="window.print()" style="background:#1a2e4a;color:#fff;border:none;padding:8pt 24pt;font-size:11pt;font-weight:700;border-radius:4pt;cursor:pointer">Print / Save as PDF</button>'+
+    ' &nbsp;<span style="font-size:8pt;color:#888">In print dialog: Layout=Portrait, Margins=None, enable Background graphics</span>'+
+    '</div>'+
+    '<script>window.onload=function(){document.title="'+label.replace(/"/g,"'")+' PO '+poNum+'";};<\/script></body></html>';
   try{
     var blob=new Blob([html],{type:"text/html;charset=utf-8"});
     var url=URL.createObjectURL(blob);
