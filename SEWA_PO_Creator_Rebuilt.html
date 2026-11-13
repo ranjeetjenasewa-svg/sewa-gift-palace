@@ -1411,16 +1411,16 @@ function exportPDF(){
     var groups=groupByDept(arr);
     for(var gi=0;gi<groups.length;gi++){
       var g=groups[gi];
-      html+='<tr><td colspan="9" style="padding:5px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;background:#e8eef8;color:#1a2e4a;border:1px solid #c5d3e8">&#9658; '+g.dept+'</td></tr>';
+      html+='<tr><td colspan="10" style="padding:3pt 8pt;font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.6px;background:#e8eef8;color:#1a2e4a;border:0.5pt solid #c5d3e8">&#9658; '+g.dept+'</td></tr>';
       for(var ri=0;ri<g.rows.length;ri++){
         var it=g.rows[ri],bg=ri%2===0?"#fff":"#f8fafc";
         var val=it.reorder*it.rsp;
         var negS=it.isNeg?"color:#c0392b;font-weight:700;":"";
-        function td(v,align,ex){return'<td style="padding:4px 5px;font-size:9px;border:1px solid #dde3ec;background:'+bg+';text-align:'+(align||"left")+';'+(ex||"")+'">'+v+'</td>';}
+        function td(v,align,ex){return'<td style="padding:3pt 4pt;font-size:7.5pt;border:0.5pt solid #dde3ec;background:'+bg+';text-align:'+(align||"left")+';'+(ex||"")+'">'+v+'</td>';}
         html+='<tr>'+
           td(sno++,"center","color:#aaa;font-size:9px")+
-          td('<span style="font-family:monospace;font-size:8px;color:#666">'+it.code+'</span>',"left","")+
-          td('<span style="font-size:8px;color:#666">'+it.dept+'</span>',"left","")+
+          td('<span style="font-family:monospace;font-size:7pt;color:#555">'+it.code+'</span>',"left","")+
+          td('<span style="font-size:7pt;color:#555">'+it.dept+'</span>',"left","")+
           td(it.name+(it.isBlocked?'<span style="font-size:8px;font-weight:700;color:#553c9a;background:#faf5ff;border:1px solid #c4b5fd;border-radius:3px;padding:0 3px;margin-left:3px">BLOCK</span>':""),"left","")+
           td("&#8377;"+it.rsp.toLocaleString("en-IN"),"right","")+
           td(it.maxLvl!==null?it.maxLvl:"—","center","color:#666")+
@@ -1434,31 +1434,47 @@ function exportPDF(){
   }
   function buildSection(title,dotClr,bgClr,bdClr,arr,qClr){
     if(!arr.length)return"";
-    return'<div style="padding:7px 12px;font-size:11.5px;font-weight:700;background:'+bgClr+';color:'+qClr+';border:1.5px solid '+bdClr+';border-radius:6px;margin:12px 0 6px;display:flex;align-items:center;gap:8px">'+
-      '<span style="width:9px;height:9px;border-radius:50%;background:'+dotClr+';display:inline-block;flex-shrink:0"></span>'+
+    return'<div class="section-hdr" style="padding:5pt 10pt;font-size:9pt;font-weight:700;background:'+bgClr+';color:'+qClr+';border:1pt solid '+bdClr+';border-radius:3pt;margin:7pt 0 3pt;display:flex;align-items:center;gap:6pt">'+
+      '<span style="width:7pt;height:7pt;border-radius:50%;background:'+dotClr+';display:inline-block;flex-shrink:0"></span>'+
       title+' &nbsp;<span style="margin-left:auto;background:rgba(0,0,0,.08);padding:2px 10px;border-radius:12px;font-size:10px">'+arr.length+' items</span></div>'+
       '<table style="width:100%;border-collapse:collapse;margin-bottom:4px"><thead>'+
-      '<tr style="background:#1a2e4a">'+TH.map(function(h,i){return'<th style="padding:5px 5px;font-size:8.5px;font-weight:700;color:#fff;text-align:'+(i>=4?"right":"left")+';white-space:nowrap;border:1px solid #0d1e32;letter-spacing:.2px">'+h+'</th>';}).join("")+'</tr>'+
+      '<colgroup><col class="c0"><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"><col class="c8"><col class="c9"></colgroup>'+
+      '<tr style="background:#1a2e4a">'+TH.map(function(h,i){return'<th style="padding:4pt 4pt;font-size:7.5pt;font-weight:700;color:#fff;text-align:'+(i>=4?"right":"left")+';border:0.5pt solid #0d1e32;letter-spacing:.2px">'+h+'</th>';}).join("")+'</tr>'+
       '</thead><tbody>'+buildRows(arr,qClr)+'</tbody></table>';
   }
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+label+' PO '+poNum+'</title>'+
-    '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;background:#f0f2f5;font-size:10px;color:#0f1923}.page{background:#fff;max-width:794px;margin:12px auto;padding:0;box-shadow:0 2px 12px rgba(0,0,0,.12);border-radius:4px;overflow:hidden;margin-bottom:24px}@media print{body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{margin:0;box-shadow:none;border-radius:0;max-width:100%;width:100%}@page{size:A4 portrait;margin:10mm 8mm}}</style></head><body>'+
+    '<style>'+
+    '@page{size:210mm 297mm portrait;margin:8mm 8mm 10mm 8mm}'+
+    '*{box-sizing:border-box;margin:0;padding:0}'+
+    'html,body{width:210mm;font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#0f1923;background:#fff}'+
+    'body{padding:0}'+
+    '.page{width:100%;background:#fff}'+
+    'table{width:100%;border-collapse:collapse;table-layout:fixed}'+
+    'th,td{overflow:hidden;word-break:break-word}'+
+    /* col widths: S.No=5% Code=10% Dept=12% Name=28% RSP=9% MAX=7% Stock=9% Reorder=9% Value=9% Policy=4% (rounding to 100) */
+    '.c0{width:4%}.c1{width:9%}.c2{width:11%}.c3{width:28%}.c4{width:9%}.c5{width:7%}.c6{width:9%}.c7{width:9%}.c8{width:10%}.c9{width:4%}'+
+    '@media print{'+
+    'html,body{width:210mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+    '.page{break-inside:auto}'+
+    'tr{break-inside:avoid}'+
+    '.section-hdr{break-before:avoid;break-after:avoid}'+
+    '}</style></head><body>'+
     '<div class="page">'+
-    '<div style="background:#1a2e4a;padding:14px 20px;text-align:center"><div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:.5px">SEWA GIFT PALACE</div><div style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-top:2px">Christofin Impex &middot; New Delhi</div></div>'+
-    '<div style="background:#e87c1e;padding:8px;text-align:center;font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px">PURCHASE ORDER &mdash; '+label.toUpperCase()+'</div>'+
-    '<div style="padding:7px 16px;background:#f0f4f8;border-bottom:1px solid #dde3ec;display:flex;justify-content:space-between;font-size:9.5px;color:#555;flex-wrap:wrap;gap:4px"><span><strong>PO No:</strong> '+poNum+' &nbsp;|&nbsp; <strong>Date:</strong> '+poDate+' &nbsp;|&nbsp; Stock: Last date Stock column</span><span>'+genTime+'</span></div>'+
-    '<div style="display:flex;border-bottom:1px solid #dde3ec">'+
-    [{lbl:"Out of Stock",val:redI.length,bg:"#fff5f5",clr:"#c0392b"},{lbl:"Low Stock",val:grayI.length,bg:"#f7fafc",clr:"#4a5568"},{lbl:"Blocked",val:blkI.length,bg:"#faf5ff",clr:"#553c9a"},{lbl:"Order Units",val:totalU,bg:"#eef2f8",clr:"#1a2e4a"},{lbl:"RSP Value",val:"&#8377;"+totalV.toLocaleString("en-IN"),bg:"#fff8f0",clr:"#e87c1e"}].map(function(s){return'<div style="flex:1;padding:9px 12px;background:'+s.bg+';border-right:1px solid #dde3ec"><div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:'+s.clr+';margin-bottom:3px">'+s.lbl+'</div><div style="font-size:17px;font-weight:700;color:'+s.clr+'">'+s.val+'</div></div>';}).join("")+
+    '<div style="background:#1a2e4a;padding:10pt 16pt;text-align:center"><div style="font-size:16pt;font-weight:700;color:#fff;letter-spacing:.5px">SEWA GIFT PALACE</div><div style="font-size:8pt;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;margin-top:2px">Christofin Impex &middot; New Delhi</div></div>'+
+    '<div style="background:#e87c1e;padding:5pt;text-align:center;font-size:11pt;font-weight:700;color:#fff;letter-spacing:.5px">PURCHASE ORDER &mdash; '+label.toUpperCase()+'</div>'+
+    '<div style="padding:4pt 10pt;background:#f0f4f8;border-bottom:1px solid #dde3ec;display:flex;justify-content:space-between;font-size:7.5pt;color:#555"><span><strong>Stock as of Day Latest</strong> &nbsp;|&nbsp; &#9679; = Needs Order &nbsp; &#9679; = Sufficient Stock</span><span><strong>PO No:</strong> '+poNum+' &nbsp;|&nbsp; <strong>Date:</strong> '+poDate+' &nbsp;|&nbsp; '+genTime+'</span></div>'+
+    '<div style="display:flex;border-bottom:1.5px solid #dde3ec">'+
+    [{lbl:"OUT OF STOCK",val:redI.length,bg:"#fff5f5",clr:"#c0392b"},{lbl:"LOW STOCK",val:grayI.length,bg:"#f7fafc",clr:"#4a5568"},{lbl:"BLOCKED",val:blkI.length,bg:"#faf5ff",clr:"#553c9a"},{lbl:"ORDER UNITS",val:totalU,bg:"#eef2f8",clr:"#1a2e4a"},{lbl:"RSP VALUE",val:"&#8377;"+totalV.toLocaleString("en-IN"),bg:"#fff8f0",clr:"#e87c1e"}].map(function(s){return'<div style="flex:1;padding:6pt 8pt;background:'+s.bg+';border-right:1px solid #dde3ec"><div style="font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:'+s.clr+';margin-bottom:2pt">'+s.lbl+'</div><div style="font-size:14pt;font-weight:700;color:'+s.clr+'">'+s.val+'</div></div>';}).join("")+
     '</div>'+
-    '<div style="padding:12px 16px">'+
+    '<div style="padding:6pt 10pt">'+
     buildSection("Out of Stock — Order Immediately","#c0392b","#fff5f5","#feb2b2",redI,"#c0392b")+
     buildSection("Low Stock — Order Soon","#e87c1e","#fff8f0","#f5c07a",grayI,"#4a5568")+
-    (orderI.length?'<table style="width:100%;border-collapse:collapse;margin:4px 0 14px"><tr><td style="padding:8px 12px;font-size:11px;font-weight:700;background:#1a2e4a;color:#fff;border:1px solid #0d1e32">TOTAL &mdash; '+orderI.length+' items</td><td style="padding:8px 12px;font-size:11px;font-weight:700;background:#1a2e4a;color:#fff;border:1px solid #0d1e32;text-align:center;white-space:nowrap">'+totalU.toLocaleString("en-IN")+' units</td><td style="padding:8px 12px;font-size:11px;font-weight:700;background:#e87c1e;color:#fff;border:1px solid #c55e10;text-align:right;white-space:nowrap">&#8377;'+totalV.toLocaleString("en-IN")+'</td></tr></table>':"")+
+    (orderI.length?'<table style="width:100%;border-collapse:collapse;margin:4pt 0 10pt"><tr><td style="padding:6pt 10pt;font-size:9pt;font-weight:700;background:#1a2e4a;color:#fff;border:0.5pt solid #0d1e32">TOTAL &mdash; '+orderI.length+' items</td><td style="padding:8px 12px;font-size:11px;font-weight:700;background:#1a2e4a;color:#fff;border:1px solid #0d1e32;text-align:center;white-space:nowrap">'+totalU.toLocaleString("en-IN")+' units</td><td style="padding:8px 12px;font-size:11px;font-weight:700;background:#e87c1e;color:#fff;border:1px solid #c55e10;text-align:right;white-space:nowrap">&#8377;'+totalV.toLocaleString("en-IN")+'</td></tr></table>':"")+
     buildSection("Blocked Items — Verify","#553c9a","#faf5ff","#c4b5fd",blkI,"#553c9a")+
     buildSection("Sufficient Stock","#1a6b3a","#f0fff4","#9ae6b4",greenI,"#1a6b3a")+
     '</div>'+
-    '<div style="padding:14px 16px;border-top:1px solid #dde3ec;display:flex;gap:30px">'+
-    ['Prepared By','Checked By','Authorized By'].map(function(l){return'<div style="flex:1"><div style="font-size:8.5px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:22px">'+l+'</div><div style="border-top:1px solid #1a2e4a;padding-top:4px;font-size:9px;color:#888">Signature &amp; Date</div></div>';}).join("")+
+    '<div style="padding:10pt 14pt;border-top:1pt solid #dde3ec;display:flex;gap:20pt;margin-top:6pt">'++
+    ['Prepared By','Checked By','Authorized By'].map(function(l){return'<div style="flex:1"><div style="font-size:7.5pt;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:18pt">'+l+'</div><div style="border-top:1px solid #1a2e4a;padding-top:4px;font-size:9px;color:#888">Signature &amp; Date</div></div>';}).join("")+
     '</div>'+
     '<div style="padding:6px 16px;border-top:1px solid #e8ecf0;font-size:8.5px;color:#aaa;text-align:center">SEWA GIFT PALACE / CHRISTOFIN IMPEX &middot; '+poNum+' &middot; '+genTime+'</div>'+
     '</div>'+
