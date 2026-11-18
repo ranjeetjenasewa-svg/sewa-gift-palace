@@ -311,7 +311,7 @@
     <select id="filterSalesman" onchange="renderOutstanding()">
       <option value="">All Salesmen</option>
     </select>
-    <input type="text" id="searchParty" placeholder="🔍 Search party…" oninput="renderOutstanding()">
+    <input type="text" id="searchParty" autocomplete="off" placeholder="🔍 Search party…" oninput="renderOutstanding()">
     <select id="filterAging" onchange="renderOutstanding()">
       <option value="">All Aging</option>
       <option value="0-30">0–30 Days</option>
@@ -941,8 +941,8 @@ window.addEventListener('unhandledrejection', function(e) {
     <div style="font-size:30px">🔒</div>
     <h3 style="margin:6px 0 4px;color:#1a237e">Christofin Impex</h3>
     <p style="margin:0 0 14px;color:#666;font-size:13px">Enter access key to open the dashboard</p>
-    <input id="chrKey" type="password" autocomplete="off" placeholder="Access key"
-      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #bbb;border-radius:8px;font-size:14px">
+    <input id="chrKey" name="chr-access-key" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Access key"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #bbb;border-radius:8px;font-size:14px;-webkit-text-security:disc">
     <div id="chrKeyErr" style="color:#c62828;font-size:12px;min-height:18px;margin:8px 0 4px"></div>
     <button id="chrKeyBtn" style="width:100%;background:#1a237e;color:#fff;border:0;border-radius:8px;padding:10px;font-size:14px;font-weight:600;cursor:pointer">Open Dashboard</button>
   </div>
@@ -1014,7 +1014,7 @@ window.addEventListener('unhandledrejection', function(e) {
         call(name,args).then(function(r){ if(ok) ok(r); }).catch(function(e){
           var m=(e&&e.message)||String(e);
           if(/Failed to fetch|NetworkError|Load failed/i.test(m))
-            m += ' — check internet; Apps Script deployment must be: Execute as Me, Access: Anyone';
+            m += ' — server not reachable. Open the Apps Script link in an Incognito window: it must show "Outstanding Dashboard API" (not a sign-in page). If not: Deploy → Manage deployments → Edit → Who has access = Anyone, Version = New version.';
           if(bad) bad({message:m});
         });
       };
