@@ -1,1 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Christofin Impex — Outstanding Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#222;font-size:13px}
+
+  /* ── Navbar ── */
+  .nav{background:linear-gradient(135deg,#1a237e,#283593);color:#fff;padding:10px 18px;
+    display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .nav-brand{display:flex;align-items:center;gap:10px}
+  .nav-logo{width:44px;height:44px;border-radius:50%;background:#fff;flex:0 0 auto;box-shadow:0 0 0 2px rgba(255,255,255,.35)}
+  .nav-title{font-size:16px;font-weight:700;letter-spacing:.5px}
+  .nav-sub{font-size:11px;opacity:.8;margin-top:2px}
+  .nav-right{display:flex;align-items:center;gap:10px}
+  .nav-btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;
+    padding:5px 12px;border-radius:5px;cursor:pointer;font-size:12px;transition:.2s}
+  .nav-btn:hover{background:rgba(255,255,255,.3)}
+  .nav-status{font-size:11px;opacity:.75;background:rgba(255,255,255,.12);
+    padding:3px 10px;border-radius:12px}
+
+  /* ── Stats Bar ── */
+  .stats-bar{display:flex;gap:8px;padding:12px 14px;overflow-x:auto;background:#fff;
+    border-bottom:1px solid #e0e0e0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .stat-card{flex:0 0 auto;background:#f8f9ff;border:1px solid #e3e6ff;border-radius:8px;
+    padding:8px 14px;text-align:center;min-width:120px;transition:.2s;cursor:default}
+  .stat-card:hover{box-shadow:0 2px 8px rgba(26,35,126,.15);transform:translateY(-1px)}
+  .stat-card.red{border-color:#ffcdd2;background:#fff5f5}
+  .stat-card.green{border-color:#c8e6c9;background:#f1fff1}
+  .stat-card.blue{border-color:#bbdefb;background:#f0f8ff}
+  .stat-card.orange{border-color:#ffe0b2;background:#fffaf0}
+  .stat-label{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+  .stat-value{font-size:16px;font-weight:700;color:#1a237e}
+  .stat-card.red .stat-value{color:#c62828}
+  .stat-card.green .stat-value{color:#2e7d32}
+  .stat-card.blue .stat-value{color:#1565c0}
+  .stat-card.orange .stat-value{color:#e65100}
+
+  /* ── Tabs ── */
+  .tab-bar{display:flex;background:#1a237e;padding:0 10px;gap:2px;overflow-x:auto}
+  .tab-btn{background:transparent;border:none;color:rgba(255,255,255,.65);padding:10px 16px;
+    cursor:pointer;font-size:12px;font-weight:600;border-bottom:3px solid transparent;
+    white-space:nowrap;transition:.2s}
+  .tab-btn.active{color:#fff;border-bottom-color:#90caf9}
+  .tab-btn:hover:not(.active){color:rgba(255,255,255,.9);background:rgba(255,255,255,.08)}
+  .tab-pane{display:none;padding:12px 14px}
+  .tab-pane.active{display:block}
+
+  /* ── Toolbar ── */
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    background:#fff;padding:10px 14px;border-radius:8px;margin-bottom:10px;
+    box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .toolbar select,.toolbar input[type=text],.toolbar input[type=date]{
+    padding:6px 10px;border:1px solid #ddd;border-radius:5px;font-size:12px;
+    background:#fafafa;min-width:150px}
+  .toolbar select:focus,.toolbar input:focus{outline:none;border-color:#3f51b5}
+
+  /* ── Table ── */
+  .tbl-wrap{background:#fff;border-radius:8px;overflow:auto;
+    box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  thead th{background:#1a237e;color:#fff;padding:8px 10px;text-align:left;
+    white-space:nowrap;position:sticky;top:0;z-index:5}
+  tbody tr{border-bottom:1px solid #f0f0f0;transition:.15s}
+  tbody tr:hover{background:#f5f7ff}
+  tbody td{padding:7px 10px;vertical-align:middle}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  /* Outstanding table layout */
+  #outTable{table-layout:auto}
+  #outTable th,#outTable td{white-space:nowrap}
+  #outTable td:nth-child(2){white-space:normal;min-width:200px;max-width:280px}
+  #outTable td:nth-child(3){min-width:110px}
+  #outTable th.num,#outTable td.num{min-width:78px}
+  #outTable thead th:nth-child(1),#outTable thead th:nth-child(13),
+  #outTable td:nth-child(13){text-align:center}
+  #outTable th:nth-child(14),#outTable td:nth-child(14){min-width:190px;width:190px}
+  .act{display:flex;flex-wrap:nowrap;align-items:center;gap:4px}
+  .act button{flex:0 0 auto;height:26px;display:inline-flex;align-items:center;justify-content:center;
+    white-space:nowrap;line-height:1}
+  .btn-hist{background:#ede7f6;color:#4a148c;padding:3px 9px;border:none;border-radius:4px;
+    cursor:pointer;font-size:11px}
+  .total-row td{font-weight:700;background:#e8eaf6;border-top:2px solid #3f51b5}
+  tr.party-header td{background:#e8eaf6;font-weight:700;cursor:pointer}
+  tr.party-header td:first-child::before{content:'▶ ';font-size:10px;color:#666}
+  tr.party-header.open td:first-child::before{content:'▼ ';color:#1a237e}
+  tr.bill-row{background:#fafbff}
+  tr.bill-row td{padding:5px 10px;font-size:11px}
+
+  /* ── Badges & Pills ── */
+  .badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+  .b-0-30{background:#e8f5e9;color:#1b5e20}
+  .b-31-60{background:#fff9c4;color:#f57f17}
+  .b-61-90{background:#ffe0b2;color:#bf360c}
+  .b-91{background:#ffcdd2;color:#b71c1c}
+  .pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+  .pill-cash{background:#e8f5e9;color:#2e7d32}
+  .pill-cheque{background:#e3f2fd;color:#1565c0}
+  .pill-upi{background:#f3e5f5;color:#6a1b9a}
+
+  /* ── Buttons ── */
+  .btn{padding:5px 12px;border:none;border-radius:5px;cursor:pointer;
+    font-size:12px;font-weight:600;transition:.2s}
+  .btn:hover{opacity:.85;transform:translateY(-1px)}
+  .btn-primary{background:#1a237e;color:#fff}
+  .btn-success{background:#2e7d32;color:#fff}
+  .btn-warning{background:#e65100;color:#fff}
+  .btn-danger{background:#c62828;color:#fff}
+  .btn-sm{padding:3px 9px;font-size:11px}
+  .btn-pay{background:linear-gradient(135deg,#2e7d32,#43a047);color:#fff;padding:3px 9px;
+    border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600}
+  .btn-fu{background:#1565c0;color:#fff;padding:3px 9px;border:none;
+    border-radius:4px;cursor:pointer;font-size:11px}
+  .btn-wa{background:#25d366;color:#fff;padding:3px 9px;border:none;
+    border-radius:4px;cursor:pointer;font-size:11px}
+
+  /* ── Modal ── */
+  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+    z-index:1000;overflow-y:auto;padding:20px}
+  .modal-backdrop.show{display:flex;align-items:flex-start;justify-content:center}
+  .modal{background:#fff;border-radius:10px;width:100%;max-width:560px;
+    box-shadow:0 8px 40px rgba(0,0,0,.3);overflow:hidden}
+  .modal-pay{max-width:620px}
+  .modal-header{background:linear-gradient(135deg,#1a237e,#283593);color:#fff;
+    padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+  .modal-header h3{font-size:14px;font-weight:700}
+  .modal-close{background:none;border:none;color:#fff;font-size:20px;
+    cursor:pointer;line-height:1;opacity:.8}
+  .modal-close:hover{opacity:1}
+  .modal-body{padding:16px 18px}
+  .modal-footer{padding:12px 18px;background:#f5f5f5;display:flex;gap:8px;justify-content:flex-end;
+    border-top:1px solid #eee}
+
+  /* ── Form elements ── */
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .form-row.single{grid-template-columns:1fr}
+  .form-group{display:flex;flex-direction:column;gap:4px}
+  .form-group label{font-size:11px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:.4px}
+  .form-group input,.form-group select,.form-group textarea{
+    padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-size:13px;
+    background:#fafafa;transition:.2s}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+    outline:none;border-color:#3f51b5;background:#fff}
+  .form-group input[readonly]{background:#f0f0f0;color:#555}
+  .form-group textarea{resize:vertical;min-height:60px}
+
+  /* ── Info boxes ── */
+  .info-box{background:#e3f2fd;border-left:4px solid #1565c0;padding:8px 12px;
+    border-radius:4px;font-size:12px;margin-bottom:10px}
+  .info-box.success{background:#e8f5e9;border-color:#2e7d32}
+  .info-box.warning{background:#fff8e1;border-color:#f57f17}
+  .info-box.error{background:#ffebee;border-color:#c62828}
+
+  /* ── Bill allocation table ── */
+  .bill-alloc-toggle{cursor:pointer;color:#1565c0;font-size:11px;font-weight:600;
+    text-decoration:underline;margin-bottom:6px;display:inline-block}
+  .bill-alloc-wrap{display:none;border:1px solid #ddd;border-radius:6px;overflow:hidden;margin-bottom:10px}
+  .bill-alloc-wrap.show{display:block}
+  .bill-alloc-wrap table{font-size:11px}
+  .bill-alloc-wrap thead th{background:#3f51b5;padding:5px 8px}
+  .bill-alloc-wrap tbody td{padding:4px 8px}
+  .bill-alloc-wrap input[type=number]{width:90px;padding:3px 6px;border:1px solid #ccc;
+    border-radius:3px;font-size:11px}
+
+  /* ── Reporting sub-tabs ── */
+  .sub-tab-bar{display:flex;gap:4px;margin-bottom:12px;border-bottom:2px solid #e0e0e0;padding-bottom:0}
+  .sub-tab{padding:7px 14px;border:none;background:transparent;cursor:pointer;
+    font-size:12px;font-weight:600;color:#666;border-bottom:3px solid transparent;
+    margin-bottom:-2px;transition:.2s}
+  .sub-tab.active{color:#1a237e;border-bottom-color:#1a237e}
+  .sub-tab:hover:not(.active){color:#3f51b5}
+  .sub-pane{display:none}
+  .sub-pane.active{display:block}
+
+  /* ── Collection summary cards ── */
+  .coll-cards{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .coll-card{background:#fff;border:1px solid #e0e0e0;border-radius:7px;
+    padding:8px 14px;text-align:center;flex:1;min-width:110px}
+  .coll-card .cc-label{font-size:10px;color:#888;text-transform:uppercase}
+  .coll-card .cc-val{font-size:15px;font-weight:700;color:#1a237e;margin-top:2px}
+
+  /* ── Export panel ── */
+  .export-panel{background:#fff;border-radius:8px;padding:16px;
+    box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:10px}
+  .export-panel h4{font-size:13px;font-weight:700;color:#1a237e;margin-bottom:12px;
+    padding-bottom:6px;border-bottom:1px solid #e0e0e0}
+  .export-actions{display:flex;gap:8px;margin-top:14px;padding-top:10px;border-top:1px solid #f0f0f0}
+
+  /* ── Aging summary ── */
+  .aging-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .aging-chip{background:#fff;border:1px solid #ddd;border-radius:6px;
+    padding:6px 12px;font-size:11px;text-align:center}
+  .aging-chip strong{display:block;font-size:14px}
+
+  /* ── Loading spinner ── */
+  .loading{display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:40px;color:#666;font-size:13px}
+  .spinner{width:24px;height:24px;border:3px solid #e0e0e0;
+    border-top-color:#1a237e;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── Toast ── */
+  #toast{position:fixed;bottom:24px;right:24px;background:#333;color:#fff;
+    padding:10px 18px;border-radius:7px;font-size:13px;z-index:9999;
+    transform:translateY(60px);opacity:0;transition:.3s;pointer-events:none;max-width:320px}
+  #toast.show{transform:translateY(0);opacity:1}
+  #toast.ok{background:#2e7d32}
+  #toast.err{background:#c62828}
+  #toast.warn{background:#e65100}
+
+  /* ── Misc ── */
+  .empty{text-align:center;padding:30px;color:#999;font-style:italic}
+  .text-right{text-align:right}
+  .text-center{text-align:center}
+  .bold{font-weight:700}
+  .sep{border:none;border-top:1px solid #eee;margin:12px 0}
+  .collected-tag{font-size:10px;color:#2e7d32;font-weight:600;background:#e8f5e9;
+    padding:1px 5px;border-radius:3px;margin-left:4px}
+
+  /* ── Live sync indicator ── */
+  .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:#69f0ae;margin-right:4px;animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(105,240,174,.6)}
+    50%{opacity:.7;box-shadow:0 0 0 4px rgba(105,240,174,0)}}
+  .live-dot.syncing{background:#ffd54f;animation:spin .7s linear infinite}
+  .live-dot.error{background:#ef5350;animation:none}
+  #syncInfo{font-size:11px;opacity:.75;background:rgba(255,255,255,.12);
+    padding:3px 10px;border-radius:12px;display:flex;align-items:center;gap:4px}
+  #syncCountdown{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════════════════ -->
+<div class="nav">
+  <div class="nav-brand">
+    <img class="nav-logo" alt="Christofin" src="data:image/jpeg;base64,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">
+    <div>
+      <div class="nav-title">Christofin Impex</div>
+      <div class="nav-sub">Outstanding Payment Dashboard</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span style="font-size:10px;opacity:.5;margin-right:4px">V32</span>
+    <div id="syncInfo">
+      <span class="live-dot" id="liveDot"></span>
+      <span id="srcLabel">Loading…</span>
+      &nbsp;·&nbsp;
+      <span id="syncCountdown">—</span>
+    </div>
+    <button class="nav-btn" onclick="refreshAll()">🔄 Refresh</button>
+  </div>
+</div>
+
+<!-- ══ V31 DIAGNOSTIC BANNER ═══════════════════════════════════════ -->
+<!-- Green = server rendered OK. JS updates it; hides itself on full success. -->
+<div id="_v30d" style="background:#1b5e20;color:#e8f5e9;font:11px/26px monospace;padding:0 14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+  V32: ⏳ JS loading…
+</div>
+
+<!-- ══ STATS BAR ════════════════════════════════════════════════════ -->
+<div class="stats-bar" id="statsBar">
+  <div class="stat-card red">
+    <div class="stat-label">Net Outstanding</div>
+    <div class="stat-value" id="s-netOut">—</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">Today's Collection</div>
+    <div class="stat-value" id="s-todayTotal">—</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">Cash Today</div>
+    <div class="stat-value" id="s-todayCash">—</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-label">Cheque Today</div>
+    <div class="stat-value" id="s-todayCheque">—</div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-label">UPI Today</div>
+    <div class="stat-value" id="s-todayUPI">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Collected</div>
+    <div class="stat-value" id="s-totalColl">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Today Txns</div>
+    <div class="stat-value" id="s-todayTxn">—</div>
+  </div>
+</div>
+
+<!-- ══ TABS ═════════════════════════════════════════════════════════ -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('outstanding',this)">📋 Outstanding</button>
+  <button class="tab-btn" onclick="switchTab('history',this)">📅 Follow-Up History</button>
+  <button class="tab-btn" onclick="switchTab('masters',this)">🗂️ Masters</button>
+  <button class="tab-btn" onclick="switchTab('reporting',this)">📊 Reporting</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     TAB 1 — OUTSTANDING
+════════════════════════════════════════════════════════════════════ -->
+<div class="tab-pane active" id="tab-outstanding">
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <select id="filterSalesman" onchange="renderOutstanding()">
+      <option value="">All Salesmen</option>
+    </select>
+    <input type="text" id="searchParty" placeholder="🔍 Search party…" oninput="renderOutstanding()">
+    <select id="filterAging" onchange="renderOutstanding()">
+      <option value="">All Aging</option>
+      <option value="0-30">0–30 Days</option>
+      <option value="31-60">31–60 Days</option>
+      <option value="61-90">61–90 Days</option>
+      <option value="91-120">91–120 Days</option>
+      <option value="121-150">121–150 Days</option>
+      <option value="151+">151+ Days</option>
+    </select>
+    <select id="filterPaid" onchange="renderOutstanding()">
+      <option value="">All Parties</option>
+      <option value="pending">Only Pending</option>
+      <option value="partial">Partially Collected</option>
+    </select>
+    <span id="countLabel" style="margin-left:auto;font-size:11px;color:#888"></span>
+  </div>
+
+  <!-- Aging summary chips — pre-populated server-side, re-rendered by JS on filter -->
+  <div class="aging-row" id="agingRow"></div>
+
+  <!-- Table -->
+  <div class="tbl-wrap">
+    <table id="outTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Party Account</th>
+          <th>Salesman / Area</th>
+          <th class="num">Closing Amt</th>
+          <th class="num">0–30</th>
+          <th class="num">31–60</th>
+          <th class="num">61–90</th>
+          <th class="num">91–120</th>
+          <th class="num">121–150</th>
+          <th class="num">≥151</th>
+          <th>Remark</th>
+          <th>Follow-Up Date</th>
+          <th>FU#</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="outBody">
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     TAB 2 — FOLLOW-UP HISTORY
+════════════════════════════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-history">
+  <div class="toolbar">
+    <select id="histSalesman" onchange="renderHistory()">
+      <option value="">All Salesmen</option>
+    </select>
+    <input type="text" id="histSearch" placeholder="🔍 Search party…" oninput="renderHistory()">
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>Party Account</th>
+          <th>Salesman</th>
+          <th>Follow-Up Date</th>
+          <th>Remark</th>
+          <th>Promised Payment</th>
+          <th>Staff</th>
+          <th class="num">Outstanding</th>
+        </tr>
+      </thead>
+      <tbody id="histBody">
+        <tr><td colspan="8" class="loading"><div class="spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     TAB 3 — MASTERS
+════════════════════════════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-masters">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+    <!-- Salesman Master -->
+    <div>
+      <div class="export-panel">
+        <h4>➕ Add / Update Salesman</h4>
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Salesman Name *</label>
+          <input id="sm-name" type="text" placeholder="Full name">
+        </div>
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Area / Region</label>
+          <input id="sm-area" type="text" placeholder="Delhi North, etc.">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Contact Number</label>
+          <input id="sm-contact" type="text" placeholder="10-digit mobile">
+        </div>
+        <button class="btn btn-primary" onclick="saveSalesman()">💾 Save Salesman</button>
+      </div>
+      <div class="tbl-wrap" style="max-height:300px;overflow:auto">
+        <table>
+          <thead><tr><th>Name</th><th>Area</th><th>Contact</th></tr></thead>
+          <tbody id="smTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Party Master -->
+    <div>
+      <div class="export-panel">
+        <h4>➕ Add / Update Party</h4>
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Party Name *</label>
+          <input id="pm-name" type="text" placeholder="Party account name">
+        </div>
+        <div class="form-group" style="margin-bottom:8px">
+          <label>Contact Number</label>
+          <input id="pm-contact" type="text" placeholder="10-digit mobile">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Assigned Salesman</label>
+          <select id="pm-salesman"><option value="">— Select —</option></select>
+        </div>
+        <button class="btn btn-primary" onclick="saveParty()">💾 Save Party</button>
+      </div>
+      <div class="tbl-wrap" style="max-height:300px;overflow:auto">
+        <table>
+          <thead><tr><th>Party Name</th><th>Salesman</th><th>Contact</th></tr></thead>
+          <tbody id="pmTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     TAB 4 — REPORTING
+════════════════════════════════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-reporting">
+
+  <!-- Sub-tabs -->
+  <div class="sub-tab-bar">
+    <button class="sub-tab active" onclick="switchSubTab('rpt-pending',this)">📌 Pending</button>
+    <button class="sub-tab" onclick="switchSubTab('rpt-collection',this)">✅ Collection Done</button>
+    <button class="sub-tab" onclick="switchSubTab('rpt-export',this)">⬇️ Export Reports</button>
+  </div>
+
+  <!-- Sub-tab: Pending -->
+  <div class="sub-pane active" id="sub-rpt-pending">
+    <div class="toolbar">
+      <select id="rptSalesman" onchange="renderPendingReport()">
+        <option value="">All Salesmen</option>
+      </select>
+      <input type="text" id="rptSearch" placeholder="🔍 Search party…" oninput="renderPendingReport()">
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Party Account</th>
+            <th>Salesman</th>
+            <th class="num">Total Outstanding</th>
+            <th class="num">Collected</th>
+            <th class="num">Net Pending</th>
+            <th>Last Follow-Up</th>
+            <th class="text-center">FU#</th>
+          </tr>
+        </thead>
+        <tbody id="pendingRptBody">
+          <tr><td colspan="7" class="empty">Switch to Reporting tab to load</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sub-tab: Collection Done -->
+  <div class="sub-pane" id="sub-rpt-collection">
+    <div class="toolbar">
+      <label style="font-size:11px;font-weight:600;color:#555">From:</label>
+      <input type="date" id="rptFrom">
+      <label style="font-size:11px;font-weight:600;color:#555">To:</label>
+      <input type="date" id="rptTo">
+      <select id="rptMode">
+        <option value="">All Modes</option>
+        <option value="Cash">Cash</option>
+        <option value="Cheque">Cheque</option>
+        <option value="UPI">UPI</option>
+      </select>
+      <select id="rptSmFilter">
+        <option value="">All Salesmen</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="loadCollectionReport()">▶ Load</button>
+    </div>
+    <div class="coll-cards">
+      <div class="coll-card"><div class="cc-label">Total</div><div class="cc-val" id="cc-total">—</div></div>
+      <div class="coll-card"><div class="cc-label">Cash</div><div class="cc-val" id="cc-cash">—</div></div>
+      <div class="coll-card"><div class="cc-label">Cheque</div><div class="cc-val" id="cc-cheque">—</div></div>
+      <div class="coll-card"><div class="cc-label">UPI</div><div class="cc-val" id="cc-upi">—</div></div>
+      <div class="coll-card"><div class="cc-label">Transactions</div><div class="cc-val" id="cc-txn">—</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Payment Date</th>
+            <th>Party Account</th>
+            <th>Salesman</th>
+            <th>Mode</th>
+            <th>Mode Details</th>
+            <th class="num">Amount</th>
+            <th class="num">Remaining</th>
+            <th>Staff</th>
+          </tr>
+        </thead>
+        <tbody id="collBody">
+          <tr><td colspan="8" class="empty">Apply filters and click Load</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sub-tab: Export -->
+  <div class="sub-pane" id="sub-rpt-export">
+    <div class="export-panel">
+      <h4>📤 Export Reports</h4>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Report Type *</label>
+          <select id="expType" onchange="toggleExportFilters()">
+            <option value="pending">Pending Outstanding Report</option>
+            <option value="collection">Collection Done Report</option>
+            <option value="party">Party Account-Wise Outstanding</option>
+            <option value="salesman">Salesman-Wise Outstanding</option>
+            <option value="date-wise">Date-Wise Collection Report</option>
+            <option value="mode-wise">Payment Mode-Wise Report</option>
+            <option value="bill-wise">Bill-Wise Partial Payment Report</option>
+            <option value="followup">Follow-Up History Report</option>
+          </select>
+        </div>
+        <div class="form-group" id="expSmGroup">
+          <label>Salesman Filter</label>
+          <select id="expSalesman">
+            <option value="">All Salesmen</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" id="expDateRow">
+        <div class="form-group">
+          <label>From Date</label>
+          <input type="date" id="expFrom">
+        </div>
+        <div class="form-group">
+          <label>To Date</label>
+          <input type="date" id="expTo">
+        </div>
+      </div>
+      <div class="form-row" id="expModeRow" style="display:none">
+        <div class="form-group">
+          <label>Payment Mode</label>
+          <select id="expMode">
+            <option value="">All Modes</option>
+            <option value="Cash">Cash</option>
+            <option value="Cheque">Cheque</option>
+            <option value="UPI">UPI</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Party Filter</label>
+          <input type="text" id="expParty" placeholder="Exact party name…">
+        </div>
+      </div>
+      <div class="export-actions">
+        <button class="btn btn-success" onclick="doExport('csv')">⬇️ Download Excel (CSV)</button>
+        <button class="btn btn-warning" onclick="doExport('pdf')">🖨️ Print / PDF</button>
+        <span id="expStatus" style="font-size:11px;color:#888;align-self:center"></span>
+      </div>
+    </div>
+
+    <!-- Party-wise breakdown table -->
+    <div class="export-panel" id="partyBreakdownPanel" style="display:none">
+      <h4>📊 Party-Wise Payment Breakdown</h4>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Party Account</th>
+              <th>Salesman</th>
+              <th class="num">Raw Outstanding</th>
+              <th class="num">Total Collected</th>
+              <th class="num">Net Pending</th>
+              <th class="text-center">Transactions</th>
+            </tr>
+          </thead>
+          <tbody id="partyBreakdownBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL — FOLLOW-UP
+════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="fuModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📝 Log Follow-Up</h3>
+      <button class="modal-close" onclick="closeModal('fuModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Party Account</label>
+          <input id="fu-party" type="text" readonly>
+        </div>
+        <div class="form-group">
+          <label>Salesman</label>
+          <input id="fu-salesman" type="text" readonly>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Follow-Up Date *</label>
+          <input id="fu-date" type="date">
+        </div>
+        <div class="form-group">
+          <label>Promised Payment Date</label>
+          <input id="fu-promised" type="date">
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label>Remark *</label>
+          <textarea id="fu-remark" placeholder="Follow-up notes…"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Outstanding Amount</label>
+          <input id="fu-amt" type="text" readonly>
+        </div>
+        <div class="form-group">
+          <label>Staff Name *</label>
+          <input id="fu-staff" type="text" placeholder="Your name">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('fuModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitFollowUp()">💾 Save Follow-Up</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL — WHATSAPP
+════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="waModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>💬 Send WhatsApp Message</h3>
+      <button class="modal-close" onclick="closeModal('waModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Party Account</label>
+          <input id="wa-party" type="text" readonly>
+        </div>
+        <div class="form-group">
+          <label>Salesman</label>
+          <input id="wa-salesman" type="text" readonly>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Send To</label>
+          <select id="wa-recipient">
+            <option value="party">Party Contact</option>
+            <option value="salesman">Salesman</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input id="wa-phone" type="text" placeholder="10-digit number">
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label>Message Type</label>
+          <select id="wa-type" onchange="buildWAMessage()">
+            <option value="reminder">Payment Reminder</option>
+            <option value="followup">Follow-Up Message</option>
+            <option value="statement">Statement Request</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label>Message Preview</label>
+          <textarea id="wa-msg" rows="5"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Outstanding Amount</label>
+          <input id="wa-amt" type="text" readonly>
+        </div>
+        <div class="form-group">
+          <label>Staff Name</label>
+          <input id="wa-staff" type="text" placeholder="Your name">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('waModal')">Cancel</button>
+      <button class="btn btn-success" onclick="sendWA()">📱 Open WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL — PARTY BILL HISTORY
+════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="histModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3 id="histModal-title">📋 Follow-Up History</h3>
+      <button class="modal-close" onclick="closeModal('histModal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div class="tbl-wrap" style="max-height:420px">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Follow-Up Date</th>
+              <th>Remark</th>
+              <th>Promised Date</th>
+              <th>Staff</th>
+            </tr>
+          </thead>
+          <tbody id="histModalBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('histModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MODAL — PAYMENT COLLECTION
+════════════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="payModal">
+  <div class="modal modal-pay">
+    <div class="modal-header">
+      <h3>💳 Update Payment / Collection Entry</h3>
+      <button class="modal-close" onclick="closeModal('payModal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Party info -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Party Account</label>
+          <input id="pay-party" type="text" readonly>
+        </div>
+        <div class="form-group">
+          <label>Salesman</label>
+          <input id="pay-salesman" type="text" readonly>
+        </div>
+      </div>
+
+      <!-- Outstanding summary -->
+      <div class="info-box" id="pay-outInfo" style="margin-bottom:10px">
+        <strong>Net Outstanding:</strong> <span id="pay-netOut">—</span>
+        &nbsp;|&nbsp; <strong>Bills:</strong> <span id="pay-billCount">—</span>
+      </div>
+
+      <!-- Payment date + mode -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Payment Date *</label>
+          <input id="pay-date" type="date">
+        </div>
+        <div class="form-group">
+          <label>Payment Mode *</label>
+          <select id="pay-mode" onchange="togglePayMode()">
+            <option value="">— Select Mode —</option>
+            <option value="Cash">💵 Cash</option>
+            <option value="Cheque">🏦 Cheque</option>
+            <option value="UPI">📱 UPI</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Cash fields -->
+      <div id="fields-cash" style="display:none">
+        <div class="form-row" style="grid-template-columns:1fr">
+          <div class="form-group">
+            <label>Amount Received (₹) *</label>
+            <input id="cash-amount" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateBillAutoFill()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Cheque fields -->
+      <div id="fields-cheque" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cheque Number *</label>
+            <input id="chq-no" type="text" placeholder="e.g. 123456">
+          </div>
+          <div class="form-group">
+            <label>Amount (₹) *</label>
+            <input id="chq-amount" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateBillAutoFill()">
+          </div>
+        </div>
+      </div>
+
+      <!-- UPI fields -->
+      <div id="fields-upi" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>UPI App *</label>
+            <select id="upi-app">
+              <option value="">— Select —</option>
+              <option value="PhonePe">PhonePe</option>
+              <option value="Paytm">Paytm</option>
+              <option value="GPay">Google Pay</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Amount (₹) *</label>
+            <input id="upi-amount" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateBillAutoFill()">
+          </div>
+        </div>
+        <div class="form-row" style="grid-template-columns:1fr">
+          <div class="form-group">
+            <label>Transaction ID (optional)</label>
+            <input id="upi-txnid" type="text" placeholder="UPI TxnID if available">
+          </div>
+        </div>
+      </div>
+
+      <!-- Bill allocation -->
+      <span class="bill-alloc-toggle" onclick="toggleBillAlloc()">📋 Bill Allocation (optional)</span>
+      <div class="bill-alloc-wrap" id="billAllocWrap">
+        <div style="display:flex;gap:8px;padding:7px 10px;background:#f5f7ff;border-bottom:1px solid #e0e0e0">
+          <button class="btn btn-primary btn-sm" onclick="autoAllocBills()">⚡ Auto-fill Oldest First</button>
+          <button class="btn btn-sm" style="background:#eee" onclick="clearBillAlloc()">✕ Clear</button>
+          <span id="allocRemaining" style="font-size:11px;color:#555;align-self:center;margin-left:auto"></span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Bill No.</th>
+              <th>Date</th>
+              <th class="num">Pending (₹)</th>
+              <th>Aging</th>
+              <th class="num">Allocate (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="billAllocBody"></tbody>
+        </table>
+      </div>
+
+      <div class="sep"></div>
+
+      <!-- Staff + Notes -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Staff Name *</label>
+          <input id="pay-staff" type="text" placeholder="Who collected?">
+        </div>
+        <div class="form-group">
+          <label>Notes (optional)</label>
+          <input id="pay-notes" type="text" placeholder="Any remarks…">
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('payModal')">Cancel</button>
+      <button class="btn btn-success" onclick="submitPayment()">✅ Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════════════ -->
+
+<!-- V32: No scriptlets. All data via google.script.run. -->
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  var diag = document.getElementById('_v30d');
+  if(diag) {
+    diag.style.background = '#b71c1c';
+    diag.style.display    = 'block';
+    diag.textContent = 'JS ERROR (line ' + line + '): ' + msg;
+  }
+  return false;
+};
+window.addEventListener('unhandledrejection', function(e) {
+  var diag = document.getElementById('_v30d');
+  if(diag) {
+    diag.style.background = '#b71c1c';
+    diag.style.display    = 'block';
+    diag.textContent = 'PROMISE ERROR: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason));
+  }
+});
+</script>
+
+<script>
+// V32: Main script — filtering, sorting, payment modals, follow-up, auto-sync
+
+/* ════════════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════════════ */
+const DB = {
+  parties       : [],
+  salesmanSummary:[],
+  grandTotal    : 0,
+  followUpHistory:[],
+  partyMaster   : [],
+  salesmanMaster: [],
+  payByParty    : {}   // party name → array of payment records
+};
+
+/* ════════════════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════════════ */
+const inr = v => '₹' + (Number(v)||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});
+
+function ageBadge(bucket){
+  const cls = bucket==='0-30'?'b-0-30':bucket==='31-60'?'b-31-60':bucket==='61-90'?'b-61-90':'b-91';
+  return `<span class="badge ${cls}">${bucket}</span>`;
+}
+
+// Safe party id for inline onclick: encodes quotes/&/< too; modals decode with decodeURIComponent
+/* ── Date / time: always IST (Asia/Kolkata). Display DD-MM-YYYY and 12-hour time. ──
+   Internally dates stay yyyy-MM-dd so filters and "today" comparisons remain exact. */
+const TZ='Asia/Kolkata';
+function fmtDate(v){
+  if(v===null||v===undefined||v==='') return '';
+  var s=String(v).trim(); if(!s) return '';
+  var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if(m) return m[3]+'-'+m[2]+'-'+m[1];
+  if(/^\d{2}-\d{2}-\d{4}/.test(s)) return s.slice(0,10);
+  var d=new Date(s);
+  if(isNaN(d)) return s;
+  return new Intl.DateTimeFormat('en-GB',{timeZone:TZ,day:'2-digit',month:'2-digit',year:'numeric'}).format(d).split('/').join('-');
+}
+function fmtDateTime(v){
+  if(v===null||v===undefined||v==='') return '';
+  var s=String(v).trim();
+  if(/[AaPp][Mm]$/.test(s)) return s;                       // already 12-hour
+  var m=/^(\d{2})-(\d{2})-(\d{4})[ T](\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(s);
+  if(m){                                                     // old 24-hour text -> 12-hour
+    var h=+m[4], ap=h>=12?'PM':'AM', h12=((h+11)%12)+1;
+    return m[1]+'-'+m[2]+'-'+m[3]+' '+String(h12).padStart(2,'0')+':'+m[5]+':'+(m[6]||'00')+' '+ap;
+  }
+  var d=new Date(s);
+  if(isNaN(d)) return s;
+  var P={}; new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(d).forEach(function(x){P[x.type]=x.value;});
+  var hh=+P.hour;
+  return P.day+'-'+P.month+'-'+P.year+' '+String(((hh+11)%12)+1).padStart(2,'0')+':'+P.minute+':'+P.second+' '+(hh>=12?'PM':'AM');
+}
+function pid(s){ return encodeURIComponent(String(s)).replace(/'/g,'%27').replace(/\(/g,'%28').replace(/\)/g,'%29'); }
+
+function todayISO(){
+  // today's date in IST as yyyy-MM-dd (independent of the PC's own time zone)
+  return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+}
+
+function toast(msg, type='ok', dur=3000){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='show '+type;
+  setTimeout(()=>el.className='',dur);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TAB SWITCHING
+════════════════════════════════════════════════════════════════ */
+function switchTab(id, btn){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='history') renderHistory();
+  if(id==='masters') renderMasters();
+  if(id==='reporting') renderPendingReport();
+}
+
+function switchSubTab(id, btn){
+  document.querySelectorAll('.sub-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sub-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='rpt-export') buildPartyBreakdown();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DATA LOADING
+════════════════════════════════════════════════════════════════ */
+function refreshAll(){
+  _nextFullSync  = Date.now() + SYNC_FULL_MS;
+  _nextStatsSync = Date.now() + SYNC_STATS_MS;
+  loadData(false);
+}
+
+function showLoadError(msg){
+  setSyncStatus('error', '⚠️ Error');
+  // Strip HTML tags for the toast (plain text only)
+  var plain = msg.replace(/<[^>]+>/g,'').substring(0,120);
+  document.getElementById('outBody').innerHTML =
+    `<tr><td colspan="14" style="padding:28px 24px;text-align:center;color:#c62828;line-height:1.7">
+      ${msg}<br><br>
+      <button class="btn btn-primary btn-sm" onclick="loadData(false)">🔄 Retry Data</button>
+    </td></tr>`;
+  toast(plain, 'err', 8000);
+}
+
+function _finishLoad(d){
+  var diag=document.getElementById('_v30d');
+  try { _lastGrandTotal = d.grandTotal; } catch(e){}
+  try { populateFilters(); } catch(e){ if(diag){diag.style.display='block';diag.textContent='V31: populateFilters error: '+e.message;} }
+  try { renderOutstanding(); } catch(e){ if(diag){diag.style.display='block';diag.textContent='V31: renderOutstanding error: '+e.message;} return; }
+  try { renderHistory(); } catch(e){}
+  try { loadSummary(); } catch(e){}
+  try { setSyncStatus('live', '✅ ' + (d.sourceSheet||'Loaded') + ' · ' + fmtTime()); } catch(e){}
+  // V31: hide banner on full success
+  if(diag) diag.style.display='none';
+  try { startAutoSync(); } catch(e){}
+}
+
+function loadData(silent){
+  // silent=true  -> background sync: keeps current table on screen, no spinner, never blanks the page.
+  // silent=false -> user-initiated (first load / Refresh / Retry): shows spinner.
+  if(_isSyncing){ if(!silent) _reloadQueued=true; return; }   // a user-requested refresh waits for the running sync, never skipped
+  if(typeof google==='undefined' || !google.script || !google.script.run){
+    if(!silent){
+      document.getElementById('outBody').innerHTML=
+        '<tr><td colspan="14" style="color:#c0392b;padding:24px;text-align:center;font-size:14px;line-height:1.6">'+
+        '<b>⚠️ Open as deployed web app</b><br>'+
+        'Apps Script → Deploy → Manage Deployments → copy the web app URL<br>'+
+        '<span style="font-size:12px;color:#555">Editor preview mode does not support google.script.run</span>'+
+        '</td></tr>';
+    }
+    setSyncStatus('error','⚠️ Open via deployed URL');
+    return;
+  }
+
+  _isSyncing = true;
+  setSyncStatus('syncing', silent ? 'Syncing…' : 'Refreshing…');
+  if(!silent){
+    document.getElementById('outBody').innerHTML =
+      '<tr><td colspan="14" class="loading"><div class="spinner"></div> Loading outstanding data…</td></tr>';
+  }
+
+  function runQueued(){ if(_reloadQueued){ _reloadQueued=false; setTimeout(function(){ loadData(false); },0); } }
+  function fail(msg){
+    _isSyncing = false;
+    if(silent){
+      // keep the existing table; just flag it and retry on the next cycle
+      setSyncStatus('error', '⚠️ Sync failed · retrying');
+      _nextFullSync = Date.now() + 30000;
+    } else {
+      showLoadError(msg);
+    }
+    runQueued();
+  }
+
+  var _loadTimer = setTimeout(function(){
+    fail('Server timeout (30s) — check Code.gs is saved & deployed, then click Retry.');
+  }, 30000);
+
+  google.script.run
+    .withSuccessHandler(function(rawOut){
+      clearTimeout(_loadTimer);
+      var d;
+      try { d = JSON.parse(rawOut); }
+      catch(e){ fail('Bad response: ' + e.message); return; }
+      if(d.error){ fail('⚠️ Server error: ' + d.error); return; }
+      DB.parties         = d.parties         || [];
+      DB.salesmanSummary = d.salesmanSummary  || [];
+      DB.grandTotal      = d.grandTotal       || 0;
+      _isSyncing = false;
+      _finishLoad(d);
+      runQueued();
+      google.script.run
+        .withSuccessHandler(function(rawPay){
+          try {
+            var pays = JSON.parse(rawPay);
+            DB.payByParty = {};
+            pays.forEach(function(p){
+              if(!DB.payByParty[p.party]) DB.payByParty[p.party]=[];
+              DB.payByParty[p.party].push(p);
+            });
+          } catch(e){ DB.payByParty={}; }
+          try { renderOutstanding(); loadSummary(); } catch(e){}
+        })
+        .withFailureHandler(function(){ /* keep previous payment data */ })
+        .getPaymentHistory('{}');
+      google.script.run
+        .withSuccessHandler(function(rawHist){
+          try { DB.followUpHistory = JSON.parse(rawHist); } catch(e){ DB.followUpHistory=[]; }
+          try { renderHistory(); } catch(e){}
+        })
+        .withFailureHandler(function(){ /* keep previous history */ })
+        .getFullHistory();
+    })
+    .withFailureHandler(function(e){
+      clearTimeout(_loadTimer);
+      fail('Could not read sheet: ' + ((e && e.message)||String(e)));
+    })
+    .getOutstandingData();
+}
+
+function loadSummary(){
+  // Compute stats directly from DB (no async call needed)
+  const today = todayISO();
+  let netOut=0, todayTotal=0, todayCash=0, todayCheque=0, todayUPI=0,
+      totalColl=0, todayTxn=0;
+
+  DB.parties.forEach(function(p){
+    const col=(DB.payByParty[p.party]||[]).reduce(function(a,x){return a+x.amount;},0);
+    netOut+=Math.max(0,p.closing-col);
+  });
+  Object.keys(DB.payByParty).forEach(function(pName){
+    (DB.payByParty[pName]||[]).forEach(function(r){
+      totalColl += r.amount;
+      if(r.paymentDate===today){
+        todayTotal+=r.amount; todayTxn++;
+        if(r.mode==='Cash')   todayCash+=r.amount;
+        if(r.mode==='Cheque') todayCheque+=r.amount;
+        if(r.mode==='UPI')    todayUPI+=r.amount;
+      }
+    });
+  });
+
+  document.getElementById('s-netOut').textContent     = inr(netOut);
+  document.getElementById('s-todayTotal').textContent = inr(todayTotal);
+  document.getElementById('s-todayCash').textContent  = inr(todayCash);
+  document.getElementById('s-todayCheque').textContent= inr(todayCheque);
+  document.getElementById('s-todayUPI').textContent   = inr(todayUPI);
+  document.getElementById('s-totalColl').textContent  = inr(totalColl);
+  document.getElementById('s-todayTxn').textContent   = todayTxn;
+
+  // Keep async getDashboardSummary as a cross-check but don't depend on it
+  try {
+    google.script.run
+      .withSuccessHandler(function(raw){
+        try {
+          const s=JSON.parse(raw);
+          document.getElementById('s-todayTotal').textContent = inr(s.todayTotal);
+          document.getElementById('s-todayCash').textContent  = inr(s.todayCash);
+          document.getElementById('s-todayCheque').textContent= inr(s.todayCheque);
+          document.getElementById('s-todayUPI').textContent   = inr(s.todayUPI);
+          document.getElementById('s-totalColl').textContent  = inr(s.totalCollected);
+          document.getElementById('s-todayTxn').textContent   = s.todayTransactions;
+        } catch(e){}
+      })
+      .withFailureHandler(function(){})
+      .getDashboardSummary();
+  } catch(e){}
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FILTERS & DROPDOWN POPULATION
+════════════════════════════════════════════════════════════════ */
+function populateFilters(){
+  const salesmen=[...new Set(DB.parties.map(p=>p.salesman))].filter(Boolean).sort();
+  const selects=['filterSalesman','histSalesman','pm-salesman','rptSalesman','rptSmFilter','expSalesman'];
+  selects.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const val=el.value;
+    while(el.options.length>1) el.remove(1);
+    salesmen.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s; o.textContent=s; el.appendChild(o);
+    });
+    el.value=val;
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   OUTSTANDING TAB
+════════════════════════════════════════════════════════════════ */
+function getNetPending(party){
+  const col=(DB.payByParty[party.party]||[]).reduce((a,x)=>a+x.amount,0);
+  return Math.max(0,party.closing-col);
+}
+function getCollected(party){
+  return (DB.payByParty[party.party]||[]).reduce((a,x)=>a+x.amount,0);
+}
+
+function renderOutstanding(){
+  const smF  = document.getElementById('filterSalesman').value;
+  const qF   = document.getElementById('searchParty').value.toLowerCase();
+  const agF  = document.getElementById('filterAging').value;
+  const paidF= document.getElementById('filterPaid').value;
+
+  // Aging-bucket field map
+  const AGE_FIELD = { '0-30':'d0_30','31-60':'d31_60','61-90':'d61_90',
+                      '91-120':'d91_120','121-150':'d121_150','151+':'d151plus' };
+
+  let list = DB.parties.filter(p=>{
+    if(smF && p.salesman!==smF) return false;
+    if(qF  && !p.party.toLowerCase().includes(qF) &&
+              !String(p.salesmanArea||'').toLowerCase().includes(qF)) return false;
+    if(paidF==='pending'  && getNetPending(p)<=0) return false;
+    if(paidF==='partial'){
+      const col=getCollected(p);
+      if(col<=0 || getNetPending(p)<=0) return false;
+    }
+    if(agF && AGE_FIELD[agF]){ if(!p[AGE_FIELD[agF]]) return false; }
+    return true;
+  });
+
+  // Build aging chips (6 buckets from new format)
+  const agTotals={'0-30':0,'31-60':0,'61-90':0,'91-120':0,'121-150':0,'151+':0};
+  DB.parties.forEach(p=>{
+    agTotals['0-30']   += p.d0_30   ||0;
+    agTotals['31-60']  += p.d31_60  ||0;
+    agTotals['61-90']  += p.d61_90  ||0;
+    agTotals['91-120'] += p.d91_120 ||0;
+    agTotals['121-150']+= p.d121_150||0;
+    agTotals['151+']   += p.d151plus||0;
+  });
+  const agRow=document.getElementById('agingRow');
+  agRow.innerHTML=Object.entries(agTotals).map(([k,v])=>
+    `<div class="aging-chip" onclick="filterByAge('${k}')">${k} Days<strong>${inr(v)}</strong></div>`
+  ).join('');
+
+  let totalClose=0, totalCol=0;
+  const tbody=document.getElementById('outBody');
+
+  if(!list.length){
+    tbody.innerHTML=`<tr><td colspan="14" class="empty">No matching parties</td></tr>`;
+    document.getElementById('countLabel').textContent='0 parties';
+    return;
+  }
+
+  let html='';
+  list.forEach((p,i)=>{
+    const col=getCollected(p);
+    totalClose+=p.closing; totalCol+=col;
+
+    // Aging bucket color helpers
+    const c61  = p.d61_90  >0 ? 'color:#e67e22'                : '';
+    const c91  = p.d91_120 >0 ? 'color:#e74c3c'                : '';
+    const c121 = p.d121_150>0 ? 'color:#c0392b;font-weight:700': '';
+    const c151 = p.d151plus>0 ? 'color:#7b241c;font-weight:700': '';
+
+    html += `<tr>
+      <td style="font-size:11px;color:#999;text-align:center">${i+1}</td>
+      <td><strong>${p.party}</strong></td>
+      <td style="font-size:11px">${p.salesmanArea||p.salesman}</td>
+      <td class="num bold">${inr(p.closing)}</td>
+      <td class="num">${p.d0_30>0   ?inr(p.d0_30)   :'—'}</td>
+      <td class="num">${p.d31_60>0  ?inr(p.d31_60)  :'—'}</td>
+      <td class="num" style="${c61}">${p.d61_90>0  ?inr(p.d61_90)  :'—'}</td>
+      <td class="num" style="${c91}">${p.d91_120>0 ?inr(p.d91_120) :'—'}</td>
+      <td class="num" style="${c121}">${p.d121_150>0?inr(p.d121_150):'—'}</td>
+      <td class="num" style="${c151}">${p.d151plus>0?inr(p.d151plus):'—'}</td>
+      <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.remark||''}">${p.remark||'—'}</td>
+      <td style="font-size:11px;white-space:nowrap">${fmtDate(p.followUpDate)||'—'}</td>
+      <td class="text-center">${p.followUpCount||0}</td>
+      <td><div class="act">
+        <button class="btn-pay" onclick="openPayModal('${pid(p.party)}')">💳 Pay</button>
+        <button class="btn-fu"  onclick="openFUModal('${pid(p.party)}')">📝 FU</button>
+        <button class="btn-wa"  onclick="openWAModal('${pid(p.party)}')" title="WhatsApp">💬</button>
+        <button class="btn-hist" onclick="openHistModal('${pid(p.party)}')" title="History">🕐</button>
+      </div></td>
+    </tr>`;
+  });
+
+  html += `<tr class="total-row">
+    <td></td>
+    <td class="bold">GRAND TOTAL (${list.length} parties)</td>
+    <td></td>
+    <td class="num bold" style="color:#c62828">${inr(totalClose)}</td>
+    <td colspan="10"></td>
+  </tr>`;
+
+  tbody.innerHTML=html;
+  document.getElementById('countLabel').textContent=list.length+' parties';
+}
+
+function filterByAge(bucket){
+  document.getElementById('filterAging').value=bucket;
+  renderOutstanding();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HISTORY TAB
+════════════════════════════════════════════════════════════════ */
+function renderHistory(){
+  const smF=document.getElementById('histSalesman').value;
+  const qF =document.getElementById('histSearch').value.toLowerCase();
+  const list=DB.followUpHistory.filter(r=>{
+    if(smF && r.salesman!==smF) return false;
+    if(qF  && !String(r.party).toLowerCase().includes(qF)) return false;
+    return true;
+  });
+  const tbody=document.getElementById('histBody');
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="8" class="empty">No follow-up history</td></tr>'; return; }
+  tbody.innerHTML=list.map(r=>`<tr>
+    <td style="font-size:11px;color:#888">${fmtDateTime(r.timestamp)}</td>
+    <td>${r.party||''}</td>
+    <td>${r.salesman||''}</td>
+    <td>${fmtDate(r.followUpDate)}</td>
+    <td>${r.remark||''}</td>
+    <td>${fmtDate(r.promisedDate)||'—'}</td>
+    <td>${r.staffName||''}</td>
+    <td class="num">${r.outstandingAmt?inr(r.outstandingAmt):'—'}</td>
+  </tr>`).join('');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MASTERS TAB
+════════════════════════════════════════════════════════════════ */
+function renderMasters(){
+  google.script.run
+    .withSuccessHandler(raw=>{
+      try{ DB.salesmanMaster=JSON.parse(raw); }catch(e){ DB.salesmanMaster=[]; }
+      const tbody=document.getElementById('smTable');
+      tbody.innerHTML=DB.salesmanMaster.length
+        ? DB.salesmanMaster.map(s=>`<tr><td>${s.name}</td><td>${s.area||''}</td><td>${s.contact||''}</td></tr>`).join('')
+        : '<tr><td colspan="3" class="empty">No salesmen yet</td></tr>';
+    })
+    .getSalesmanMaster();
+
+  google.script.run
+    .withSuccessHandler(raw=>{
+      try{ DB.partyMaster=JSON.parse(raw); }catch(e){ DB.partyMaster=[]; }
+      const tbody=document.getElementById('pmTable');
+      tbody.innerHTML=DB.partyMaster.length
+        ? DB.partyMaster.map(p=>`<tr><td>${p.name}</td><td>${p.salesman||''}</td><td>${p.contact||''}</td></tr>`).join('')
+        : '<tr><td colspan="3" class="empty">No parties yet</td></tr>';
+    })
+    .getPartyMaster();
+}
+
+function saveSalesman(){
+  const name=document.getElementById('sm-name').value.trim();
+  if(!name){ toast('Enter salesman name','warn'); return; }
+  const data={name, area:document.getElementById('sm-area').value.trim(),
+    contact:document.getElementById('sm-contact').value.trim()};
+  google.script.run
+    .withSuccessHandler(()=>{ toast('Salesman saved ✓'); renderMasters(); populateFilters(); })
+    .withFailureHandler(e=>toast('Error: '+e.message,'err'))
+    .saveSalesmanMaster(JSON.stringify(data));
+}
+
+function saveParty(){
+  const name=document.getElementById('pm-name').value.trim();
+  if(!name){ toast('Enter party name','warn'); return; }
+  const data={name, contact:document.getElementById('pm-contact').value.trim(),
+    salesman:document.getElementById('pm-salesman').value};
+  google.script.run
+    .withSuccessHandler(()=>{ toast('Party saved ✓'); renderMasters(); })
+    .withFailureHandler(e=>toast('Error: '+e.message,'err'))
+    .savePartyMaster(JSON.stringify(data));
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MODALS — OPEN / CLOSE
+════════════════════════════════════════════════════════════════ */
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+// Close on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(bd=>{
+  bd.addEventListener('click', e=>{ if(e.target===bd) bd.classList.remove('show'); });
+});
+
+/* ── Follow-Up Modal ── */
+function openFUModal(pid){
+  const p=DB.parties.find(x=>x.party===decodeURIComponent(pid));
+  if(!p) return;
+  const net=getNetPending(p);
+  document.getElementById('fu-party').value  =p.party;
+  document.getElementById('fu-salesman').value=p.salesman;
+  document.getElementById('fu-date').value   =todayISO();
+  document.getElementById('fu-promised').value='';
+  document.getElementById('fu-remark').value ='';
+  document.getElementById('fu-amt').value    =inr(net);
+  document.getElementById('fu-staff').value  ='';
+  openModal('fuModal');
+}
+
+/* ── Save-button lock: one click = one save (prevents duplicate rows on double-click) ── */
+var _saveBusy={};
+function lockSave(key, selector, label){
+  if(_saveBusy[key]) return false;
+  _saveBusy[key]=true;
+  var b=document.querySelector(selector);
+  if(b){ b.disabled=true; b.dataset.label=b.textContent; b.textContent=label; }
+  return true;
+}
+function unlockSave(key, selector){
+  _saveBusy[key]=false;
+  var b=document.querySelector(selector);
+  if(b){ b.disabled=false; if(b.dataset.label) b.textContent=b.dataset.label; }
+}
+
+function submitFollowUp(){
+  const party=document.getElementById('fu-party').value;
+  const date =document.getElementById('fu-date').value;
+  const rem  =document.getElementById('fu-remark').value.trim();
+  const staff=document.getElementById('fu-staff').value.trim();
+  if(!date||!rem||!staff){ toast('Fill all required fields','warn'); return; }
+
+  const data={
+    party, salesman:document.getElementById('fu-salesman').value,
+    followUpDate:date, remark:rem,
+    promisedDate:document.getElementById('fu-promised').value,
+    staffName:staff, outstandingAmt:document.getElementById('fu-amt').value
+  };
+  const FU_BTN='button[onclick="submitFollowUp()"]';
+  if(!lockSave('fu',FU_BTN,'⏳ Saving…')) return;
+  google.script.run
+    .withSuccessHandler(raw=>{
+      unlockSave('fu',FU_BTN);
+      var r={}; try{ r=JSON.parse(raw)||{}; }catch(e){}
+      closeModal('fuModal');
+      toast(r.duplicate ? (r.message||'Already saved') : 'Follow-up saved ✓');
+      loadData(false);
+    })
+    .withFailureHandler(e=>{ unlockSave('fu',FU_BTN); toast('Error: '+((e&&e.message)||e),'err'); })
+    .saveFollowUp(JSON.stringify(data));
+}
+
+/* ── WhatsApp Modal ── */
+function openWAModal(pid){
+  const p=DB.parties.find(x=>x.party===decodeURIComponent(pid));
+  if(!p) return;
+  document.getElementById('wa-party').value   =p.party;
+  document.getElementById('wa-salesman').value=p.salesman;
+  document.getElementById('wa-amt').value     =inr(getNetPending(p));
+  document.getElementById('wa-staff').value   ='';
+  document.getElementById('wa-phone').value   ='';
+  openModal('waModal');
+
+  // Try to get contact
+  google.script.run
+    .withSuccessHandler(raw=>{
+      try{ const c=JSON.parse(raw); document.getElementById('wa-phone').value=c.partyPhone||c.smPhone||''; }catch(e){}
+    })
+    .getContactInfo(p.party, p.salesman);
+
+  buildWAMessage();
+}
+
+function buildWAMessage(){
+  const party=document.getElementById('wa-party').value;
+  const amt  =document.getElementById('wa-amt').value;
+  const type =document.getElementById('wa-type').value;
+  const msgs={
+    reminder:`Dear ${party},\n\nThis is a gentle reminder that you have an outstanding payment of *${amt}* with Christofin Impex.\n\nKindly arrange for the payment at your earliest convenience.\n\nThank you.`,
+    followup:`Dear ${party},\n\nWe are following up on the outstanding balance of *${amt}* with Christofin Impex.\n\nPlease let us know when you plan to clear this amount.\n\nRegards, Christofin Impex`,
+    statement:`Dear ${party},\n\nWe request you to kindly review and confirm the outstanding amount of *${amt}* on your account.\n\nPlease contact us for the full statement.\n\nThank you, Christofin Impex`
+  };
+  document.getElementById('wa-msg').value=msgs[type]||'';
+}
+
+function sendWA(){
+  const phone=document.getElementById('wa-phone').value.replace(/\D/g,'');
+  if(!phone||phone.length<10){ toast('Enter valid phone number','warn'); return; }
+  const msg=encodeURIComponent(document.getElementById('wa-msg').value);
+  const staff=document.getElementById('wa-staff').value.trim()||'Staff';
+
+  google.script.run
+    .withSuccessHandler(()=>{})
+    .logWhatsApp(JSON.stringify({
+      party:document.getElementById('wa-party').value,
+      salesman:document.getElementById('wa-salesman').value,
+      messageType:document.getElementById('wa-type').value,
+      recipient:document.getElementById('wa-recipient').value,
+      phone, outstandingAmt:document.getElementById('wa-amt').value,
+      staffName:staff
+    }));
+
+  // NOTE: never write a double-slash inside a string here (Apps Script's HTML
+  // pipeline treats it as a comment start and breaks the whole script).
+  window.open('https:' + '\x2f\x2f' + 'wa.me' + '\x2f' + '91' + phone.slice(-10) + '?text=' + msg, '_blank');
+  closeModal('waModal');
+}
+
+/* ── Party History Modal ── */
+function openHistModal(pid){
+  const party=decodeURIComponent(pid);
+  document.getElementById('histModal-title').textContent='📋 Follow-Up History — ' + party;
+  const history=DB.followUpHistory.filter(r=>r.party===party);
+  const tbody=document.getElementById('histModalBody');
+  if(!history.length){ tbody.innerHTML='<tr><td colspan="5" class="empty">No history yet</td></tr>'; }
+  else {
+    tbody.innerHTML=history.map(r=>`<tr>
+      <td style="font-size:11px">${fmtDateTime(r.timestamp)}</td>
+      <td>${fmtDate(r.followUpDate)}</td>
+      <td>${r.remark||''}</td>
+      <td>${fmtDate(r.promisedDate)||'—'}</td>
+      <td>${r.staffName||''}</td>
+    </tr>`).join('');
+  }
+  openModal('histModal');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PAYMENT MODAL
+════════════════════════════════════════════════════════════════ */
+let _payParty=null; // current party object in payment modal
+
+function openPayModal(pid){
+  const p=DB.parties.find(x=>x.party===decodeURIComponent(pid));
+  if(!p){ toast('Party not found','err'); return; }
+  _payParty=p;
+
+  const col=getCollected(p);
+  const net=getNetPending(p);
+
+  document.getElementById('pay-party').value   =p.party;
+  document.getElementById('pay-salesman').value=p.salesman;
+  document.getElementById('pay-netOut').textContent   =inr(net);
+  document.getElementById('pay-billCount').textContent='Closing: '+inr(p.closing);
+  document.getElementById('pay-date').value    =todayISO();
+  document.getElementById('pay-mode').value    ='';
+  document.getElementById('pay-staff').value   ='';
+  document.getElementById('pay-notes').value   ='';
+
+  // Hide all mode fields
+  ['cash','cheque','upi'].forEach(m=>document.getElementById('fields-'+m).style.display='none');
+  document.getElementById('cash-amount').value='';
+  document.getElementById('chq-no').value='';
+  document.getElementById('chq-amount').value='';
+  document.getElementById('upi-app').value='';
+  document.getElementById('upi-amount').value='';
+  document.getElementById('upi-txnid').value='';
+
+  // Build bill allocation table
+  buildBillAllocTable(p);
+  document.getElementById('billAllocWrap').classList.remove('show');
+
+  openModal('payModal');
+}
+
+function buildBillAllocTable(p){
+  // V23: no bill-level data — show aging bucket summary instead
+  const tbody=document.getElementById('billAllocBody');
+  const buckets=[
+    {label:'0–30 Days', amt:p.d0_30}, {label:'31–60 Days', amt:p.d31_60},
+    {label:'61–90 Days', amt:p.d61_90}, {label:'91–120 Days', amt:p.d91_120},
+    {label:'121–150 Days', amt:p.d121_150}, {label:'≥151 Days', amt:p.d151plus}
+  ].filter(b=>b.amt>0);
+  tbody.innerHTML = buckets.length
+    ? buckets.map(b=>`<tr><td colspan="3">${b.label}</td><td class="num">${inr(b.amt)}</td><td></td></tr>`).join('')
+    : '<tr><td colspan="5" style="text-align:center;color:#888">No aging data</td></tr>';
+}
+
+function toggleBillAlloc(){
+  document.getElementById('billAllocWrap').classList.toggle('show');
+}
+
+function getPayAmount(){
+  const mode=document.getElementById('pay-mode').value;
+  if(mode==='Cash')   return Number(document.getElementById('cash-amount').value)||0;
+  if(mode==='Cheque') return Number(document.getElementById('chq-amount').value)||0;
+  if(mode==='UPI')    return Number(document.getElementById('upi-amount').value)||0;
+  return 0;
+}
+
+function updateBillAutoFill(){
+  updateAllocRemaining();
+}
+
+function autoAllocBills(){
+  // V23: no bill-level allocation in new format; just show the section
+  document.getElementById('billAllocWrap').classList.add('show');
+  updateAllocRemaining();
+}
+
+function clearBillAlloc(){
+  document.querySelectorAll('[id^=alloc_]').forEach(inp=>inp.value='');
+  updateAllocRemaining();
+}
+
+function updateAllocRemaining(){
+  const amount=getPayAmount();
+  let allocated=0;
+  document.querySelectorAll('[id^=alloc_]').forEach(inp=>allocated+=Number(inp.value)||0);
+  const rem=amount-allocated;
+  const el=document.getElementById('allocRemaining');
+  if(el) el.textContent=`Amount: ${inr(amount)} | Allocated: ${inr(allocated)} | Remaining: ${inr(rem)}`;
+}
+
+function togglePayMode(){
+  const mode=document.getElementById('pay-mode').value;
+  ['cash','cheque','upi'].forEach(m=>{
+    document.getElementById('fields-'+m).style.display=(m===mode.toLowerCase()?'block':'none');
+  });
+  updateAllocRemaining();
+}
+
+function getBillAllocations(){
+  if(!_payParty) return [];
+  // V23: no bills — return empty allocations
+  const sorted=[];
+  const allocs=[];
+  sorted.forEach((b,i)=>{
+    const val=Number(document.getElementById('alloc_'+i)?.value)||0;
+    if(val>0) allocs.push({billNo:b.billNo, days:b.days, pendingAmt:b.pendingAmt, allocated:val});
+  });
+  return allocs;
+}
+
+function getModeDetail(){
+  const mode=document.getElementById('pay-mode').value;
+  if(mode==='Cash')   return 'Cash';
+  if(mode==='Cheque') return 'Cheque No: '+(document.getElementById('chq-no').value||'N/A');
+  if(mode==='UPI'){
+    const app=document.getElementById('upi-app').value||'UPI';
+    const txn=document.getElementById('upi-txnid').value.trim();
+    return app+(txn?' | TxnID: '+txn:'');
+  }
+  return '';
+}
+
+function submitPayment(){
+  const party  =document.getElementById('pay-party').value;
+  const salesman=document.getElementById('pay-salesman').value;
+  const pDate  =document.getElementById('pay-date').value;
+  const mode   =document.getElementById('pay-mode').value;
+  const staff  =document.getElementById('pay-staff').value.trim();
+  const amount =getPayAmount();
+
+  if(!pDate)   { toast('Select payment date','warn'); return; }
+  if(!mode)    { toast('Select payment mode','warn'); return; }
+  if(!amount)  { toast('Enter amount','warn'); return; }
+  if(!staff)   { toast('Enter staff name','warn'); return; }
+
+  // Cheque number required
+  if(mode==='Cheque' && !document.getElementById('chq-no').value.trim()){
+    toast('Enter cheque number','warn'); return;
+  }
+  // UPI app required
+  if(mode==='UPI' && !document.getElementById('upi-app').value){
+    toast('Select UPI app','warn'); return;
+  }
+
+  const payload={
+    party, salesman, paymentDate:pDate, mode,
+    modeDetail:getModeDetail(), amount,
+    billAllocations:getBillAllocations(),
+    staffName:staff, notes:document.getElementById('pay-notes').value.trim()
+  };
+
+  const PAY_BTN='button[onclick="submitPayment()"]';
+  if(!lockSave('pay',PAY_BTN,'⏳ Saving…')) return;
+  google.script.run
+    .withSuccessHandler(raw=>{
+      unlockSave('pay',PAY_BTN);
+      var r; try{ r=JSON.parse(raw); }catch(e){ r={message:'Saved'}; }
+      closeModal('payModal');
+      toast(r.message || 'Payment saved ✓', 'ok');
+      loadData(false); // refresh all data + stats
+    })
+    .withFailureHandler(e=>{ unlockSave('pay',PAY_BTN); toast('Error: '+((e&&e.message)||e),'err'); })
+    .savePayment(JSON.stringify(payload));
+}
+
+/* ════════════════════════════════════════════════════════════════
+   REPORTING — PENDING SUB-TAB
+════════════════════════════════════════════════════════════════ */
+function renderPendingReport(){
+  const smF=document.getElementById('rptSalesman').value;
+  const qF =document.getElementById('rptSearch').value.toLowerCase();
+  const list=DB.parties.filter(p=>{
+    if(smF && p.salesman!==smF) return false;
+    if(qF  && !p.party.toLowerCase().includes(qF)) return false;
+    return getNetPending(p)>0;
+  });
+
+  const tbody=document.getElementById('pendingRptBody');
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="7" class="empty">No pending parties</td></tr>'; return; }
+
+  let totOut=0, totCol=0, totNet=0;
+  let html='';
+  list.forEach(p=>{
+    const col=getCollected(p);
+    const net=getNetPending(p);
+    totOut+=p.closing; totCol+=col; totNet+=net;
+    html+=`<tr>
+      <td>${p.party}</td>
+      <td>${p.salesman}</td>
+      <td class="num">${inr(p.closing)}</td>
+      <td class="num" style="color:#2e7d32">${col>0?inr(col):'—'}</td>
+      <td class="num bold" style="color:#c62828">${inr(net)}</td>
+      <td>${fmtDate(p.followUpDate)||'—'}</td>
+      <td class="text-center">${p.followUpCount||0}</td>
+    </tr>`;
+  });
+  html+=`<tr class="total-row">
+    <td class="bold">TOTAL (${list.length})</td><td></td>
+    <td class="num">${inr(totOut)}</td>
+    <td class="num" style="color:#2e7d32">${inr(totCol)}</td>
+    <td class="num bold" style="color:#c62828">${inr(totNet)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+  tbody.innerHTML=html;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   REPORTING — COLLECTION DONE SUB-TAB
+════════════════════════════════════════════════════════════════ */
+function loadCollectionReport(){
+  const filters={};
+  const f=document.getElementById('rptFrom').value;
+  const t=document.getElementById('rptTo').value;
+  const mode=document.getElementById('rptMode').value;
+  const sm=document.getElementById('rptSmFilter').value;
+  if(f) filters.fromDate=f;
+  if(t) filters.toDate=t;
+  if(mode) filters.mode=mode;
+  if(sm) filters.salesman=sm;
+
+  google.script.run
+    .withSuccessHandler(raw=>{
+      var pays; try{ pays=JSON.parse(raw); }catch(e){ pays=[]; }
+      let totTotal=0,totCash=0,totCheque=0,totUPI=0;
+      pays.forEach(p=>{
+        totTotal+=p.amount;
+        if(p.mode==='Cash')   totCash+=p.amount;
+        if(p.mode==='Cheque') totCheque+=p.amount;
+        if(p.mode==='UPI')    totUPI+=p.amount;
+      });
+      document.getElementById('cc-total').textContent =inr(totTotal);
+      document.getElementById('cc-cash').textContent  =inr(totCash);
+      document.getElementById('cc-cheque').textContent=inr(totCheque);
+      document.getElementById('cc-upi').textContent   =inr(totUPI);
+      document.getElementById('cc-txn').textContent   =pays.length;
+
+      const tbody=document.getElementById('collBody');
+      if(!pays.length){ tbody.innerHTML='<tr><td colspan="8" class="empty">No records found</td></tr>'; return; }
+      tbody.innerHTML=pays.map(p=>`<tr>
+        <td>${fmtDate(p.paymentDate)}</td>
+        <td>${p.party}</td>
+        <td>${p.salesman}</td>
+        <td><span class="pill pill-${p.mode.toLowerCase()}">${p.mode}</span></td>
+        <td style="font-size:11px;color:#666">${p.modeDetail||'—'}</td>
+        <td class="num bold">${inr(p.amount)}</td>
+        <td class="num" style="color:#c62828">${inr(p.remaining)}</td>
+        <td>${p.staffName||''}</td>
+      </tr>`).join('');
+    })
+    .withFailureHandler(e=>toast('Error: '+e.message,'err'))
+    .getPaymentHistory(JSON.stringify(filters));
+}
+
+/* ════════════════════════════════════════════════════════════════
+   REPORTING — EXPORT SUB-TAB
+════════════════════════════════════════════════════════════════ */
+function toggleExportFilters(){
+  const type=document.getElementById('expType').value;
+  const dateTypes=['collection','date-wise','mode-wise','bill-wise','followup'];
+  const modeTypes=['collection','date-wise','mode-wise','bill-wise'];
+  document.getElementById('expDateRow').style.display=dateTypes.includes(type)?'grid':'none';
+  document.getElementById('expModeRow').style.display=modeTypes.includes(type)?'grid':'none';
+  document.getElementById('expSmGroup').style.display=(type!=='mode-wise')?'flex':'none';
+}
+
+function getExportFilters(){
+  const f={};
+  const from=document.getElementById('expFrom').value;
+  const to  =document.getElementById('expTo').value;
+  const sm  =document.getElementById('expSalesman').value;
+  const mode=document.getElementById('expMode').value;
+  const party=document.getElementById('expParty').value.trim();
+  if(from)  f.fromDate=from;
+  if(to)    f.toDate=to;
+  if(sm)    f.salesman=sm;
+  if(mode)  f.mode=mode;
+  if(party) f.party=party;
+  return f;
+}
+
+function doExport(format){
+  const reportType=document.getElementById('expType').value;
+  const filters   =getExportFilters();
+  const statusEl  =document.getElementById('expStatus');
+  statusEl.textContent='⏳ Generating…';
+
+  google.script.run
+    .withSuccessHandler(raw=>{
+      var result; try{ result=JSON.parse(raw); }catch(e){ toast('Export error: bad response','err'); return; }
+      if(format==='csv'){
+        const blob=new Blob([result.csv],{type:'text/csv;charset=utf-8;'});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        a.href=url; a.download=result.filename; a.click();
+        URL.revokeObjectURL(url);
+        statusEl.textContent='✅ Downloaded!';
+        setTimeout(()=>statusEl.textContent='',3000);
+        toast('Excel file downloaded ✓');
+      } else {
+        const win=window.open('','_blank');
+        win.document.write(result.html);
+        win.document.close();
+        setTimeout(()=>win.print(), 500);
+        statusEl.textContent='🖨️ Print dialog opened';
+        setTimeout(()=>statusEl.textContent='',3000);
+      }
+    })
+    .withFailureHandler(e=>{ statusEl.textContent='❌ Error'; toast('Export error: '+e.message,'err'); })
+    .getExportData(JSON.stringify({reportType, format, filters}));
+}
+
+function buildPartyBreakdown(){
+  const panel=document.getElementById('partyBreakdownPanel');
+  const tbody=document.getElementById('partyBreakdownBody');
+  if(!DB.parties.length){ panel.style.display='none'; return; }
+
+  let html='';
+  let totOut=0,totCol=0,totNet=0;
+  DB.parties.forEach(p=>{
+    const pays=DB.payByParty[p.party]||[];
+    const col=pays.reduce((a,x)=>a+x.amount,0);
+    const net=Math.max(0,p.closing-col);
+    if(p.closing<=0 && col<=0) return;
+    totOut+=p.closing; totCol+=col; totNet+=net;
+    html+=`<tr>
+      <td>${p.party}</td>
+      <td>${p.salesman}</td>
+      <td class="num">${inr(p.closing)}</td>
+      <td class="num" style="color:#2e7d32">${col>0?inr(col):'—'}</td>
+      <td class="num bold" style="color:${net>0?'#c62828':'#2e7d32'}">${inr(net)}</td>
+      <td class="text-center">${pays.length}</td>
+    </tr>`;
+  });
+  html+=`<tr class="total-row">
+    <td class="bold">TOTAL</td><td></td>
+    <td class="num">${inr(totOut)}</td>
+    <td class="num" style="color:#2e7d32">${inr(totCol)}</td>
+    <td class="num bold" style="color:#c62828">${inr(totNet)}</td>
+    <td></td>
+  </tr>`;
+  tbody.innerHTML=html;
+  panel.style.display='block';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LIVE SYNC
+════════════════════════════════════════════════════════════════ */
+const SYNC_STATS_MS  = 30  * 1000;   // stats bar: every 30s
+const SYNC_FULL_MS   = 120 * 1000;   // full data: every 2 min
+let _nextFullSync    = 0;
+let _nextStatsSync   = 0;
+let _syncTick        = null;
+let _lastGrandTotal  = null;
+let _isSyncing       = false;
+let _reloadQueued    = false;
+
+function fmtTime(){
+  return new Date().toLocaleTimeString('en-IN',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).toUpperCase();
+}
+
+function setSyncStatus(state, label){
+  const dot=document.getElementById('liveDot');
+  const src=document.getElementById('srcLabel');
+  dot.className='live-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
+  if(label) src.textContent=label;
+}
+
+function startAutoSync(){
+  _nextStatsSync = Date.now() + SYNC_STATS_MS;
+  _nextFullSync  = Date.now() + SYNC_FULL_MS;
+
+  if(_syncTick) clearInterval(_syncTick);
+  _syncTick = setInterval(function(){
+   try {
+    const now=Date.now();
+    const toFull  = Math.max(0, Math.ceil((_nextFullSync  - now)/1000));
+    const toStats = Math.max(0, Math.ceil((_nextStatsSync - now)/1000));
+    document.getElementById('syncCountdown').textContent =
+      _isSyncing ? 'syncing…' : 'next sync ' + toFull + 's';
+
+    // Stats sync
+    if(now >= _nextStatsSync && !_isSyncing){
+      _nextStatsSync = now + SYNC_STATS_MS;
+      loadSummary();
+    }
+    // Full sync
+    if(now >= _nextFullSync && !_isSyncing){
+      _nextFullSync = now + SYNC_FULL_MS;
+      syncFullData();
+    }
+   } catch(e){ /* a timer tick must never break the page */ }
+  }, 1000);
+}
+
+function syncFullData(){
+  // Background refresh through google.script.run.
+  // NEVER use location.reload() here: inside an Apps Script web app this page lives in a
+  // sandboxed iframe, and reloading that frame (instead of the /exec page) leaves a blank page.
+  if(_isSyncing) return;
+  loadData(true);
+}
+
+function flashSyncBar(){
+  const bar=document.getElementById('statsBar');
+  bar.style.transition='background .3s';
+  bar.style.background='#e8f5e9';
+  setTimeout(()=>bar.style.background='',1200);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   INIT  — V30: injection done above in a separate earlier script block.
+   This block sets date defaults and calls loadData().
+════════════════════════════════════════════════════════════════ */
+
+// Set default dates for collection report  — wrapped in try/catch (V30)
+(function(){
+  try {
+    const today=todayISO();
+    const firstOfMonth=today.substring(0,8)+'01';
+    document.getElementById('rptFrom').value=firstOfMonth;
+    document.getElementById('rptTo').value  =today;
+    document.getElementById('expFrom').value=firstOfMonth;
+    document.getElementById('expTo').value  =today;
+    toggleExportFilters();
+  } catch(e) {
+    // Date defaults failed — log to diagnostic banner but do NOT block initApp
+    var diag=document.getElementById('_v30d');
+    if(diag) diag.textContent='V30: ⚠️ date-defaults error: '+e.message+' (continuing…)';
+  }
+})();
+
+// V31: initApp — table already server-rendered, just load client data for interactivity
+(function initApp(){
+  var diag=document.getElementById('_v30d');
+  if(diag) diag.textContent = diag.textContent.replace('main script loading…','JS active · loading client data…');
+  loadData();
+})();
+</script>
+</body>
+</html>
 
