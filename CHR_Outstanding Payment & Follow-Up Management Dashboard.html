@@ -153,6 +153,20 @@
   .info-box.warning{background:#fff8e1;border-color:#f57f17}
   .info-box.error{background:#ffebee;border-color:#c62828}
 
+  /* ── Partial payment ── */
+  .st-badge{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700;white-space:nowrap}
+  .st-paid{background:#e8f5e9;color:#2e7d32}
+  .st-part{background:#fff3e0;color:#e65100}
+  .st-pend{background:#ffebee;color:#c62828}
+  .pay-sum{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px}
+  .pay-sum div{background:#f5f7ff;border:1px solid #dfe3f5;border-radius:6px;padding:6px 8px;text-align:center}
+  .pay-sum span{display:block;font-size:9px;color:#666;text-transform:uppercase;letter-spacing:.3px}
+  .pay-sum b{font-size:13px;color:#1a237e}
+  .pay-sum .rem b{color:#c62828}
+  .pay-prev{border:1px solid #ddd;border-radius:6px;overflow:hidden;margin-bottom:10px}
+  .pay-prev-h{background:#f5f7ff;padding:5px 10px;font-size:11px;font-weight:700;color:#1a237e;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .pay-prev table{width:100%}
+  .pay-prev .scr{max-height:130px;overflow:auto}
   /* ── Bill allocation table ── */
   .bill-alloc-toggle{cursor:pointer;color:#1565c0;font-size:11px;font-weight:600;
     text-decoration:underline;margin-bottom:6px;display:inline-block}
@@ -324,7 +338,8 @@
     <select id="filterPaid" onchange="renderOutstanding()">
       <option value="">All Parties</option>
       <option value="pending">Only Pending</option>
-      <option value="partial">Partially Collected</option>
+      <option value="partial">Partially Paid</option>
+      <option value="paid">Fully Paid</option>
     </select>
     <span id="countLabel" style="margin-left:auto;font-size:11px;color:#888"></span>
   </div>
@@ -760,6 +775,13 @@
           <tbody id="histModalBody"></tbody>
         </table>
       </div>
+      <div style="padding:8px 12px;background:#f5f7ff;font-weight:700;font-size:12px;color:#1a237e;border-top:1px solid #dfe3f5">💳 Payment History</div>
+      <div class="tbl-wrap" style="max-height:220px">
+        <table>
+          <thead><tr><th>Date</th><th>Mode</th><th class="num">Received</th><th class="num">Total Collected</th><th class="num">Pending</th><th>Details</th><th>Staff</th></tr></thead>
+          <tbody id="histPayBody"></tbody>
+        </table>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="closeModal('histModal')">Close</button>
@@ -790,11 +812,26 @@
         </div>
       </div>
 
-      <!-- Outstanding summary -->
-      <div class="info-box" id="pay-outInfo" style="margin-bottom:10px">
-        <strong>Net Outstanding:</strong> <span id="pay-netOut">—</span>
-        &nbsp;|&nbsp; <strong>Bills:</strong> <span id="pay-billCount">—</span>
+      <!-- Payment summary (partial payment) -->
+      <div class="pay-sum">
+        <div><span>Total Amount</span><b id="ps-total">—</b></div>
+        <div><span>Previously Received</span><b id="ps-prev">—</b></div>
+        <div><span>Today's Received</span><b id="ps-today">₹0</b></div>
+        <div><span>Total Received</span><b id="ps-recv">—</b></div>
+        <div class="rem"><span>Remaining Pending</span><b id="ps-rem">—</b></div>
       </div>
+      <div style="margin-bottom:8px;font-size:12px">
+        <strong>Status:</strong> <span id="ps-status" class="st-badge st-pend">Pending</span>
+        <span id="ps-last" style="margin-left:10px;color:#555"></span>
+      </div>
+      <div class="pay-prev" id="ps-prevWrap">
+        <div class="pay-prev-h"><span>Previous Payments (date-wise)</span><span id="ps-prevCnt"></span></div>
+        <div class="scr"><table>
+          <thead><tr><th>Date</th><th>Mode</th><th class="num">Amount</th><th>Details</th><th>Staff</th></tr></thead>
+          <tbody id="ps-prevBody"></tbody>
+        </table></div>
+      </div>
+      <span id="pay-netOut" style="display:none"></span><span id="pay-billCount" style="display:none"></span>
 
       <!-- Payment date + mode -->
       <div class="form-row">
@@ -1312,6 +1349,42 @@ function getNetPending(party){
   const col=(DB.payByParty[party.party]||[]).reduce((a,x)=>a+x.amount,0);
   return Math.max(0,party.closing-col);
 }
+function payStatus(p){
+  const col=getCollected(p);
+  if(col<=0) return 'Pending';
+  return getNetPending(p)<=0 ? 'Paid' : 'Partially Paid';
+}
+function statusClass(s){ return s==='Paid'?'st-paid':(s==='Partially Paid'?'st-part':'st-pend'); }
+function statusLine(p){
+  const col=getCollected(p);
+  if(col<=0) return '';
+  const s=payStatus(p);
+  return '<div style="margin-top:2px"><span class="st-badge '+statusClass(s)+'">'+s+'</span> '+
+    '<span style="font-size:10px;color:#666">Recd '+inr(col)+' · Bal '+inr(getNetPending(p))+'</span></div>';
+}
+function payRowsFor(party){
+  return (DB.payByParty[party]||[]).slice().sort(function(a,b){
+    return String(a.paymentDate).localeCompare(String(b.paymentDate)) || String(a.timestamp).localeCompare(String(b.timestamp));
+  });
+}
+function updatePaySummary(){
+  if(!_payParty) return;
+  const p=_payParty;
+  const prev=getCollected(p);
+  const today=getPayAmount();
+  const recv=prev+today;
+  const rem=Math.max(0,p.closing-recv);
+  document.getElementById('ps-total').textContent=inr(p.closing);
+  document.getElementById('ps-prev').textContent=inr(prev);
+  document.getElementById('ps-today').textContent=inr(today);
+  document.getElementById('ps-recv').textContent=inr(recv);
+  document.getElementById('ps-rem').textContent=inr(rem);
+  const s=recv<=0?'Pending':(rem<=0?'Paid':'Partially Paid');
+  const el=document.getElementById('ps-status');
+  el.textContent=s; el.className='st-badge '+statusClass(s);
+  const over=document.getElementById('ps-today');
+  over.style.color = today>(p.closing-prev)+0.001 ? '#c62828' : '';
+}
 function getCollected(party){
   return (DB.payByParty[party.party]||[]).reduce((a,x)=>a+x.amount,0);
 }
@@ -1331,6 +1404,7 @@ function renderOutstanding(){
     if(qF  && !p.party.toLowerCase().includes(qF) &&
               !String(p.salesmanArea||'').toLowerCase().includes(qF)) return false;
     if(paidF==='pending'  && getNetPending(p)<=0) return false;
+    if(paidF==='paid' && payStatus(p)!=='Paid') return false;
     if(paidF==='partial'){
       const col=getCollected(p);
       if(col<=0 || getNetPending(p)<=0) return false;
@@ -1376,7 +1450,7 @@ function renderOutstanding(){
 
     html += `<tr>
       <td style="font-size:11px;color:#999;text-align:center">${i+1}</td>
-      <td><strong>${p.party}</strong></td>
+      <td><strong>${p.party}</strong>${statusLine(p)}</td>
       <td style="font-size:11px">${p.salesmanArea||p.salesman}</td>
       <td class="num bold">${inr(p.closing)}</td>
       <td class="num">${p.d0_30>0   ?inr(p.d0_30)   :'—'}</td>
@@ -1613,7 +1687,7 @@ function sendWA(){
 /* ── Party History Modal ── */
 function openHistModal(pid){
   const party=decodeURIComponent(pid);
-  document.getElementById('histModal-title').textContent='📋 Follow-Up History — ' + party;
+  document.getElementById('histModal-title').textContent='📋 Follow-Up & Payment History — ' + party;
   const history=DB.followUpHistory.filter(r=>r.party===party);
   const tbody=document.getElementById('histModalBody');
   if(!history.length){ tbody.innerHTML='<tr><td colspan="5" class="empty">No history yet</td></tr>'; }
@@ -1626,6 +1700,13 @@ function openHistModal(pid){
       <td>${r.staffName||''}</td>
     </tr>`).join('');
   }
+  const pr=payRowsFor(party);
+  let runTot=0;
+  document.getElementById('histPayBody').innerHTML = pr.length
+    ? pr.map(r=>{ runTot+=r.amount; return '<tr><td>'+fmtDate(r.paymentDate)+'</td><td>'+(r.mode||'')+'</td><td class="num">'+inr(r.amount)+
+        '</td><td class="num">'+inr(runTot)+'</td><td class="num">'+inr(r.remaining)+
+        '</td><td style="font-size:11px">'+(r.modeDetail||'')+'</td><td style="font-size:11px">'+(r.staffName||'')+'</td></tr>'; }).join('')
+    : '<tr><td colspan="7" class="empty">No payments yet</td></tr>';
   openModal('histModal');
 }
 
@@ -1646,6 +1727,14 @@ function openPayModal(pid){
   document.getElementById('pay-salesman').value=p.salesman;
   document.getElementById('pay-netOut').textContent   =inr(net);
   document.getElementById('pay-billCount').textContent='Closing: '+inr(p.closing);
+  const prevRows=payRowsFor(p.party);
+  document.getElementById('ps-prevBody').innerHTML = prevRows.length
+    ? prevRows.map(r=>'<tr><td>'+fmtDate(r.paymentDate)+'</td><td>'+(r.mode||'')+'</td><td class="num">'+inr(r.amount)+
+        '</td><td style="font-size:11px">'+(r.modeDetail||'')+'</td><td style="font-size:11px">'+(r.staffName||'')+'</td></tr>').join('')
+    : '<tr><td colspan="5" style="text-align:center;color:#888">No previous payment</td></tr>';
+  document.getElementById('ps-prevCnt').textContent = prevRows.length ? (prevRows.length+' payment(s) · '+inr(col)) : '';
+  const lastP=prevRows.length?prevRows[prevRows.length-1]:null;
+  document.getElementById('ps-last').textContent = lastP ? ('Last payment: '+inr(lastP.amount)+' on '+fmtDate(lastP.paymentDate)+' ('+(lastP.mode||'')+')') : '';
   document.getElementById('pay-date').value    =todayISO();
   document.getElementById('pay-mode').value    ='';
   document.getElementById('pay-staff').value   ='';
@@ -1664,6 +1753,7 @@ function openPayModal(pid){
   buildBillAllocTable(p);
   document.getElementById('billAllocWrap').classList.remove('show');
 
+  updatePaySummary();
   openModal('payModal');
 }
 
@@ -1693,6 +1783,7 @@ function getPayAmount(){
 }
 
 function updateBillAutoFill(){
+  updatePaySummary();
   updateAllocRemaining();
 }
 
@@ -1721,6 +1812,7 @@ function togglePayMode(){
   ['cash','cheque','upi'].forEach(m=>{
     document.getElementById('fields-'+m).style.display=(m===mode.toLowerCase()?'block':'none');
   });
+  updatePaySummary();
   updateAllocRemaining();
 }
 
@@ -1760,6 +1852,10 @@ function submitPayment(){
   if(!mode)    { toast('Select payment mode','warn'); return; }
   if(!amount)  { toast('Enter amount','warn'); return; }
   if(!staff)   { toast('Enter staff name','warn'); return; }
+  if(_payParty){
+    const pend=getNetPending(_payParty);
+    if(amount>pend+0.001){ toast('Amount '+inr(amount)+' is more than pending '+inr(pend),'warn'); return; }
+  }
 
   // Cheque number required
   if(mode==='Cheque' && !document.getElementById('chq-no').value.trim()){
@@ -1783,6 +1879,7 @@ function submitPayment(){
     .withSuccessHandler(raw=>{
       unlockSave('pay',PAY_BTN);
       var r; try{ r=JSON.parse(raw); }catch(e){ r={message:'Saved'}; }
+      if(r && r.success===false){ toast(r.message||'Payment not saved','err'); return; }
       closeModal('payModal');
       toast(r.message || 'Payment saved ✓', 'ok');
       loadData(false); // refresh all data + stats
