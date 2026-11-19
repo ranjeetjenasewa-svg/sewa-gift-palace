@@ -161,10 +161,10 @@
   .fu-chip span{display:block;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.3px}
   .fu-chip b{font-size:15px;color:#1a237e}
   .fu-chip.red b{color:#c62828}.fu-chip.grn b{color:#2e7d32}
-  #fuRepTable tr.fu-done td{background:#f1f8e9}
-  #fuRepTable tr.fu-pend td{background:#fffafa}
-  #fuRepTable tr.fu-done td:first-child{box-shadow:inset 4px 0 0 #2e7d32}
-  #fuRepTable tr.fu-pend td:first-child{box-shadow:inset 4px 0 0 #c62828}
+  #fuRepTable tr.fu-done td,#ofuTable tr.fu-done td{background:#f1f8e9}
+  #fuRepTable tr.fu-pend td,#ofuTable tr.fu-pend td{background:#fffafa}
+  #fuRepTable tr.fu-done td:first-child,#ofuTable tr.fu-done td:first-child{box-shadow:inset 4px 0 0 #2e7d32}
+  #fuRepTable tr.fu-pend td:first-child,#ofuTable tr.fu-pend td:first-child{box-shadow:inset 4px 0 0 #c62828}
   /* ── Partial payment ── */
   .st-badge{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700;white-space:nowrap}
   .st-paid{background:#e8f5e9;color:#2e7d32}
@@ -355,22 +355,29 @@
     </select>
     <label for="filterFUDate" style="font-size:11px;font-weight:700;color:#1a237e;margin-left:6px">📅 Follow-up Date</label>
     <input type="date" id="filterFUDate" onchange="renderOutstanding()" title="Show parties whose follow-up / promised payment is on this date">
-    <button class="btn btn-sm" type="button" onclick="setFUToday()" style="background:#e8eaf6">Today</button>
-    <button class="btn btn-sm" type="button" id="fuDateClear" onclick="clearFUDate()" style="display:none;background:#ffebee;color:#c62828">✕ Clear</button>
+    <button class="btn btn-sm" type="button" onclick="setOFUToday()" style="background:#e8eaf6">Today</button>
+    <button class="btn btn-sm" type="button" id="fuDateClear" onclick="clearOFUDate()" style="display:none;background:#ffebee;color:#c62828">✕ Clear</button>
     <span id="countLabel" style="margin-left:auto;font-size:11px;color:#888"></span>
+    <button class="btn btn-sm" type="button" onclick="exportOutstandingPDF()" style="background:#e65100;color:#fff" title="Print / save the current view as PDF">🖨️ PDF</button>
   </div>
 
   <!-- Follow-up date report (shown only when a follow-up date is selected) -->
   <div class="fu-rep" id="fuReport">
-    <div class="fu-chips" id="fuChips"></div>
+    <div class="fu-chips" id="ofuChips"></div>
     <div class="tbl-wrap">
-      <table id="fuRepTable">
+      <table id="ofuTable">
         <thead>
           <tr>
             <th>Follow-up Date</th>
             <th>Party Name</th>
             <th>Salesman</th>
             <th class="num">Total Outstanding</th>
+            <th class="num">( 0 - 30 ) Days</th>
+            <th class="num">( 31 - 60 ) Days</th>
+            <th class="num">( 61 - 90 ) Days</th>
+            <th class="num">( 91 - 120 ) Days</th>
+            <th class="num">( 121 - 150 ) Days</th>
+            <th class="num">(&gt;= 151 ) Days</th>
             <th class="num">Promised Amount</th>
             <th class="num">Previous Collection</th>
             <th class="num">Remaining Pending</th>
@@ -379,7 +386,7 @@
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody id="fuRepBody"></tbody>
+        <tbody id="ofuBody"></tbody>
       </table>
     </div>
   </div>
@@ -514,7 +521,51 @@
   <div class="sub-tab-bar">
     <button class="sub-tab active" onclick="switchSubTab('rpt-pending',this)">📌 Pending</button>
     <button class="sub-tab" onclick="switchSubTab('rpt-collection',this)">✅ Collection Done</button>
+    <button class="sub-tab" onclick="switchSubTab('rpt-followup',this)">📅 Follow-up Report</button>
     <button class="sub-tab" onclick="switchSubTab('rpt-export',this)">⬇️ Export Reports</button>
+  </div>
+
+  <!-- Sub-tab: Follow-up Report (by follow-up / promised payment date) -->
+  <div class="sub-pane" id="sub-rpt-followup">
+    <div class="toolbar">
+      <label for="rfuDate" style="font-size:11px;font-weight:700;color:#1a237e">📅 Follow-up Date</label>
+      <input type="date" id="rfuDate" onchange="renderFUReport()" title="Parties whose follow-up / promised payment is on this date">
+      <button class="btn btn-sm" type="button" onclick="setFUToday()" style="background:#e8eaf6">Today</button>
+      <button class="btn btn-sm" type="button" onclick="clearFUDate()" style="background:#ffebee;color:#c62828">✕ Clear</button>
+      <select id="rfuSalesman" onchange="renderFUReport()">
+        <option value="">All Salesmen</option>
+      </select>
+      <input type="text" id="rfuSearch" placeholder="🔍 Search party…" oninput="renderFUReport()">
+      <span id="rfuCount" style="margin-left:auto;font-size:11px;color:#888"></span>
+      <button class="btn btn-success btn-sm" type="button" onclick="exportFU('csv')">⬇️ Excel (CSV)</button>
+      <button class="btn btn-sm" type="button" onclick="exportFU('pdf')" style="background:#e65100;color:#fff">🖨️ Print / PDF</button>
+    </div>
+    <div class="fu-chips" id="fuChips"></div>
+    <div class="tbl-wrap">
+      <table id="fuRepTable">
+        <thead>
+          <tr>
+            <th>Follow-up Date</th>
+            <th>Party Name</th>
+            <th>Salesman</th>
+            <th class="num">Total Outstanding</th>
+            <th class="num">( 0 - 30 ) Days</th>
+            <th class="num">( 31 - 60 ) Days</th>
+            <th class="num">( 61 - 90 ) Days</th>
+            <th class="num">( 91 - 120 ) Days</th>
+            <th class="num">( 121 - 150 ) Days</th>
+            <th class="num">(&gt;= 151 ) Days</th>
+            <th class="num">Promised Amount</th>
+            <th class="num">Previous Collection</th>
+            <th class="num">Remaining Pending</th>
+            <th>Payment Status</th>
+            <th>Remark</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="fuRepBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Sub-tab: Pending -->
@@ -1200,7 +1251,13 @@ function switchSubTab(id, btn){
   document.getElementById('sub-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='rpt-export') buildPartyBreakdown();
+  if(id==='rpt-followup'){
+    const dEl=document.getElementById('rfuDate');
+    if(!dEl.value && !_rfuTouched) dEl.value=todayISO();
+    renderFUReport();
+  }
 }
+var _rfuTouched=false;
 
 /* ════════════════════════════════════════════════════════════════
    DATA LOADING
@@ -1373,7 +1430,7 @@ function loadSummary(){
 ════════════════════════════════════════════════════════════════ */
 function populateFilters(){
   const salesmen=[...new Set(DB.parties.map(p=>p.salesman))].filter(Boolean).sort();
-  const selects=['filterSalesman','histSalesman','pm-salesman','rptSalesman','rptSmFilter','expSalesman'];
+  const selects=['filterSalesman','histSalesman','pm-salesman','rptSalesman','rptSmFilter','expSalesman','rfuSalesman'];
   selects.forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
@@ -1435,8 +1492,9 @@ function getCollected(party){
   return (DB.payByParty[party.party]||[]).reduce((a,x)=>a+x.amount,0);
 }
 
-function setFUToday(){ document.getElementById('filterFUDate').value=todayISO(); renderOutstanding(); }
-function clearFUDate(){ document.getElementById('filterFUDate').value=''; renderOutstanding(); }
+
+function setFUToday(){ _rfuTouched=true; document.getElementById('rfuDate').value=todayISO(); renderFUReport(); }
+function clearFUDate(){ _rfuTouched=true; document.getElementById('rfuDate').value=''; renderFUReport(); }
 
 function fuScheduleOf(p){
   /* date this party's payment follow-up is scheduled for: latest follow-up's promised date,
@@ -1447,9 +1505,15 @@ function fuScheduleOf(p){
   return {date:p.paymentDate||p.followUpDate||'', amt:0, remark:p.remark||''};
 }
 
-function renderFUReport(D){
-  const smF=document.getElementById('filterSalesman').value;
-  const qF =document.getElementById('searchParty').value.toLowerCase();
+function fuIds(src){
+  return src==='o'
+    ? {date:'filterFUDate',sm:'filterSalesman',q:'searchParty',chips:'ofuChips',body:'ofuBody',count:'countLabel'}
+    : {date:'rfuDate',sm:'rfuSalesman',q:'rfuSearch',chips:'fuChips',body:'fuRepBody',count:'rfuCount'};
+}
+function getFURows(D,src){
+  const I=fuIds(src);
+  const smF=document.getElementById(I.sm).value;
+  const qF =document.getElementById(I.q).value.toLowerCase();
   const rows=[];
   DB.parties.forEach(p=>{
     if(smF && p.salesman!==smF) return;
@@ -1464,20 +1528,37 @@ function renderFUReport(D){
     rows.push({p:p, s:s, prev:prev, onDay:onDay, rem:rem, done:done});
   });
   rows.sort((a,b)=> (a.done-b.done) || String(a.p.salesman).localeCompare(String(b.p.salesman)) || (b.p.closing-a.p.closing));
+  return rows;
+}
 
-  let tOut=0,tProm=0,tPrev=0,tRem=0,tGot=0,nDone=0;
-  rows.forEach(r=>{ tOut+=r.p.closing; tProm+=r.s.amt; tPrev+=r.prev; tRem+=r.rem; tGot+=r.onDay; if(r.done) nDone++; });
+function renderFUReport(src){
+  src=(src==='o')?'o':'r';
+  const I=fuIds(src);
+  const D=document.getElementById(I.date).value;
+  const tb=document.getElementById(I.body);
+  if(!D){
+    document.getElementById(I.chips).innerHTML='';
+    tb.innerHTML='<tr><td colspan="16" class="empty">Select a follow-up date to see the parties scheduled for that day</td></tr>';
+    document.getElementById(I.count).textContent='';
+    return;
+  }
+  const smF=document.getElementById(I.sm).value;
+  const rows=getFURows(D,src);
 
-  document.getElementById('fuChips').innerHTML=
+  const T={out:0,a1:0,a2:0,a3:0,a4:0,a5:0,a6:0,prom:0,prev:0,rem:0,got:0,done:0};
+  rows.forEach(r=>{ const p=r.p; T.out+=p.closing; T.a1+=p.d0_30; T.a2+=p.d31_60; T.a3+=p.d61_90; T.a4+=p.d91_120; T.a5+=p.d121_150; T.a6+=p.d151plus;
+    T.prom+=r.s.amt; T.prev+=r.prev; T.rem+=r.rem; T.got+=r.onDay; if(r.done) T.done++; });
+
+  document.getElementById(I.chips).innerHTML=
     '<div class="fu-chip"><span>Follow-ups on '+fmtDate(D)+'</span><b>'+rows.length+' parties</b></div>'+
-    '<div class="fu-chip"><span>Total Outstanding</span><b>'+inr(tOut)+'</b></div>'+
-    '<div class="fu-chip"><span>Promised Amount</span><b>'+inr(tProm)+'</b></div>'+
-    '<div class="fu-chip grn"><span>Collected on this date</span><b>'+inr(tGot)+' · '+nDone+' done</b></div>'+
-    '<div class="fu-chip red"><span>Still Pending</span><b>'+inr(tRem)+' · '+(rows.length-nDone)+' parties</b></div>';
+    '<div class="fu-chip"><span>Total Outstanding</span><b>'+inr(T.out)+'</b></div>'+
+    '<div class="fu-chip"><span>Promised Amount</span><b>'+inr(T.prom)+'</b></div>'+
+    '<div class="fu-chip grn"><span>Collected on this date</span><b>'+inr(T.got)+' · '+T.done+' done</b></div>'+
+    '<div class="fu-chip red"><span>Still Pending</span><b>'+inr(T.rem)+' · '+(rows.length-T.done)+' parties</b></div>';
 
-  const tb=document.getElementById('fuRepBody');
+  const ag=v=>(v>0?inr(v):'—');
   if(!rows.length){
-    tb.innerHTML='<tr><td colspan="10" class="empty">No follow-up scheduled for '+fmtDate(D)+(smF?' ('+smF+')':'')+'</td></tr>';
+    tb.innerHTML='<tr><td colspan="16" class="empty">No follow-up scheduled for '+fmtDate(D)+(smF?' ('+smF+')':'')+'</td></tr>';
   } else {
     let html=rows.map(r=>{
       const p=r.p;
@@ -1489,6 +1570,8 @@ function renderFUReport(D){
         '<td><strong>'+p.party+'</strong></td>'+
         '<td style="font-size:11px">'+(p.salesman||'')+(p.salesmanArea&&p.salesmanArea!==p.salesman?'<div style="color:#888">'+p.salesmanArea+'</div>':'')+'</td>'+
         '<td class="num bold">'+inr(p.closing)+'</td>'+
+        '<td class="num">'+ag(p.d0_30)+'</td><td class="num">'+ag(p.d31_60)+'</td><td class="num">'+ag(p.d61_90)+'</td>'+
+        '<td class="num">'+ag(p.d91_120)+'</td><td class="num">'+ag(p.d121_150)+'</td><td class="num">'+ag(p.d151plus)+'</td>'+
         '<td class="num">'+(r.s.amt>0?inr(r.s.amt):'—')+'</td>'+
         '<td class="num">'+(r.prev>0?inr(r.prev):'—')+'</td>'+
         '<td class="num bold" style="color:'+(r.rem>0?'#c62828':'#2e7d32')+'">'+inr(r.rem)+'</td>'+
@@ -1501,21 +1584,121 @@ function renderFUReport(D){
         '</div></td></tr>';
     }).join('');
     html+='<tr class="total-row"><td></td><td class="bold">TOTAL ('+rows.length+' parties)</td><td></td>'+
-      '<td class="num bold">'+inr(tOut)+'</td><td class="num bold">'+inr(tProm)+'</td><td class="num bold">'+inr(tPrev)+'</td>'+
-      '<td class="num bold" style="color:#c62828">'+inr(tRem)+'</td><td colspan="3"></td></tr>';
+      '<td class="num bold">'+inr(T.out)+'</td>'+
+      '<td class="num bold">'+inr(T.a1)+'</td><td class="num bold">'+inr(T.a2)+'</td><td class="num bold">'+inr(T.a3)+'</td>'+
+      '<td class="num bold">'+inr(T.a4)+'</td><td class="num bold">'+inr(T.a5)+'</td><td class="num bold">'+inr(T.a6)+'</td>'+
+      '<td class="num bold">'+inr(T.prom)+'</td><td class="num bold">'+inr(T.prev)+'</td>'+
+      '<td class="num bold" style="color:#c62828">'+inr(T.rem)+'</td><td colspan="3"></td></tr>';
     tb.innerHTML=html;
   }
-  document.getElementById('countLabel').textContent=rows.length+' follow-ups on '+fmtDate(D);
+  document.getElementById(I.count).textContent=rows.length+' follow-ups on '+fmtDate(D);
 }
 
+/* ── Export of the follow-up report (Excel/CSV and Print/PDF): same columns, ageing included ── */
+function fuExportTable(src){
+  const I=fuIds(src);
+  const D=document.getElementById(I.date).value;
+  if(!D){ toast('Select a follow-up date first','warn'); return null; }
+  const rows=getFURows(D,src);
+  if(!rows.length){ toast('No follow-ups on '+fmtDate(D)+' to export','warn'); return null; }
+  const head=['Follow-up Date','Party Name','Salesman','Total Outstanding','( 0 - 30 ) Days','( 31 - 60 ) Days','( 61 - 90 ) Days',
+    '( 91 - 120 ) Days','( 121 - 150 ) Days','(>= 151 ) Days','Promised Amount','Previous Collection','Remaining Pending','Payment Status','Collected On Date','Remark'];
+  const num=v=>Number(v)||0;
+  const body=rows.map(r=>{ const p=r.p;
+    return [fmtDate(D),p.party,p.salesmanArea||p.salesman,num(p.closing),num(p.d0_30),num(p.d31_60),num(p.d61_90),num(p.d91_120),num(p.d121_150),num(p.d151plus),
+      num(r.s.amt),num(r.prev),num(r.rem),r.done?'Collected':'Pending',num(r.onDay),r.s.remark||''];});
+  const tot=['TOTAL ('+rows.length+' parties)','',''];
+  for(let c=3;c<=14;c++){ tot.push(c===13 ? '' : body.reduce((a,r)=>a+r[c],0)); }
+  tot.push('');
+  return {D:D, head:head, body:body, tot:tot, sm:document.getElementById(I.sm).value};
+}
+
+function exportFU(format,src){
+  src=(src==='o')?'o':'r';
+  const t=fuExportTable(src); if(!t) return;
+  const dmyD=fmtDate(t.D);
+  if(format==='csv'){
+    const q=v=>{ const s=String(v); return /[",\n]/.test(s)?'"'+s.split('"').join('""')+'"':s; };
+    const lines=[['Christofin Impex - Follow-up Report'],['Follow-up Date: '+dmyD+(t.sm?'  |  Salesman: '+t.sm:'')],[],t.head].concat(t.body).concat([t.tot]);
+    const csv='﻿'+lines.map(r=>r.map(q).join(',')).join('\r\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='Follow_Up_Report_'+dmyD+(t.sm?'_'+t.sm.split(' ').join('_'):'')+'.csv'; a.click();
+    URL.revokeObjectURL(url);
+    toast('Excel file downloaded ✓');
+  } else {
+    const esc=s=>String(s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;');
+    const cell=(v,c)=>'<td'+(c>=3&&c!==13&&c!==15?' style="text-align:right"':'')+'>'+(typeof v==='number'?(v>0?inr(v):'—'):esc(v))+'</td>';
+    const trs=t.body.map(r=>'<tr>'+r.map((v,c)=>cell(v,c)).join('')+'</tr>').join('');
+    const totRow='<tr class="tot">'+t.tot.map((v,c)=>c===0?'<td>'+esc(v)+'</td>':cell(v,c)).join('')+'</tr>';
+    const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Follow-up Report - Christofin Impex</title><style>'+
+      '@page{size:A4 landscape;margin:1cm}body{font-family:Arial,Helvetica,sans-serif;font-size:8pt;color:#000}'+
+      'h2{margin:0;color:#1a237e}p{margin:2px 0 8px;color:#555}table{width:100%;border-collapse:collapse}'+
+      'th{background:#1a237e;color:#fff;padding:4px 5px;font-size:7pt;text-align:left}td{padding:3px 5px;border-bottom:1px solid #ddd;font-size:7.5pt}'+
+      'tr:nth-child(even) td{background:#f7f7f7}.tot td{background:#e8eaf6!important;font-weight:700;border-top:2px solid #9fa8da}'+
+      'thead{display:table-header-group}body{print-color-adjust:exact;-webkit-print-color-adjust:exact}</style></head><body>'+
+      '<h2>Christofin Impex</h2><p><b>Follow-up Report</b> &nbsp;|&nbsp; Follow-up Date: '+dmyD+(t.sm?' &nbsp;|&nbsp; Salesman: '+esc(t.sm):'')+' &nbsp;|&nbsp; Generated: '+nowText()+'</p>'+
+      '<table><thead><tr>'+t.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+trs+totRow+'</tbody></table></body></html>';
+    const win=window.open('','_blank');
+    if(!win){ toast('Allow pop-ups to print the report','warn'); return; }
+    win.document.write(html); win.document.close();
+    setTimeout(()=>win.print(),500);
+  }
+}
+function exportOutstandingPDF(){
+  if(document.getElementById('filterFUDate').value){ exportFU('pdf','o'); return; }
+  const list=_outList||[];
+  if(!list.length){ toast('No parties to export','warn'); return; }
+  const esc=s=>String(s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;');
+  const head=['#','Party Account','Salesman / Area','Closing Amt','( 0 - 30 ) Days','( 31 - 60 ) Days','( 61 - 90 ) Days','( 91 - 120 ) Days','( 121 - 150 ) Days','(>= 151 ) Days','Remark','Follow-Up Date','FU#'];
+  const keys=['closing','d0_30','d31_60','d61_90','d91_120','d121_150','d151plus'];
+  const tot=keys.map(()=>0);
+  const money=v=>(v>0?inr(v):'—');
+  const trs=list.map((p,i)=>{
+    keys.forEach((k,j)=>{ tot[j]+=Number(p[k])||0; });
+    return '<tr><td>'+(i+1)+'</td><td><b>'+esc(p.party)+'</b></td><td>'+esc(p.salesmanArea||p.salesman||'')+'</td>'+
+      keys.map(k=>'<td class="n">'+money(Number(p[k])||0)+'</td>').join('')+
+      '<td>'+esc(p.remark||'')+'</td><td>'+(fmtDate(p.followUpDate)||'')+'</td><td class="c">'+(p.followUpCount||0)+'</td></tr>';
+  }).join('');
+  const totRow='<tr class="tot"><td></td><td>GRAND TOTAL ('+list.length+' parties)</td><td></td>'+tot.map(v=>'<td class="n">'+inr(v)+'</td>').join('')+'<td colspan="3"></td></tr>';
+  const f=[];
+  const sm=document.getElementById('filterSalesman').value, ag=document.getElementById('filterAging').value, pd=document.getElementById('filterPaid');
+  const q=document.getElementById('searchParty').value.trim();
+  if(sm) f.push('Salesman: '+sm);
+  if(ag) f.push('Ageing: '+ag+' days');
+  if(pd.value) f.push('Status: '+pd.options[pd.selectedIndex].text);
+  if(q) f.push('Search: '+q);
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Outstanding Report - Christofin Impex</title><style>'+
+    '@page{size:A4 landscape;margin:1cm}body{font-family:Arial,Helvetica,sans-serif;font-size:8pt;color:#000}'+
+    'h2{margin:0;color:#1a237e}p{margin:2px 0 8px;color:#555}table{width:100%;border-collapse:collapse}'+
+    'th{background:#1a237e;color:#fff;padding:4px 5px;font-size:7pt;text-align:left}td{padding:3px 5px;border-bottom:1px solid #ddd;font-size:7.5pt}'+
+    'td.n{text-align:right}td.c{text-align:center}tr:nth-child(even) td{background:#f7f7f7}'+
+    '.tot td{background:#e8eaf6!important;font-weight:700;border-top:2px solid #9fa8da}'+
+    'thead{display:table-header-group}body{print-color-adjust:exact;-webkit-print-color-adjust:exact}</style></head><body>'+
+    '<h2>Christofin Impex</h2><p><b>Outstanding Payment Report</b> &nbsp;|&nbsp; '+(f.length?esc(f.join('  |  '))+' &nbsp;|&nbsp; ':'All parties &nbsp;|&nbsp; ')+'Generated: '+nowText()+'</p>'+
+    '<table><thead><tr>'+head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+trs+totRow+'</tbody></table></body></html>';
+  const win=window.open('','_blank');
+  if(!win){ toast('Allow pop-ups to print the report','warn'); return; }
+  win.document.write(html); win.document.close();
+  setTimeout(()=>win.print(),500);
+}
+
+function nowText(){
+  return new Date().toLocaleString('en-GB',{timeZone:TZ,hour12:true}).split(',').join('');
+}
+
+var _outList=[];
+function setOFUToday(){ document.getElementById('filterFUDate').value=todayISO(); renderOutstanding(); }
+function clearOFUDate(){ document.getElementById('filterFUDate').value=''; renderOutstanding(); }
+
 function renderOutstanding(){
-  const fuD=document.getElementById('filterFUDate').value;
-  const fuOn=!!fuD;
+  const fuOn=!!document.getElementById('filterFUDate').value;
   document.getElementById('fuDateClear').style.display = fuOn ? '' : 'none';
   document.getElementById('fuReport').classList.toggle('show',fuOn);
   document.getElementById('outWrap').style.display = fuOn ? 'none' : '';
   document.getElementById('agingRow').style.display = fuOn ? 'none' : '';
-  if(fuOn){ renderFUReport(fuD); return; }
+  if(fuOn){ renderFUReport('o'); return; }
   const smF  = document.getElementById('filterSalesman').value;
   const qF   = document.getElementById('searchParty').value.toLowerCase();
   const agF  = document.getElementById('filterAging').value;
@@ -1539,6 +1722,7 @@ function renderOutstanding(){
     return true;
   });
 
+  _outList=list;
   // Build aging chips (6 buckets from new format)
   const agTotals={'0-30':0,'31-60':0,'61-90':0,'91-120':0,'121-150':0,'151+':0};
   DB.parties.forEach(p=>{
