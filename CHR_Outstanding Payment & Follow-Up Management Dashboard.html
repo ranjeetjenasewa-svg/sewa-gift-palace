@@ -153,6 +153,18 @@
   .info-box.warning{background:#fff8e1;border-color:#f57f17}
   .info-box.error{background:#ffebee;border-color:#c62828}
 
+  /* ── Follow-up date report (inside dashboard) ── */
+  .fu-rep{display:none;margin-top:8px}
+  .fu-rep.show{display:block}
+  .fu-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .fu-chip{flex:1;min-width:130px;background:#fff;border:1px solid #dfe3f5;border-radius:8px;padding:7px 10px}
+  .fu-chip span{display:block;font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.3px}
+  .fu-chip b{font-size:15px;color:#1a237e}
+  .fu-chip.red b{color:#c62828}.fu-chip.grn b{color:#2e7d32}
+  #fuRepTable tr.fu-done td{background:#f1f8e9}
+  #fuRepTable tr.fu-pend td{background:#fffafa}
+  #fuRepTable tr.fu-done td:first-child{box-shadow:inset 4px 0 0 #2e7d32}
+  #fuRepTable tr.fu-pend td:first-child{box-shadow:inset 4px 0 0 #c62828}
   /* ── Partial payment ── */
   .st-badge{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:700;white-space:nowrap}
   .st-paid{background:#e8f5e9;color:#2e7d32}
@@ -341,14 +353,42 @@
       <option value="partial">Partially Paid</option>
       <option value="paid">Fully Paid</option>
     </select>
+    <label for="filterFUDate" style="font-size:11px;font-weight:700;color:#1a237e;margin-left:6px">📅 Follow-up Date</label>
+    <input type="date" id="filterFUDate" onchange="renderOutstanding()" title="Show parties whose follow-up / promised payment is on this date">
+    <button class="btn btn-sm" type="button" onclick="setFUToday()" style="background:#e8eaf6">Today</button>
+    <button class="btn btn-sm" type="button" id="fuDateClear" onclick="clearFUDate()" style="display:none;background:#ffebee;color:#c62828">✕ Clear</button>
     <span id="countLabel" style="margin-left:auto;font-size:11px;color:#888"></span>
+  </div>
+
+  <!-- Follow-up date report (shown only when a follow-up date is selected) -->
+  <div class="fu-rep" id="fuReport">
+    <div class="fu-chips" id="fuChips"></div>
+    <div class="tbl-wrap">
+      <table id="fuRepTable">
+        <thead>
+          <tr>
+            <th>Follow-up Date</th>
+            <th>Party Name</th>
+            <th>Salesman</th>
+            <th class="num">Total Outstanding</th>
+            <th class="num">Promised Amount</th>
+            <th class="num">Previous Collection</th>
+            <th class="num">Remaining Pending</th>
+            <th>Payment Status</th>
+            <th>Remark</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="fuRepBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Aging summary chips — pre-populated server-side, re-rendered by JS on filter -->
   <div class="aging-row" id="agingRow"></div>
 
   <!-- Table -->
-  <div class="tbl-wrap">
+  <div class="tbl-wrap" id="outWrap">
     <table id="outTable">
       <thead>
         <tr>
@@ -659,6 +699,13 @@
           <label>Promised Payment Date</label>
           <input id="fu-promised" type="date">
         </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Promised Amount (₹)</label>
+          <input id="fu-promisedAmt" type="number" min="0" step="0.01" placeholder="Amount party promised to pay">
+        </div>
+        <div class="form-group"></div>
       </div>
       <div class="form-row single">
         <div class="form-group">
@@ -1388,7 +1435,87 @@ function getCollected(party){
   return (DB.payByParty[party.party]||[]).reduce((a,x)=>a+x.amount,0);
 }
 
+function setFUToday(){ document.getElementById('filterFUDate').value=todayISO(); renderOutstanding(); }
+function clearFUDate(){ document.getElementById('filterFUDate').value=''; renderOutstanding(); }
+
+function fuScheduleOf(p){
+  /* date this party's payment follow-up is scheduled for: latest follow-up's promised date,
+     otherwise the payment date / follow-up date typed in MASTER OUT */
+  const h=(DB.followUpHistory||[]).find(r=>r.party===p.party);
+  if(h && h.promisedDate) return {date:h.promisedDate, amt:Number(h.promisedAmount)||0, remark:h.remark||p.remark||''};
+  if(h) return {date:p.paymentDate||'', amt:0, remark:h.remark||p.remark||''};
+  return {date:p.paymentDate||p.followUpDate||'', amt:0, remark:p.remark||''};
+}
+
+function renderFUReport(D){
+  const smF=document.getElementById('filterSalesman').value;
+  const qF =document.getElementById('searchParty').value.toLowerCase();
+  const rows=[];
+  DB.parties.forEach(p=>{
+    if(smF && p.salesman!==smF) return;
+    if(qF && !p.party.toLowerCase().includes(qF) && !String(p.salesmanArea||'').toLowerCase().includes(qF)) return;
+    const s=fuScheduleOf(p);
+    if(s.date!==D) return;
+    const pays=DB.payByParty[p.party]||[];
+    let prev=0, onDay=0;
+    pays.forEach(x=>{ if(x.paymentDate<D) prev+=x.amount; else if(x.paymentDate===D) onDay+=x.amount; });
+    const rem=getNetPending(p);
+    const done = rem<=0 || (s.amt>0 ? onDay>=s.amt : onDay>0);
+    rows.push({p:p, s:s, prev:prev, onDay:onDay, rem:rem, done:done});
+  });
+  rows.sort((a,b)=> (a.done-b.done) || String(a.p.salesman).localeCompare(String(b.p.salesman)) || (b.p.closing-a.p.closing));
+
+  let tOut=0,tProm=0,tPrev=0,tRem=0,tGot=0,nDone=0;
+  rows.forEach(r=>{ tOut+=r.p.closing; tProm+=r.s.amt; tPrev+=r.prev; tRem+=r.rem; tGot+=r.onDay; if(r.done) nDone++; });
+
+  document.getElementById('fuChips').innerHTML=
+    '<div class="fu-chip"><span>Follow-ups on '+fmtDate(D)+'</span><b>'+rows.length+' parties</b></div>'+
+    '<div class="fu-chip"><span>Total Outstanding</span><b>'+inr(tOut)+'</b></div>'+
+    '<div class="fu-chip"><span>Promised Amount</span><b>'+inr(tProm)+'</b></div>'+
+    '<div class="fu-chip grn"><span>Collected on this date</span><b>'+inr(tGot)+' · '+nDone+' done</b></div>'+
+    '<div class="fu-chip red"><span>Still Pending</span><b>'+inr(tRem)+' · '+(rows.length-nDone)+' parties</b></div>';
+
+  const tb=document.getElementById('fuRepBody');
+  if(!rows.length){
+    tb.innerHTML='<tr><td colspan="10" class="empty">No follow-up scheduled for '+fmtDate(D)+(smF?' ('+smF+')':'')+'</td></tr>';
+  } else {
+    let html=rows.map(r=>{
+      const p=r.p;
+      const badge = r.done
+        ? '<span class="st-badge st-paid">Collected</span>'+(r.onDay>0?'<div style="font-size:10px;color:#666">Recd '+inr(r.onDay)+'</div>':'')
+        : '<span class="st-badge st-pend">Pending</span>'+(r.onDay>0?'<div style="font-size:10px;color:#666">Recd '+inr(r.onDay)+' so far</div>':'');
+      return '<tr class="'+(r.done?'fu-done':'fu-pend')+'">'+
+        '<td style="white-space:nowrap">'+fmtDate(D)+'</td>'+
+        '<td><strong>'+p.party+'</strong></td>'+
+        '<td style="font-size:11px">'+(p.salesman||'')+(p.salesmanArea&&p.salesmanArea!==p.salesman?'<div style="color:#888">'+p.salesmanArea+'</div>':'')+'</td>'+
+        '<td class="num bold">'+inr(p.closing)+'</td>'+
+        '<td class="num">'+(r.s.amt>0?inr(r.s.amt):'—')+'</td>'+
+        '<td class="num">'+(r.prev>0?inr(r.prev):'—')+'</td>'+
+        '<td class="num bold" style="color:'+(r.rem>0?'#c62828':'#2e7d32')+'">'+inr(r.rem)+'</td>'+
+        '<td>'+badge+'</td>'+
+        '<td style="font-size:11px;max-width:160px">'+(r.s.remark||'—')+'</td>'+
+        '<td><div class="act">'+
+          '<button class="btn-pay" onclick="openPayModal(\''+pid(p.party)+'\')">💳 Pay</button>'+
+          '<button class="btn-fu" onclick="openFUModal(\''+pid(p.party)+'\')">📝 FU</button>'+
+          '<button class="btn-wa" onclick="openWAModal(\''+pid(p.party)+'\')" title="WhatsApp">💬</button>'+
+        '</div></td></tr>';
+    }).join('');
+    html+='<tr class="total-row"><td></td><td class="bold">TOTAL ('+rows.length+' parties)</td><td></td>'+
+      '<td class="num bold">'+inr(tOut)+'</td><td class="num bold">'+inr(tProm)+'</td><td class="num bold">'+inr(tPrev)+'</td>'+
+      '<td class="num bold" style="color:#c62828">'+inr(tRem)+'</td><td colspan="3"></td></tr>';
+    tb.innerHTML=html;
+  }
+  document.getElementById('countLabel').textContent=rows.length+' follow-ups on '+fmtDate(D);
+}
+
 function renderOutstanding(){
+  const fuD=document.getElementById('filterFUDate').value;
+  const fuOn=!!fuD;
+  document.getElementById('fuDateClear').style.display = fuOn ? '' : 'none';
+  document.getElementById('fuReport').classList.toggle('show',fuOn);
+  document.getElementById('outWrap').style.display = fuOn ? 'none' : '';
+  document.getElementById('agingRow').style.display = fuOn ? 'none' : '';
+  if(fuOn){ renderFUReport(fuD); return; }
   const smF  = document.getElementById('filterSalesman').value;
   const qF   = document.getElementById('searchParty').value.toLowerCase();
   const agF  = document.getElementById('filterAging').value;
@@ -1579,6 +1706,7 @@ function openFUModal(pid){
   document.getElementById('fu-salesman').value=p.salesman;
   document.getElementById('fu-date').value   =todayISO();
   document.getElementById('fu-promised').value='';
+  document.getElementById('fu-promisedAmt').value='';
   document.getElementById('fu-remark').value ='';
   document.getElementById('fu-amt').value    =inr(net);
   document.getElementById('fu-staff').value  ='';
@@ -1611,6 +1739,7 @@ function submitFollowUp(){
     party, salesman:document.getElementById('fu-salesman').value,
     followUpDate:date, remark:rem,
     promisedDate:document.getElementById('fu-promised').value,
+    promisedAmount:Number(document.getElementById('fu-promisedAmt').value)||0,
     staffName:staff, outstandingAmt:document.getElementById('fu-amt').value
   };
   const FU_BTN='button[onclick="submitFollowUp()"]';
