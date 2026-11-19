@@ -67,6 +67,15 @@
   tbody tr{border-bottom:1px solid #f0f0f0;transition:.15s}
   tbody tr:hover{background:#f5f7ff}
   tbody td{padding:7px 10px;vertical-align:middle}
+  /* ── Better row visibility: zebra stripes, clearer row lines, stronger hover ── */
+  tbody tr{border-bottom:1px solid #d9dff0}
+  tbody tr:nth-child(even){background:#f1f4fc}
+  tbody tr:hover{background:#dfe6fb}
+  tbody tr.total-row{background:#e3e7f7!important;border-top:2px solid #9fa8da}
+  #outTable td.num{border-left:1px solid #e6eaf6}
+  #outTable td:nth-child(2){font-weight:700;color:#1a237e}
+  #outTable td:nth-child(4){background:rgba(26,35,126,.06);font-weight:700}
+  #fuRepTable td.num,#ofuTable td.num{border-left:1px solid #e6eaf6}
   .num{text-align:right;font-variant-numeric:tabular-nums}
   /* Outstanding table layout */
   #outTable{table-layout:auto}
