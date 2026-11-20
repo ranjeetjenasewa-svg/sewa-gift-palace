@@ -437,6 +437,7 @@ function setStatusFilter(s){
 }
 
 function updateKPIs(){ renderTable(); }
+function clearFilters(){ document.getElementById('fSearch').value=''; document.getElementById('fFrom').value=''; document.getElementById('fTo').value=''; renderTable(); }
 
 function orderDateMs(row){ return parseDate(row[1]) || parseDate(row[0]); }
 
@@ -521,7 +522,7 @@ function renderTable(){
   if(filtered.length===0){
     document.getElementById('tableArea').innerHTML = '<div class="empty"><b>No orders found</b>'
       + (statusFilter ? 'There are no '+STATUS_META[statusFilter].label.toLowerCase()+' orders for the current filters.' : 'No orders match the current filters.')
-      + '</div>';
+      + '<br><br><button class="back-btn" onclick="clearFilters()">Clear search &amp; dates</button></div>';
     return;
   }
 
