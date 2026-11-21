@@ -1313,7 +1313,7 @@ function exportExcel(){
     if(v===null||v===undefined)return "";
     if(typeof v==="number")return v;
     var n=Number(v);
-    return isNaN(n)?String(v).replace(/[^-]/g,""):n;
+    return isNaN(n)?String(v).replace(/[^\x00-\x7F]/g,""):n;
   }
   function toRow(it,i){
     return[
@@ -1443,7 +1443,7 @@ function exportPDF(){
       '</thead><tbody>'+buildRows(arr,qClr)+'</tbody></table>';
   }
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+label+' PO '+poNum+'</title>'+
-    '<style>@page{size:A4 portrait;margin:8mm}*{box-sizing:border-box;margin:0;padding:0}html{width:100%}body{width:100%;font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#0f1923;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{width:100%}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{overflow:hidden;word-break:break-word}.c0{width:4%}.c1{width:9%}.c2{width:11%}.c3{width:27%}.c4{width:9%}.c5{width:7%}.c6{width:9%}.c7{width:9%}.c8{width:11%}.c9{width:4%}.no-print{display:none}@media print{html,body{width:100%}.page{break-inside:auto}tr{break-inside:avoid}.section-hdr{break-before:avoid;break-after:avoid}}</style></head><body style='margin:0;padding:0'>'+
+    '<style>@page{size:A4 portrait;margin:8mm}*{box-sizing:border-box;margin:0;padding:0}html{width:100%}body{width:100%;font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#0f1923;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{width:100%}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{overflow:hidden;word-break:break-word}.c0{width:4%}.c1{width:9%}.c2{width:11%}.c3{width:27%}.c4{width:9%}.c5{width:7%}.c6{width:9%}.c7{width:9%}.c8{width:11%}.c9{width:4%}.no-print{display:none}@media print{html,body{width:100%}.page{break-inside:auto}tr{break-inside:avoid}.section-hdr{break-before:avoid;break-after:avoid}}</style></head><body style="margin:0;padding:0">'+
     '<div class="page">'+
     '<div style="background:#1a2e4a;padding:10pt 16pt;text-align:center"><div style="font-size:16pt;font-weight:700;color:#fff;letter-spacing:.5px">SEWA GIFT PALACE</div><div style="font-size:8pt;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;margin-top:2px">Christofin Impex &middot; New Delhi</div></div>'+
     '<div style="background:#e87c1e;padding:5pt;text-align:center;font-size:11pt;font-weight:700;color:#fff;letter-spacing:.5px">PURCHASE ORDER &mdash; '+label.toUpperCase()+'</div>'+
@@ -1458,7 +1458,7 @@ function exportPDF(){
     buildSection("Blocked Items — Verify","#553c9a","#faf5ff","#c4b5fd",blkI,"#553c9a")+
     buildSection("Sufficient Stock","#1a6b3a","#f0fff4","#9ae6b4",greenI,"#1a6b3a")+
     '</div>'+
-    '<div style="padding:10pt 14pt;border-top:1pt solid #dde3ec;display:flex;gap:20pt;margin-top:6pt">'++
+    '<div style="padding:10pt 14pt;border-top:1pt solid #dde3ec;display:flex;gap:20pt;margin-top:6pt">'+
     ['Prepared By','Checked By','Authorized By'].map(function(l){return'<div style="flex:1"><div style="font-size:7.5pt;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:18pt">'+l+'</div><div style="border-top:1px solid #1a2e4a;padding-top:4px;font-size:9px;color:#888">Signature &amp; Date</div></div>';}).join("")+
     '</div>'+
     '<div style="padding:6px 16px;border-top:1px solid #e8ecf0;font-size:8.5px;color:#aaa;text-align:center">SEWA GIFT PALACE / CHRISTOFIN IMPEX &middot; '+poNum+' &middot; '+genTime+'</div>'+
@@ -1467,7 +1467,7 @@ function exportPDF(){
     '<button onclick="window.print()" style="background:#1a2e4a;color:#fff;border:none;padding:8pt 24pt;font-size:11pt;font-weight:700;border-radius:4pt;cursor:pointer">Print / Save as PDF</button>'+
     ' &nbsp;<span style="font-size:8pt;color:#888">In print dialog: Layout=Portrait, Margins=None, enable Background graphics</span>'+
     '</div>'+
-    '<script>window.onload=function(){document.title="'+label.replace(/"/g,"'")+' PO '+poNum+'";};<\/script></body></html>';
+    '<scr'+'ipt>window.onload=function(){document.title="'+label.replace(/"/g,"'")+' PO '+poNum+'";};<\/sc'+'ript></body></html>';
   try{
     var blob=new Blob([html],{type:"text/html;charset=utf-8"});
     var url=URL.createObjectURL(blob);
