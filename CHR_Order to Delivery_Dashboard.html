@@ -85,6 +85,7 @@
   .badge.can{background:#f1f5f9;color:#475569}
   .btn-cancel{border:1px solid #fecaca;background:#fff;color:var(--red);font-weight:700;font-size:.74rem;padding:6px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
   .btn-cancel:hover{background:var(--red);color:#fff}
+  .btn-cancel:disabled,.btn-cancel:disabled:hover{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;cursor:not-allowed}
   .cx-box{background:#fff;border:1px solid var(--line);border-left:4px solid #64748b;border-radius:12px;padding:14px 16px;display:grid;gap:8px}
   .cx-box h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
   .cx-row{font-size:.86rem;color:var(--ink2);line-height:1.5}
@@ -632,7 +633,7 @@ function renderTable(){
       html += '<td><div class="prog-cell"><div class="stage-mini">'+dots+'</div><span class="prog-n">'+doneCount+'/'+STAGES.length+'</span></div></td>';
       html += '<td class="stage-now">'+esc(currentStageName(row))+'</td>';
       html += '<td class="muted" style="font-size:.78rem">'+esc(remarkTxt)+'</td>';
-      html += '<td><button class="btn-cancel" onclick="event.stopPropagation();openCancel('+rowIdx+')">Cancel Order</button></td>';
+      html += '<td><button class="btn-cancel"'+(st==='done'?' disabled title="Completed orders cannot be cancelled" onclick="event.stopPropagation()"':' onclick="event.stopPropagation();openCancel('+rowIdx+')"')+'>Cancel Order</button></td>';
     }
     html += '</tr>';
     html += '<tr class="expand-row" id="exp-'+rowIdx+'" style="display:'+(expandedRow===rowIdx?'':'none')+'"><td colspan="'+(isCan?9:10)+'">'+(isCan?buildCancelHTML(o,cx):buildExpandHTML(rowIdx,row,rmk))+'</td></tr>';
@@ -680,7 +681,7 @@ function buildExpandHTML(rowIdx, row, rmk){
     +'<div class="remark-footer">'+holdSel
     +'<button class="save-btn" onclick="saveRemark('+rowIdx+')">Save</button>'
     +'<span class="save-ok" id="savok-'+rowIdx+'">✓ Saved</span>'
-    +'<button class="btn-cancel" style="margin-left:auto" onclick="openCancel('+rowIdx+')">Cancel Order</button></div>'
+    +'<button class="btn-cancel" style="margin-left:auto"'+(bucket(getOrderStatus(row,rowIdx))==='done'?' disabled title="Completed orders cannot be cancelled"':' onclick="openCancel('+rowIdx+')"')+'>Cancel Order</button></div>'
     +'</div></div>';
 }
 
@@ -706,6 +707,7 @@ function buildCancelHTML(o, cx){
 function openCancel(rowIdx){
   var o = allOrders.filter(function(x){ return x.rowIndex===rowIdx; })[0];
   if(!o) return;
+  if(bucket(getOrderStatus(o.row,o.rowIndex))==='done') return;
   cxTarget = o;
   document.getElementById('cxInfo').innerHTML = 'Party: <b>'+esc(o.row[2]||'')+'</b> (row '+rowIdx+')<br>The order will be marked <b>Cancelled</b> and its full record saved to the Cancelled Orders history. It is not deleted.';
   var nm=''; try{ nm=localStorage.getItem('chr_cancel_by')||''; }catch(e){}
