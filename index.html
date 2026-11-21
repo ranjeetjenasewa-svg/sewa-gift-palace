@@ -446,7 +446,6 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
           </div>
           <div class="toggle-row">
             <label class="toggle-lbl"><input type="checkbox" id="chk-po-only" onchange="resetPO()"> Show only items requiring PO</label>
-            <label class="toggle-lbl"><input type="checkbox" id="chk-blocked" onchange="resetPO()"> Include blocked items (shown separately)</label>
           </div>
         </div>
       </div>
@@ -522,6 +521,7 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
               <button type="button" onclick="clearAllBlocked()" style="padding:7px 14px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);font-size:12px">Clear All (Local)</button>
             </div>
           </div>
+          <input id="blocked-filter" type="text" placeholder="Search blocked SKU by code, name, brand…" oninput="renderBlockedList()" style="margin-bottom:10px;font-size:12px">
           <div id="blocked-list-container" class="blocked-list"></div>
         </div>
       </div>
@@ -715,6 +715,26 @@ var syncTimer   = null;
 var activeTab   = IMS_TAB;
 var gasUrl      = localStorage.getItem("sewa_gas_url") || "";
 var blockedSkus = JSON.parse(localStorage.getItem("sewa_blocked_skus")||"{}");
+var sheetBlocked = {};   // rebuilt from the "Blocked" column of the sheet on every sync
+function isBlockFlag(v){ v=String(v||"").trim().toUpperCase(); return v==="BLOCK"||v==="BLOCKED"; }
+function rebuildSheetBlocked(){
+  sheetBlocked = {};
+  if (!csvRows) return;
+  for (var i=1;i<csvRows.length;i++){
+    var r=csvRows[i]; if(!r) continue;
+    if (isBlockFlag(r[C.BLOCKED])) {
+      var code=String(r[C.CODE]||"").trim(); if(!code) continue;
+      sheetBlocked[code]={code:code,name:r[C.NAME]||"",brand:r[C.BRAND]||"",dept:r[C.DEPT]||"",date:"Google Sheet",fromSheet:true};
+    }
+  }
+}
+function allBlocked(){
+  var m={},k;
+  for (k in blockedSkus) m[k]=blockedSkus[k];
+  for (k in sheetBlocked) m[k]=sheetBlocked[k];
+  return m;
+}
+function blockedCount(){ return Object.keys(allBlocked()).length; }
 var currentTabView = "po";
 
 // ── BOOT ─────────────────────────────────────────────────────────────
@@ -857,6 +877,9 @@ function syncSheet() {
       if (!rows || rows.length < 5) throw new Error("NO_DATA");
       csvRows = rows;
       mapColumns(rows[0]);
+      rebuildSheetBlocked();
+      updateBlockedBadge();
+      if (currentTabView==="blocked") renderBlockedList();
       document.getElementById("error-card").style.display = "none";
       populateFilters();
       setSyncStatus("ok");
@@ -906,7 +929,7 @@ function updateHeroStats() {
   }
   document.getElementById("h-total").textContent=(csvRows.length-1).toLocaleString("en-IN");
   document.getElementById("h-need").textContent=needCount.toLocaleString("en-IN");
-  document.getElementById("h-blocked").textContent=Object.keys(blockedSkus).length;
+  document.getElementById("h-blocked").textContent=blockedCount();
   document.getElementById("hero-stats").style.display="flex";
 }
 
@@ -1017,7 +1040,6 @@ function generatePO(){
   var search=document.getElementById("f-search").value.trim().toLowerCase();
   var code=document.getElementById("f-code").value.trim().toLowerCase();
   var poOnly=document.getElementById("chk-po-only").checked;
-  var inclBlk=document.getElementById("chk-blocked").checked;
   var items=[],negCount=0;
 
   for(var i=1;i<csvRows.length;i++){
@@ -1045,7 +1067,7 @@ function generatePO(){
     var needsPO=reorder>0;
 
     var colorTag;
-    if(isBlocked){if(!inclBlk)continue;colorTag="purple";}
+    if(isBlocked)continue;   // RULE: BLOCK items are never part of a PO
     else if(!needsPO){colorTag="green";}
     else if(stock<=0){colorTag="red";}
     else{colorTag="gray";}
@@ -1124,7 +1146,7 @@ function renderPO(){
         var warnTag=it.hasMissing?'<span class="warn-tag">⚠ Missing MAX</span>':"";
         var qtyCls="qty-"+tag;
         // Block button
-        var isAlreadyBlocked=it.isBlocked||blockedSkus.hasOwnProperty(it.code);
+        var isAlreadyBlocked=it.isBlocked||blockedSkus.hasOwnProperty(it.code)||sheetBlocked.hasOwnProperty(it.code);
         var blockBtnHtml;
         if(isAlreadyBlocked){
           blockBtnHtml='<button class="block-btn blocked-done" type="button" disabled>'+
@@ -1227,7 +1249,7 @@ function blockSKU(code, name, brand, dept, btnEl) {
   },600);
 
   // Update hero stats
-  document.getElementById("h-blocked").textContent=Object.keys(blockedSkus).length;
+  document.getElementById("h-blocked").textContent=blockedCount();
 
   // Refresh blocked list if on that tab
   if (currentTabView==="blocked") renderBlockedList();
@@ -1235,54 +1257,66 @@ function blockSKU(code, name, brand, dept, btnEl) {
 
 // ── UNBLOCK SKU ──────────────────────────────────────────────────────
 function unblockSKU(code) {
+  var fromSheet = sheetBlocked.hasOwnProperty(code);
+  if (fromSheet && !gasUrl) {
+    showToast("This SKU is BLOCK in the Google Sheet. Change column B to OK in the sheet, then press Sync. (Or connect the Apps Script in ⚙ Setup to unblock from here.)","warning",7000);
+    return;
+  }
   if (!confirm("Unblock SKU "+code+"? This will also update the Google Sheet.")) return;
   delete blockedSkus[code];
   localStorage.setItem("sewa_blocked_skus",JSON.stringify(blockedSkus));
-  updateBlockedBadge();
-  document.getElementById("h-blocked").textContent=Object.keys(blockedSkus).length;
+  function finish(){
+    if (fromSheet) {
+      delete sheetBlocked[code];
+      if (csvRows) { for (var i=1;i<csvRows.length;i++){ var r=csvRows[i]; if(r && String(r[C.CODE]||"").trim()===code){ r[C.BLOCKED]="OK"; break; } } }
+    }
+    updateBlockedBadge(); renderBlockedList(); resetPO();
+  }
   if (gasUrl) {
     var url=gasUrl+"?action=unblock&itemCode="+encodeURIComponent(code);
     fetch(url,{mode:"cors"})
       .then(function(r){return r.json();})
       .then(function(data){
-        if(data.ok){showToast("SKU "+code+" unblocked in sheet","success");}
-        else{showToast("Unblocked locally but sheet update failed","warning");}
+        if(data.ok){ finish(); showToast("SKU "+code+" unblocked in sheet","success"); }
+        else{ updateBlockedBadge(); renderBlockedList(); showToast("Sheet update failed — SKU stays blocked in the sheet","warning"); }
       })
-      .catch(function(){showToast("Unblocked locally. Sheet sync failed.","warning");});
+      .catch(function(){ updateBlockedBadge(); renderBlockedList(); showToast("Sheet sync failed — SKU stays blocked in the sheet","warning"); });
   } else {
-    showToast("SKU "+code+" unblocked locally","info");
+    finish(); showToast("SKU "+code+" unblocked locally","info");
   }
-  renderBlockedList();
-  resetPO();
 }
 
 function updateBlockedBadge() {
-  var count=Object.keys(blockedSkus).length;
+  var count=blockedCount();
   document.getElementById("blocked-badge").textContent=count;
-  document.getElementById("blocked-count-label").textContent=count+" blocked SKU"+(count===1?"":"s");
+  var hb=document.getElementById("h-blocked"); if(hb) hb.textContent=count;
+  document.getElementById("blocked-count-label").textContent=count.toLocaleString("en-IN")+" blocked SKU"+(count===1?"":"s")+" ("+Object.keys(sheetBlocked).length.toLocaleString("en-IN")+" from Google Sheet)";
 }
 
 function renderBlockedList() {
   var container=document.getElementById("blocked-list-container");
-  var keys=Object.keys(blockedSkus);
+  var all=allBlocked(), keys=Object.keys(all);
+  var fEl=document.getElementById("blocked-filter");
+  var q=fEl?fEl.value.trim().toLowerCase():"";
   if(!keys.length){
-    container.innerHTML='<div class="blocked-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><div style="font-weight:600;font-size:14px;color:var(--purple);margin-bottom:6px">No blocked SKUs</div><div style="font-size:12px">Click the <strong>Block</strong> button next to any item in the PO table to add it here.</div></div>';
+    container.innerHTML='<div class="blocked-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><div style="font-weight:600;font-size:14px;color:var(--purple);margin-bottom:6px">No blocked SKUs</div><div style="font-size:12px">Items marked BLOCK in the Google Sheet appear here automatically.</div></div>';
     return;
   }
-  var html="";
-  for(var i=0;i<keys.length;i++){
-    var item=blockedSkus[keys[i]];
+  if(q){keys=keys.filter(function(k){var it=all[k];return (it.code+" "+it.name+" "+it.brand+" "+it.dept).toLowerCase().indexOf(q)>=0;});}
+  var LIMIT=200, shown=keys.slice(0,LIMIT), html="";
+  for(var i=0;i<shown.length;i++){
+    var item=all[shown[i]];
     html+='<div class="blocked-item">'+
       '<div class="blocked-item-info">'+
       '<div class="blocked-item-code">'+item.code+'</div>'+
       '<div class="blocked-item-name">'+item.name+'</div>'+
-      '<div class="blocked-item-meta">'+item.brand+' &nbsp;·&nbsp; '+item.dept+' &nbsp;·&nbsp; Blocked on '+item.date+'</div>'+
+      '<div class="blocked-item-meta">'+item.brand+' &nbsp;·&nbsp; '+item.dept+' &nbsp;·&nbsp; '+(item.fromSheet?'Marked BLOCK in Google Sheet':'Blocked on '+item.date)+'</div>'+
       '</div>'+
-      '<button class="unblock-btn" type="button" onclick="unblockSKU(\''+item.code.replace(/'/g,"\\'")+'\')">'+
-      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>'+
-      'Unblock</button>'+
+      '<button class="unblock-btn" type="button" onclick="unblockSKU(\''+String(item.code).replace(/'/g,"\\'")+'\')">Unblock</button>'+
       '</div>';
   }
+  if(keys.length>LIMIT) html+='<div style="text-align:center;font-size:12px;color:var(--text3);padding:8px">Showing first '+LIMIT+' of '+keys.length.toLocaleString("en-IN")+' — use the search box to find a specific SKU</div>';
+  if(!keys.length) html='<div style="text-align:center;font-size:13px;color:var(--text3);padding:1.5rem">No blocked SKU matches your search.</div>';
   container.innerHTML=html;
 }
 
@@ -1297,8 +1331,8 @@ function clearAllBlocked() {
 }
 
 function syncBlockedFromSheet() {
-  if(!gasUrl){showToast("Set up Apps Script URL first in the setup section","warning");return;}
-  showToast("Fetching blocked SKUs from sheet…","info");
+  syncSheet();   // re-reads the Blocked column of the sheet
+  if(!gasUrl){return;}
   fetch(gasUrl+"?action=list",{mode:"cors"})
     .then(function(r){return r.json();})
     .then(function(data){
