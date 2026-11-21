@@ -75,6 +75,35 @@
   .kpi.delayed{--c:var(--red);--cbg:var(--red-bg)}
   .kpi.hold{--c:var(--amber);--cbg:var(--amber-bg)}
   .kpi.done{--c:var(--green);--cbg:var(--green-bg)}
+  .kpi.can{display:none}
+  .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .tab{border:1.5px solid var(--line);background:var(--surface);color:var(--ink2);font-weight:700;font-size:.9rem;padding:10px 20px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .tab .tc{background:#e2e8f0;border-radius:999px;font-size:.75rem;padding:2px 9px}
+  .tab.active{background:var(--navy,#10233f);color:#fff;border-color:var(--navy,#10233f)}
+  .tab.active .tc{background:rgba(255,255,255,.2)}
+  .tab.xc.active{background:#475569;border-color:#475569}
+  .badge.can{background:#f1f5f9;color:#475569}
+  .btn-cancel{border:1px solid #fecaca;background:#fff;color:var(--red);font-weight:700;font-size:.74rem;padding:6px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .btn-cancel:hover{background:var(--red);color:#fff}
+  .cx-box{background:#fff;border:1px solid var(--line);border-left:4px solid #64748b;border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+  .cx-box h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .cx-row{font-size:.86rem;color:var(--ink2);line-height:1.5}
+  .cx-row b{color:var(--ink)}
+  .cx-remark{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+  .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:460px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:92vh;overflow:auto}
+  .modal h3{font-size:1.1rem;color:var(--red);margin-bottom:6px}
+  .modal p{font-size:.86rem;color:var(--ink2);margin-bottom:12px;line-height:1.45}
+  .modal label{display:block;font-size:.74rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:10px 0 4px}
+  .modal input,.modal textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:.9rem}
+  .modal textarea{min-height:90px;resize:vertical}
+  .modal .err{color:var(--red);font-size:.8rem;margin-top:8px;min-height:1em}
+  .modal .btns{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+  .modal .btns button{border:0;border-radius:10px;padding:10px 18px;font-weight:700;font-size:.86rem;cursor:pointer}
+  .modal .b-no{background:#e2e8f0;color:var(--ink)}
+  .modal .b-yes{background:var(--red);color:#fff}
+  .modal .b-yes:disabled{opacity:.6;cursor:wait}
   .kpi.active{border-color:var(--c);background:var(--cbg);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent),var(--shadow-lg);transform:translateY(-2px)}
   .kpi.active .sub{color:var(--c);font-weight:600}
 
@@ -189,7 +218,11 @@
   <div class="error-bar" id="errBar"></div>
 
   <div class="section-head"><h2>Order Overview</h2><span>Click a card to view its orders</span></div>
-  <div class="kpi-row">
+  <div class="tabs">
+    <button class="tab" id="tabOrders" onclick="setStatusFilter('')">Orders <span class="tc" id="tcOrders">0</span></button>
+    <button class="tab xc" id="tabCan" onclick="showCancelledTab()">Cancelled Orders <span class="tc" id="tcCan">0</span></button>
+  </div>
+  <div class="kpi-row" id="kpiRow">
     <button class="kpi total" id="cardAll" onclick="setStatusFilter('')">
       <div class="top"><span class="lbl">All Orders</span><span class="ico">&#9776;</span></div>
       <div class="num" id="kTotal">—</div><div class="sub">Overall view</div>
@@ -209,6 +242,10 @@
     <button class="kpi done" id="cardDone" onclick="setStatusFilter('done')">
       <div class="top"><span class="lbl">Completed</span><span class="ico">&#10003;</span></div>
       <div class="num" id="kDone">—</div><div class="sub">All stages done</div>
+    </button>
+    <button class="kpi can" id="cardCan" onclick="setStatusFilter('can')">
+      <div class="top"><span class="lbl">Cancelled</span><span class="ico">&#10005;</span></div>
+      <div class="num" id="kCan">—</div><div class="sub">Order cancelled</div>
     </button>
   </div>
 
@@ -230,6 +267,19 @@
 
   <div class="panel" style="overflow:hidden">
     <div id="tableArea"><div class="loading"><div class="spinner"></div><br>Loading orders…</div></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="cxModal" onclick="if(event.target===this)closeCancel()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>Cancel this order?</h3>
+    <p id="cxInfo"></p>
+    <label for="cxBy">Your name *</label>
+    <input type="text" id="cxBy" maxlength="60" placeholder="Name of person cancelling" autocomplete="name">
+    <label for="cxRemark">Cancellation remark *</label>
+    <textarea id="cxRemark" maxlength="500" placeholder="Reason for cancelling this order"></textarea>
+    <div class="err" id="cxErr"></div>
+    <div class="btns"><button class="b-no" onclick="closeCancel()">No, keep order</button><button class="b-yes" id="cxYes" onclick="confirmCancel()">Yes, cancel order</button></div>
   </div>
 </div>
 
@@ -255,6 +305,8 @@ const STAGES = [
 // ═══════════════════════════════════════════════════
 let allOrders   = [];
 let remarksMap  = {}; // rowIndex → {remark, holdStatus}
+let cancelMap   = {}; // order key → {cancelledBy, remark, cancelledDate, cancelledTime}
+let localCancel = {}; // cancellations done in this browser, kept until the sheet confirms them
 let scriptUrl   = '';
 let previewMode = false;
 let refreshTimer= null;
@@ -366,12 +418,18 @@ function processPayload(payload){
   (payload.remarks||[]).forEach(function(r){
     remarksMap[r.rowIndex] = { remark: r.remark, holdStatus: r.holdStatus };
   });
+  var serverCancel = {};
+  (payload.cancellations||[]).forEach(function(c){ serverCancel[c.key] = c; });
+  Object.keys(serverCancel).forEach(function(k){ delete localCancel[k]; });
+  cancelMap = {};
+  Object.keys(serverCancel).forEach(function(k){ cancelMap[k] = serverCancel[k]; });
+  Object.keys(localCancel).forEach(function(k){ cancelMap[k] = localCancel[k]; });
   var rows = payload.data || [];
   allOrders = [];
   for(var i=6; i<rows.length; i++){
     var row = rows[i];
     if(!row[0] && !row[1] && !row[2]) continue;
-    allOrders.push({ rowIndex: i+1, row: row });
+    allOrders.push({ rowIndex: i+1, row: row, key: orderKey(row) });
   }
   updateKPIs();
   renderTable();
@@ -405,6 +463,8 @@ function parseDate(v){
   return isNaN(d) ? null : d;
 }
 
+function orderKey(row){ return String(row[0]==null?'':row[0]) + '|' + String(row[2]==null?'':row[2]); }
+
 function getOrderStatus(row, rowIndex){
   var rmk = remarksMap[rowIndex];
   if(rmk && rmk.holdStatus==='hold') return 'hold';
@@ -424,12 +484,14 @@ var STATUS_META = {
   prog:{label:'In Progress', cls:'prog'},
   del :{label:'Delayed',     cls:'delayed'},
   hold:{label:'On Hold',     cls:'hold'},
-  done:{label:'Completed',   cls:'done'}
+  done:{label:'Completed',   cls:'done'},
+  can :{label:'Cancelled',   cls:'can'}
 };
-var CARD_IDS = {'':'cardAll', prog:'cardProg', del:'cardDel', hold:'cardHold', done:'cardDone'};
+var CARD_IDS = {'':'cardAll', prog:'cardProg', del:'cardDel', hold:'cardHold', done:'cardDone', can:'cardCan'};
 
 function bucket(st){ return st==='pend' ? 'prog' : st; }   // not-started counts as In Progress
 
+function showCancelledTab(){ statusFilter='can'; expandedRow=null; renderTable(); }
 function setStatusFilter(s){
   statusFilter = (s && statusFilter===s) ? '' : (s||'');   // clicking the active card again = back to all
   expandedRow = null;
@@ -475,9 +537,16 @@ function renderTable(){
   });
 
   // 2) counts for the cards
-  var counts = {prog:0, del:0, hold:0, done:0};
-  base.forEach(function(o){ o.st = bucket(getOrderStatus(o.row, o.rowIndex)); counts[o.st]++; });
-  document.getElementById('kTotal').textContent = base.length;
+  var counts = {prog:0, del:0, hold:0, done:0, can:0};
+  base.forEach(function(o){ o.st = cancelMap[o.key] ? 'can' : bucket(getOrderStatus(o.row, o.rowIndex)); counts[o.st]++; });
+  var activeTotal = base.length - counts.can;      // cancelled orders are not part of All Orders
+  document.getElementById('kTotal').textContent = activeTotal;
+  document.getElementById('kCan').textContent   = counts.can;
+  document.getElementById('tcCan').textContent  = counts.can;
+  document.getElementById('tcOrders').textContent = activeTotal;
+  document.getElementById('tabCan').classList.toggle('active', statusFilter==='can');
+  document.getElementById('tabOrders').classList.toggle('active', statusFilter!=='can');
+  document.getElementById('kpiRow').style.display = statusFilter==='can' ? 'none' : '';
   document.getElementById('kProg').textContent  = counts.prog;
   document.getElementById('kDel').textContent   = counts.del;
   document.getElementById('kHold').textContent  = counts.hold;
@@ -487,7 +556,7 @@ function renderTable(){
   });
 
   // 3) rows for the active view (status card + search + dates), sorted
-  var filtered = statusFilter ? base.filter(function(o){ return o.st===statusFilter; }) : base.slice();
+  var filtered = statusFilter ? base.filter(function(o){ return o.st===statusFilter; }) : base.filter(function(o){ return o.st!=='can'; });
   filtered.sort(function(a,b){
     if(fSort==='del-first'){
       var sa = a.st==='del'?0:1, sb = b.st==='del'?0:1;
@@ -496,7 +565,7 @@ function renderTable(){
     if(fSort==='row-asc') return a.rowIndex - b.rowIndex;
     return b.rowIndex - a.rowIndex;
   });
-  lastView = { rows:filtered, counts:counts, total:base.length, status:statusFilter, from:fFrom, to:fTo,
+  lastView = { rows:filtered, counts:counts, total:activeTotal, status:statusFilter, from:fFrom, to:fTo,
                search:(document.getElementById('fSearch').value||'').trim(), sort:fSort };
 
   // 4) view bar (title + back button + export buttons)
@@ -505,11 +574,11 @@ function renderTable(){
                  + '<button class="btn-export pdf" onclick="exportPDF()" title="Save as PDF, A4 portrait">&#11015; PDF</button>';
   if(statusFilter){
     var m = STATUS_META[statusFilter];
-    var colorVar = {prog:'--blue',del:'--red',hold:'--amber',done:'--green'}[statusFilter];
-    var bgVar    = {prog:'--blue-bg',del:'--red-bg',hold:'--amber-bg',done:'--green-bg'}[statusFilter];
+    var colorVar = {prog:'--blue',del:'--red',hold:'--amber',done:'--green',can:'--muted'}[statusFilter];
+    var bgVar    = {prog:'--blue-bg',del:'--red-bg',hold:'--amber-bg',done:'--green-bg',can:'--line2'}[statusFilter];
     vb.innerHTML = '<span class="chip" style="--c:var('+colorVar+');--cbg:var('+bgVar+')">'+m.label+'</span>'
       + '<span class="vtitle">'+filtered.length+' order'+(filtered.length===1?'':'s')+'</span>'
-      + '<div class="v-actions"><button class="back-btn" onclick="setStatusFilter(\'\')">&larr; Back to all orders</button>'+exportBtns+'</div>';
+      + '<div class="v-actions">'+(statusFilter==='can'?'':'<button class="back-btn" onclick="setStatusFilter(\'\')">&larr; Back to all orders</button>')+exportBtns+'</div>';
   } else {
     vb.innerHTML = '<span class="vtitle">All Orders</span><span class="muted">'+filtered.length+' record'+(filtered.length===1?'':'s')+'</span>'
       + '<div class="v-actions">'+exportBtns+'</div>';
@@ -527,7 +596,10 @@ function renderTable(){
   }
 
   var html = '<div class="tbl-wrap"><table>';
-  html += '<thead><tr><th>#</th><th>Party</th><th>Order Date</th><th>Amount</th><th>Region</th><th>Status</th><th>Progress</th><th>Current Stage</th><th>Remark</th></tr></thead><tbody>';
+  var isCan = statusFilter==='can';
+  html += isCan
+    ? '<thead><tr><th>#</th><th>Party</th><th>Order Date</th><th>Amount</th><th>Region</th><th>Status</th><th>Cancelled By</th><th>Cancelled On</th><th>Cancellation Remark</th></tr></thead><tbody>'
+    : '<thead><tr><th>#</th><th>Party</th><th>Order Date</th><th>Amount</th><th>Region</th><th>Status</th><th>Progress</th><th>Current Stage</th><th>Remark</th><th>Action</th></tr></thead><tbody>';
 
   filtered.forEach(function(o){
     var rowIdx = o.rowIndex, row = o.row;
@@ -551,11 +623,19 @@ function renderTable(){
     html += '<td>'+esc(amtTxt)+'</td>';
     html += '<td class="muted">'+esc(row[4]||'')+'</td>';
     html += '<td><span class="badge '+st+'">'+STATUS_META[st].label+'</span></td>';
-    html += '<td><div class="prog-cell"><div class="stage-mini">'+dots+'</div><span class="prog-n">'+doneCount+'/'+STAGES.length+'</span></div></td>';
-    html += '<td class="stage-now">'+esc(currentStageName(row))+'</td>';
-    html += '<td class="muted" style="font-size:.78rem">'+esc(remarkTxt)+'</td>';
+    var cx = cancelMap[o.key];
+    if(isCan && cx){
+      html += '<td>'+esc(cx.cancelledBy||'')+'</td>';
+      html += '<td class="muted">'+esc((cx.cancelledDate||'')+' '+(cx.cancelledTime||''))+'</td>';
+      html += '<td class="muted" style="font-size:.78rem">'+esc((cx.remark||'').substring(0,50)+((cx.remark||'').length>50?'…':''))+'</td>';
+    } else {
+      html += '<td><div class="prog-cell"><div class="stage-mini">'+dots+'</div><span class="prog-n">'+doneCount+'/'+STAGES.length+'</span></div></td>';
+      html += '<td class="stage-now">'+esc(currentStageName(row))+'</td>';
+      html += '<td class="muted" style="font-size:.78rem">'+esc(remarkTxt)+'</td>';
+      html += '<td><button class="btn-cancel" onclick="event.stopPropagation();openCancel('+rowIdx+')">Cancel Order</button></td>';
+    }
     html += '</tr>';
-    html += '<tr class="expand-row" id="exp-'+rowIdx+'" style="display:'+(expandedRow===rowIdx?'':'none')+'"><td colspan="9">'+buildExpandHTML(rowIdx,row,rmk)+'</td></tr>';
+    html += '<tr class="expand-row" id="exp-'+rowIdx+'" style="display:'+(expandedRow===rowIdx?'':'none')+'"><td colspan="'+(isCan?9:10)+'">'+(isCan?buildCancelHTML(o,cx):buildExpandHTML(rowIdx,row,rmk))+'</td></tr>';
   });
 
   html += '</tbody></table></div>';
@@ -599,8 +679,87 @@ function buildExpandHTML(rowIdx, row, rmk){
     +'<textarea id="rmk-'+rowIdx+'" placeholder="Add a note…">'+esc(rmk.remark||'')+'</textarea>'
     +'<div class="remark-footer">'+holdSel
     +'<button class="save-btn" onclick="saveRemark('+rowIdx+')">Save</button>'
-    +'<span class="save-ok" id="savok-'+rowIdx+'">✓ Saved</span></div>'
+    +'<span class="save-ok" id="savok-'+rowIdx+'">✓ Saved</span>'
+    +'<button class="btn-cancel" style="margin-left:auto" onclick="openCancel('+rowIdx+')">Cancel Order</button></div>'
     +'</div></div>';
+}
+
+// ═══════════════════════════════════════════════════
+//  CANCEL ORDER  (never deletes: full record is copied to the "Cancelled Orders" sheet tab)
+// ═══════════════════════════════════════════════════
+var cxTarget = null;
+
+function buildCancelHTML(o, cx){
+  cx = cx || {};
+  var row = o.row, amt=row[3];
+  return '<div class="expand-inner" onclick="event.stopPropagation()">'
+    +'<div class="cx-box"><h4>Cancellation details</h4>'
+    +'<div class="cx-row"><b>Cancelled by:</b> '+esc(cx.cancelledBy||'—')+'</div>'
+    +'<div class="cx-row"><b>Date:</b> '+esc(cx.cancelledDate||'—')+' &nbsp; <b>Time (IST):</b> '+esc(cx.cancelledTime||'—')+'</div>'
+    +'<div class="cx-row"><b>Remark:</b></div><div class="cx-remark">'+esc(cx.remark||'—')+'</div></div>'
+    +'<div class="cx-box"><h4>Cancellation history</h4>'
+    +'<div class="cx-row">&#9679; <b>'+esc((cx.cancelledDate||'')+' '+(cx.cancelledTime||''))+'</b> &mdash; Order cancelled by <b>'+esc(cx.cancelledBy||'—')+'</b>: '+esc(cx.remark||'')+'</div>'
+    +'<div class="cx-row muted">Order placed '+esc(String(row[1]||row[0]||'').split(' ')[0])+' &middot; '+esc(row[2]||'')+' &middot; ₹'+esc(amt===''||amt==null||isNaN(Number(amt))?(amt||''):Number(amt).toLocaleString('en-IN'))+'</div></div>'
+    +'</div>';
+}
+
+function openCancel(rowIdx){
+  var o = allOrders.filter(function(x){ return x.rowIndex===rowIdx; })[0];
+  if(!o) return;
+  cxTarget = o;
+  document.getElementById('cxInfo').innerHTML = 'Party: <b>'+esc(o.row[2]||'')+'</b> (row '+rowIdx+')<br>The order will be marked <b>Cancelled</b> and its full record saved to the Cancelled Orders history. It is not deleted.';
+  var nm=''; try{ nm=localStorage.getItem('chr_cancel_by')||''; }catch(e){}
+  document.getElementById('cxBy').value = nm;
+  document.getElementById('cxRemark').value = '';
+  document.getElementById('cxErr').textContent = '';
+  document.getElementById('cxYes').disabled = false;
+  document.getElementById('cxYes').textContent = 'Yes, cancel order';
+  document.getElementById('cxModal').classList.add('show');
+  setTimeout(function(){ document.getElementById(nm?'cxRemark':'cxBy').focus(); }, 50);
+}
+function closeCancel(){ document.getElementById('cxModal').classList.remove('show'); cxTarget=null; }
+
+function cxCall(payload, cb){
+  if(IN_GAS){
+    google.script.run.withSuccessHandler(function(r){ try{ cb(JSON.parse(r)); }catch(e){ cb({ok:false,error:'Bad response'}); } })
+      .withFailureHandler(function(e){ cb({ok:false,error:(e&&e.message)||'Request failed'}); })
+      .cancelOrderFromClient(payload);
+    return;
+  }
+  cbIdx++;
+  var name='__cxCb'+cbIdx, s=document.createElement('script'), done=false;
+  var timer=setTimeout(function(){ if(done) return; done=true; delete window[name]; if(s.parentNode) s.parentNode.removeChild(s); cb({ok:false,error:'Server did not respond. Check your connection and try again.'}); }, 30000);
+  window[name]=function(r){ if(done) return; done=true; clearTimeout(timer); delete window[name]; if(s.parentNode) s.parentNode.removeChild(s); cb(r); };
+  s.onerror=function(){ if(done) return; done=true; clearTimeout(timer); delete window[name]; if(s.parentNode) s.parentNode.removeChild(s); cb({ok:false,error:'Could not reach the server. Please try again.'}); };
+  s.src = scriptUrl + '?action=cancelOrder&cb=' + name + '&data=' + encodeURIComponent(JSON.stringify(payload)) + '&_=' + Date.now();
+  document.head.appendChild(s);
+}
+
+function confirmCancel(){
+  if(!cxTarget) return;
+  var by = document.getElementById('cxBy').value.trim();
+  var remark = document.getElementById('cxRemark').value.trim();
+  var err = document.getElementById('cxErr');
+  if(!by){ err.textContent='Please enter your name.'; return; }
+  if(!remark){ err.textContent='Cancellation remark is mandatory.'; return; }
+  err.textContent='';
+  try{ localStorage.setItem('chr_cancel_by', by); }catch(e){}
+  var btn = document.getElementById('cxYes'); btn.disabled = true; btn.textContent = 'Cancelling…';
+  var o = cxTarget;
+  cxCall({ key:o.key, rowIndex:o.rowIndex, cancelledBy:by, remark:remark }, function(r){
+    if(r && (r.ok || r.duplicate)){
+      var now = new Date();
+      localCancel[o.key] = { key:o.key, rowIndex:o.rowIndex, cancelledBy:by, remark:remark,
+        cancelledDate: r.cancelledDate || now.toLocaleDateString('en-GB',{timeZone:'Asia/Kolkata'}),
+        cancelledTime: r.cancelledTime || now.toLocaleTimeString('en-GB',{timeZone:'Asia/Kolkata'}) };
+      cancelMap[o.key] = localCancel[o.key];
+      closeCancel(); expandedRow = null; renderTable();
+      if(r.duplicate) alert('This order was already cancelled.');
+    } else {
+      btn.disabled = false; btn.textContent = 'Yes, cancel order';
+      err.textContent = (r && r.error) || 'Cancellation failed. Please try again.';
+    }
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -613,32 +772,32 @@ function stampNow(){ return new Date().toLocaleString('en-IN',{day:'2-digit',mon
 function fileStamp(){ var d=new Date(); function p(n){return n<10?'0'+n:''+n;} return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes()); }
 function viewSummaryText(){
   var v=lastView, parts=[];
-  parts.push('View: '+(v.status?STATUS_META[v.status].label:'All Orders'));
+  parts.push('View: '+(v.status?STATUS_META[v.status].label:'All Orders (excluding cancelled)'));
   if(v.from||v.to) parts.push('Date: '+(v.from?fmtIso(v.from):'start')+' to '+(v.to?fmtIso(v.to):'today'));
   if(v.search) parts.push('Search: "'+v.search+'"');
   return parts.join('   |   ');
 }
 function countsText(){
   var c=lastView.counts;
-  return 'All Orders: '+lastView.total+'   |   In Progress: '+c.prog+'   |   Delayed: '+c.del+'   |   On Hold: '+c.hold+'   |   Completed: '+c.done;
+  return 'All Orders: '+lastView.total+'   |   In Progress: '+c.prog+'   |   Delayed: '+c.del+'   |   On Hold: '+c.hold+'   |   Completed: '+c.done+'   |   Cancelled: '+c.can;
 }
 function exportRowsData(){
   if(!lastView) return [];
   return lastView.rows.map(function(o){
-    var row=o.row, rmk=remarksMap[o.rowIndex]||{}, amt=row[3];
+    var row=o.row, rmk=remarksMap[o.rowIndex]||{}, amt=row[3], cx=cancelMap[o.key];
     var n=(amt!==''&&amt!=null&&!isNaN(Number(amt)))?Number(amt):null;
     var done=0; STAGES.forEach(function(sg){ if(getStageStatus(row,sg)==='done') done++; });
     return { no:o.rowIndex, party:String(row[2]||row[1]||row[0]||''), date:String(row[1]||row[0]||'').split(' ')[0],
              amt:n, amtTxt:(n===null?String(amt||''):n.toLocaleString('en-IN')), region:String(row[4]||''),
-             st:o.st, status:STATUS_META[o.st].label, done:done, stage:currentStageName(row), remark:String(rmk.remark||'') };
+             st:o.st, status:STATUS_META[o.st].label, done:done, stage:(cx?'Cancelled':currentStageName(row)), remark:(cx?('Cancelled by '+(cx.cancelledBy||'')+' on '+(cx.cancelledDate||'')+' '+(cx.cancelledTime||'')+': '+(cx.remark||'')):String(rmk.remark||'')) };
   });
 }
 
 // ---------- PDF (browser print dialog -> "Save as PDF", A4 portrait preset) ----------
 function buildReportHtml(rows){
   var v=lastView, c=v.counts;
-  var colors={prog:'#2563eb',del:'#dc2626',hold:'#d97706',done:'#16a34a'};
-  var tiles=[['All Orders',v.total,'#1b3a63'],['In Progress',c.prog,'#2563eb'],['Delayed',c.del,'#dc2626'],['On Hold',c.hold,'#d97706'],['Completed',c.done,'#16a34a']]
+  var colors={prog:'#2563eb',del:'#dc2626',hold:'#d97706',done:'#16a34a',can:'#475569'};
+  var tiles=[['All Orders',v.total,'#1b3a63'],['In Progress',c.prog,'#2563eb'],['Delayed',c.del,'#dc2626'],['On Hold',c.hold,'#d97706'],['Completed',c.done,'#16a34a'],['Cancelled',c.can,'#475569']]
     .map(function(t){ return '<div class="tile" style="border-top:3px solid '+t[2]+'"><div class="tn">'+t[1]+'</div><div class="tl">'+t[0]+'</div></div>'; }).join('');
   var body=rows.map(function(r){
     return '<tr><td class="c">'+r.no+'</td><td><b>'+esc(r.party)+'</b></td><td>'+esc(r.date)+'</td><td class="r">'+esc(r.amtTxt)+'</td><td>'+esc(r.region)+'</td>'
@@ -652,7 +811,7 @@ function buildReportHtml(rows){
    +'.hd h1{font-size:15pt;margin:0;color:#10233f}.hd p{margin:1px 0 0;font-size:8.5pt;color:#64748b;text-transform:uppercase;letter-spacing:.5px}'
    +'.hd .gen{margin-left:auto;text-align:right;font-size:7.5pt;color:#475569;line-height:1.5}'
    +'.view{background:#eef2f9;border-radius:4px;padding:5px 8px;font-size:8pt;margin-bottom:8px;color:#1e293b}'
-   +'.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}'
+   +'.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:10px}'
    +'.tile{border:1px solid #e2e8f0;border-radius:4px;padding:5px 8px;text-align:left}.tn{font-size:14pt;font-weight:800}.tl{font-size:7pt;color:#64748b;text-transform:uppercase;letter-spacing:.4px}'
    +'table{width:100%;border-collapse:collapse;table-layout:fixed}'
    +'thead{display:table-header-group}tr{page-break-inside:avoid}'
@@ -719,7 +878,7 @@ function buildXlsxBlob(rows){
   var L='ABCDEFGHI'.split('');
   function s(ref,style,text){ return '<c r="'+ref+'" s="'+style+'" t="inlineStr"><is><t xml:space="preserve">'+xe(text)+'</t></is></c>'; }
   function n(ref,style,val){ return '<c r="'+ref+'" s="'+style+'"><v>'+val+'</v></c>'; }
-  var stStyle={done:7,prog:8,del:9,hold:10};
+  var stStyle={done:7,prog:8,del:9,hold:10,can:8};
   var x='<row r="1" ht="24" customHeight="1">'+s('A1',1,'Christofin Impex — Order to Delivery Report')+'</row>'
        +'<row r="2">'+s('A2',5,'Generated: '+stampNow()+'   |   '+viewSummaryText()+'   |   Records: '+rows.length)+'</row>'
        +'<row r="3">'+s('A3',5,countsText())+'</row>'
