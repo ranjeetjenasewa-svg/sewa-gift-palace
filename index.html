@@ -383,7 +383,7 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
       <div class="api-setup-card" id="setup-card" style="margin-bottom:10px">
         <div class="api-setup-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Step 1 — Google Sheets API Key (required to sync data)
+          Step 1 (Optional) — Google Sheets API Key (only if normal sync fails)
         </div>
         <ol class="api-setup-steps">
           <li>Go to <strong>console.cloud.google.com</strong> → Create project (or select existing)</li>
@@ -799,38 +799,45 @@ function parseCSV(text) {
 function num(v){var n=parseFloat((v||"").toString().replace(/,/g,""));return isNaN(n)?null:n;}
 
 // ── SYNC ─────────────────────────────────────────────────────────────
+function fetchViaApi(apiKey) {
+  var range = encodeURIComponent("'" + activeTab + "'!A1:AV60000");
+  var url = "https://sheets.googleapis.com/v4/spreadsheets/" + SHEET_ID +
+            "/values/" + range + "?key=" + apiKey + "&t=" + Date.now();
+  return fetch(url, {cache:"no-store"}).then(function(r) {
+    if (r.status === 400) throw new Error("BAD_RANGE");
+    if (r.status === 403) throw new Error("API_KEY_ERROR");
+    if (!r.ok) throw new Error("HTTP_" + r.status);
+    return r.json();
+  }).then(function(data) { return data.values || []; });
+}
+// No API key needed: reads the sheet directly via its "Anyone with link can view" share
+function fetchViaShare() {
+  var url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+            "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(activeTab) + "&t=" + Date.now();
+  return fetch(url, {cache:"no-store"}).then(function(r) {
+    if (!r.ok) throw new Error("HTTP_" + r.status);
+    return r.text();
+  }).then(function(text) {
+    if (/^\s*<(!doctype|html)/i.test(text)) throw new Error("SHEET_NOT_PUBLIC");
+    return parseCSV(text);
+  });
+}
 function syncSheet() {
   setSyncStatus("loading");
   document.getElementById("sync-icon").classList.add("spin");
   document.getElementById("btn-sync").disabled = true;
 
-  var apiKey = SHEETS_API_KEY;
-  if (!apiKey) {
-    // No API key — show setup modal
-    document.getElementById("sync-icon").classList.remove("spin");
-    document.getElementById("btn-sync").disabled = false;
-    setSyncStatus("err");
-    document.getElementById("error-card").style.display = "block";
-    return;
-  }
+  var first = SHEETS_API_KEY
+    ? fetchViaApi(SHEETS_API_KEY).catch(function(e) {
+        if (e.message === "BAD_RANGE") throw e;
+        return fetchViaShare();
+      })
+    : fetchViaShare();
 
-  // Google Sheets API v4 — works directly with "Anyone with link can view"
-  // No CSV publish needed, no CORS issues
-  var range = encodeURIComponent("'" + activeTab + "'!A1:AV60000");
-  var url = "https://sheets.googleapis.com/v4/spreadsheets/" + SHEET_ID +
-            "/values/" + range + "?key=" + apiKey + "&t=" + Date.now();
-
-  fetch(url, {cache:"no-store"})
-    .then(function(r) {
-      if (r.status === 400) throw new Error("BAD_RANGE");
-      if (r.status === 403) throw new Error("API_KEY_ERROR");
-      if (!r.ok) throw new Error("HTTP_" + r.status);
-      return r.json();
-    })
-    .then(function(data) {
-      if (!data.values || data.values.length < 5) throw new Error("NO_DATA");
-      // data.values is already a 2D array — same format as csvRows
-      csvRows = data.values;
+  first
+    .then(function(rows) {
+      if (!rows || rows.length < 5) throw new Error("NO_DATA");
+      csvRows = rows;
       document.getElementById("error-card").style.display = "none";
       populateFilters();
       setSyncStatus("ok");
@@ -839,16 +846,16 @@ function syncSheet() {
       document.getElementById("sync-icon").classList.remove("spin");
       document.getElementById("btn-sync").disabled = false;
       updateHeroStats();
-      showToast("✓ Synced " + (data.values.length-1).toLocaleString("en-IN") + " SKUs from Google Sheet", "success");
+      showToast("✓ Synced " + (rows.length-1).toLocaleString("en-IN") + " SKUs from Google Sheet", "success");
     })
     .catch(function(e) {
       document.getElementById("sync-icon").classList.remove("spin");
       document.getElementById("btn-sync").disabled = false;
       var msg = e.message;
-      if (msg === "API_KEY_ERROR") {
-        setSyncStatus("err", "API key is invalid or Sheets API not enabled.");
-      } else if (msg === "BAD_RANGE") {
+      if (msg === "BAD_RANGE") {
         setSyncStatus("err", "Tab name not found. Click 'Change tab' to update.");
+      } else if (msg === "SHEET_NOT_PUBLIC" || msg === "HTTP_401" || msg === "HTTP_403") {
+        setSyncStatus("err", "Sheet not readable. Share it as 'Anyone with the link can view', or add an API key below.");
       } else {
         setSyncStatus("err", "Sync failed: " + msg);
       }
@@ -859,11 +866,11 @@ function setSyncStatus(type, msg) {
   var el = document.getElementById("sync-status");
   if (type === "loading") {
     el.className = "s-loading";
-    el.innerHTML = '<span class="s-dot loading"></span> Syncing from Google Sheet (Sheets API)…';
+    el.innerHTML = '<span class="s-dot loading"></span> Syncing from Google Sheet…';
   } else if (type === "ok") {
     var tot = csvRows ? csvRows.length - 1 : 0;
     el.className = "s-ok";
-    el.innerHTML = '<span class="s-dot ok"></span> Live &nbsp;·&nbsp; ' + tot.toLocaleString("en-IN") + " SKUs &nbsp;·&nbsp; Google Sheets API";
+    el.innerHTML = '<span class="s-dot ok"></span> Live &nbsp;·&nbsp; ' + tot.toLocaleString("en-IN") + " SKUs &nbsp;·&nbsp; Google Sheets";
   } else {
     el.className = "s-err";
     el.innerHTML = '<span class="s-dot err"></span> ' + (msg || "Sync failed — set your API key below");
