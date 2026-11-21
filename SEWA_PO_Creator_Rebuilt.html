@@ -1467,7 +1467,7 @@ function exportPDF(){
     '<button onclick="window.print()" style="background:#1a2e4a;color:#fff;border:none;padding:8pt 24pt;font-size:11pt;font-weight:700;border-radius:4pt;cursor:pointer">Print / Save as PDF</button>'+
     ' &nbsp;<span style="font-size:8pt;color:#888">In print dialog: Layout=Portrait, Margins=None, enable Background graphics</span>'+
     '</div>'+
-    '<script>window.onload=function(){document.title="'+label.replace(/"/g,"'")+' PO '+poNum+'";};<\/script></body></html>';
+    '<scr'+'ipt>window.onload=function(){document.title="'+label.replace(/"/g,"'")+' PO '+poNum+'";};<\/sc'+'ript></body></html>';
   try{
     var blob=new Blob([html],{type:"text/html;charset=utf-8"});
     var url=URL.createObjectURL(blob);
