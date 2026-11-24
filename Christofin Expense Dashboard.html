@@ -367,7 +367,7 @@ const CONFIG = {
 
   // 1. Paste your Google Sheet ID here
   //    (from the URL: docs.google.com/spreadsheets/d/SHEET_ID/edit)
-  SHEET_ID: 'https://docs.google.com/spreadsheets/d/1Q92GgpKcfyy3L2K8yUstjAG22sXidx0NzBYnp9uLsz0/edit?gid=744040775#gid=744040775',
+  SHEET_ID: '1Q92GgpKcfyy3L2K8yUstjAG22sXidx0NzBYnp9uLsz0',
 
   // 2. Sheet tab ID — 0 for the first tab; find others in the URL after #gid=
   SHEET_GID: '744040775',
@@ -376,16 +376,16 @@ const CONFIG = {
   START_ROW: 1,
 
   // 4. Column indices in your sheet (0 = Column A, 1 = Column B, …)
-  //    Adjust these to match your Form Responses column order
+  //    Christofin sheet: A=row#, B=timestamp, C=Month, D=Year, E=Category, F=Name, G=Amount, H=PayMode, I=Approver
   COL: {
-    day:      1,   // B — Day
-    month:    2,   // C — Month
-    year:     3,   // D — Year
-    category: 4,   // E — Category
-    name:     5,   // F — Expense Name
-    amount:   6,   // G — Amount
-    payMode:  7,   // H — Payment Mode
-    approver: 8,   // I — Approved By
+    dateOrDay: 1,  // B — full timestamp (day extracted automatically) OR a plain day number
+    month:     2,  // C — Month name
+    year:      3,  // D — Year
+    category:  4,  // E — Category
+    name:      5,  // F — Expense Name
+    amount:    6,  // G — Amount
+    payMode:   7,  // H — Payment Mode
+    approver:  8,  // I — Approved By
   },
 
   // 5. Auto-sync interval in seconds (60 = refresh every minute; 0 = disable)
@@ -450,16 +450,29 @@ function processCSV(csv, isSilent) {
   const rows = parseCSV(csv).slice(CONFIG.START_ROW);
   const C    = CONFIG.COL;
 
-  const newRows = rows.map(r => ({
-    day:      parseInt(r[C.day]),
-    month:    normMo(r[C.month]),
-    year:     parseInt(r[C.year]),
-    category: (r[C.category] || '').trim() || 'Uncategorized',
-    name:     (r[C.name]     || '').trim(),
-    amount:   parseFloat((r[C.amount] || '0').replace(/[₹,\s]/g,'')),
-    payMode:  normPay(r[C.payMode]),
-    approver: (r[C.approver] || '').trim(),
-  })).filter(r =>
+  const newRows = rows.map(r => {
+    // Col B may be a full timestamp "3/13/2026 19:40:50" or just a day number
+    const rawDate = (r[C.dateOrDay] || '').trim();
+    let day;
+    if (rawDate.includes('/') || rawDate.includes('-')) {
+      // Parse date string — extract day from M/D/YYYY or D-M-YYYY etc.
+      const parts = rawDate.split(/[\/\-\s]/);
+      // Google Sheets exports as M/D/YYYY for US locale
+      day = parseInt(parts[1]) || parseInt(parts[0]);
+    } else {
+      day = parseInt(rawDate);
+    }
+    return {
+      day,
+      month:    normMo(r[C.month]),
+      year:     parseInt(r[C.year]),
+      category: (r[C.category] || '').trim() || 'Uncategorized',
+      name:     (r[C.name]     || '').trim(),
+      amount:   parseFloat((r[C.amount] || '0').replace(/[₹,\s]/g,'')),
+      payMode:  normPay(r[C.payMode]),
+      approver: (r[C.approver] || '').trim(),
+    };
+  }).filter(r =>
     r.month && !isNaN(r.day) && r.day >= 1 && r.day <= 31 &&
     !isNaN(r.year) && r.year >= 2020 && r.amount > 0
   );
