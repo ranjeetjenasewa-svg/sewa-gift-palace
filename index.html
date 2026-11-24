@@ -117,7 +117,7 @@ nav{position:sticky;top:0;z-index:100;background:linear-gradient(90deg,var(--nav
 /* ── FILTER ── */
 .filter-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 @media(min-width:560px){.filter-grid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:860px){.filter-grid{grid-template-columns:repeat(6,1fr)}}
+@media(min-width:860px){.filter-grid{grid-template-columns:repeat(4,1fr)}}
 .filter-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:5px}
 .toggle-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--text2)}
 .toggle-lbl{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none}
@@ -432,9 +432,10 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
             Filter & Generate Purchase Order
           </div>
           <div class="filter-grid">
-            <div><span class="filter-lbl">Brand</span><select id="f-brand" onchange="resetPO()" disabled><option value="">All brands</option></select></div>
-            <div><span class="filter-lbl">Group / Section</span><select id="f-section" onchange="resetPO()" disabled><option value="">All sections</option></select></div>
-            <div><span class="filter-lbl">Department</span><select id="f-dept" onchange="resetPO()" disabled><option value="">All depts</option></select></div>
+            <div><span class="filter-lbl">Brand</span><select id="f-brand" onchange="refreshVendorOptions();resetPO()" disabled><option value="">All brands</option></select></div>
+            <div><span class="filter-lbl">Group / Section</span><select id="f-section" onchange="refreshVendorOptions();resetPO()" disabled><option value="">All sections</option></select></div>
+            <div><span class="filter-lbl">Department</span><select id="f-dept" onchange="refreshVendorOptions();resetPO()" disabled><option value="">All depts</option></select></div>
+            <div><span class="filter-lbl">Vendor</span><select id="f-vendor" onchange="resetPO()" disabled><option value="">All vendors</option></select></div>
             <div><span class="filter-lbl">Item Search</span><input id="f-search" type="text" placeholder="Search item name…" oninput="resetPO()" disabled></div>
             <div><span class="filter-lbl">Item Code</span><input id="f-code" type="text" placeholder="Search code…" oninput="resetPO()" disabled></div>
             <div style="display:flex;flex-direction:column;justify-content:flex-end">
@@ -685,6 +686,7 @@ var C = {
   DAY_START:12, DAY_END:42,
   LAST_STOCK:43,   // "Last date Stock" (col AR)
   REORDER:44,      // "Re-order qty"    (col AS) - pre-calculated by sheet
+  VENDOR:48,       // "Vendor name" (col AW)
   POLICY:46        // "(Sales-Based Inventory) Reorder Policy" (col AU)
 };
 // Find columns by header name so a moved/inserted sheet column can never shift the data
@@ -702,6 +704,7 @@ function mapColumns(hdr) {
     MAX_LVL:   find(function(x){return x.indexOf("max level")===0;}),
     LAST_STOCK:find(function(x){return x.indexOf("last date stock")===0;}),
     REORDER:   find(function(x){return x.indexOf("re-order qty")===0||x.indexOf("reorder qty")===0;}),
+    VENDOR:    find(function(x){return x.indexOf("vendor name")===0;}),
     POLICY:    find(function(x){return x.indexOf("(sales-based")===0||x.indexOf("sales-based")>=0||x.indexOf("reorder policy")>=0;})
   };
   for (var k in m) { if (m[k] >= 0) C[k] = m[k]; }
@@ -1021,7 +1024,33 @@ function populateFilters(){
   fillSel("f-brand",Object.keys(brands).sort());
   fillSel("f-section",Object.keys(sections).sort());
   fillSel("f-dept",Object.keys(depts).sort());
-  ["f-brand","f-section","f-dept","f-search","f-code","btn-gen"].forEach(function(id){document.getElementById(id).disabled=false;});
+  refreshVendorOptions();
+  ["f-brand","f-section","f-dept","f-vendor","f-search","f-code","btn-gen"].forEach(function(id){document.getElementById(id).disabled=false;});
+}
+// Vendor list follows the Brand / Section / Department already chosen
+function refreshVendorOptions(){
+  if(!csvRows||csvRows.length<2)return;
+  var brand=document.getElementById("f-brand").value.toUpperCase();
+  var section=document.getElementById("f-section").value.toUpperCase();
+  var dept=document.getElementById("f-dept").value.toUpperCase();
+  var sel=document.getElementById("f-vendor"),cur=sel.value,vendors={};
+  for(var i=1;i<csvRows.length;i++){
+    var r=csvRows[i];if(!r)continue;
+    var v=(r[C.VENDOR]||"").trim();if(!v)continue;
+    if(brand&&(r[C.BRAND]||"").trim().toUpperCase()!==brand)continue;
+    if(section&&(r[C.SECTION]||"").trim().toUpperCase()!==section)continue;
+    if(dept&&(r[C.DEPT]||"").trim().toUpperCase()!==dept)continue;
+    vendors[v]=1;
+  }
+  var list=Object.keys(vendors).sort();
+  sel.innerHTML='<option value="">All vendors</option>';
+  for(var j=0;j<list.length;j++){var o=document.createElement("option");o.value=list[j];o.textContent=list[j];sel.appendChild(o);}
+  if(cur&&vendors[cur])sel.value=cur;
+}
+function poLabel(po){
+  var base=po.brand||po.section||po.dept||"";
+  if(po.vendor)return base?base+" · "+po.vendor:po.vendor;
+  return base||"All Items";
 }
 function fillSel(id,items){
   var sel=document.getElementById(id),cur=sel.value,first=sel.options[0];
@@ -1037,6 +1066,7 @@ function generatePO(){
   var brand=document.getElementById("f-brand").value;
   var section=document.getElementById("f-section").value;
   var dept=document.getElementById("f-dept").value;
+  var vendor=document.getElementById("f-vendor").value;
   var search=document.getElementById("f-search").value.trim().toLowerCase();
   var code=document.getElementById("f-code").value.trim().toLowerCase();
   var poOnly=document.getElementById("chk-po-only").checked;
@@ -1047,6 +1077,7 @@ function generatePO(){
     if(brand&&(r[C.BRAND]||"").trim().toUpperCase()!==brand.toUpperCase())continue;
     if(section&&(r[C.SECTION]||"").trim().toUpperCase()!==section.toUpperCase())continue;
     if(dept&&(r[C.DEPT]||"").trim().toUpperCase()!==dept.toUpperCase())continue;
+    if(vendor&&(r[C.VENDOR]||"").trim().toUpperCase()!==vendor.toUpperCase())continue;
     if(search&&!(r[C.NAME]||"").toLowerCase().includes(search))continue;
     if(code&&!(r[C.CODE]||"").toLowerCase().includes(code))continue;
 
@@ -1084,7 +1115,7 @@ function generatePO(){
       policy:(r[C.POLICY]!==undefined?r[C.POLICY]:"")
     });
   }
-  currentPO={items:items,brand:brand,section:section,dept:dept,negCount:negCount};
+  currentPO={items:items,brand:brand,section:section,dept:dept,vendor:vendor,negCount:negCount};
   renderPO();
 }
 
@@ -1092,7 +1123,7 @@ function generatePO(){
 function renderPO(){
   if(!currentPO)return;
   var items=currentPO.items,brand=currentPO.brand,section=currentPO.section,dept=currentPO.dept;
-  var label=brand||section||dept||"All Items";
+  var label=poLabel(currentPO);
   var negCount=currentPO.negCount;
   var redItems=items.filter(function(x){return x.colorTag==="red";});
   var grayItems=items.filter(function(x){return x.colorTag==="gray";});
@@ -1354,7 +1385,7 @@ function syncBlockedFromSheet() {
 function exportExcel(){
   if(!currentPO)return;
   var items=currentPO.items;
-  var label=(currentPO.brand||currentPO.section||currentPO.dept||"ALL").replace(/[^a-zA-Z0-9_]/g,"_");
+  var label=(poLabel(currentPO)==="All Items"?"ALL":poLabel(currentPO)).replace(/[^a-zA-Z0-9_]/g,"_");
   var now=new Date();
   var poNum="PO-"+now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0")+"-"+String(Math.floor(Math.random()*1000)).padStart(3,"0");
   var poDate=now.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
@@ -1393,7 +1424,7 @@ function exportExcel(){
   data.push(["Christofin Impex | New Delhi"]);
   data.push([]);
   data.push(["PO Number:",poNum,"","PO Date:",poDate]);
-  data.push(["Filter:",currentPO.brand||currentPO.section||currentPO.dept||"All Items"]);
+  data.push(["Filter:",poLabel(currentPO)]);
   data.push([]);
 
   // OUT OF STOCK section
@@ -1449,7 +1480,7 @@ function exportExcel(){
 function exportPDF(){
   if(!currentPO)return;
   var items=currentPO.items;
-  var label=currentPO.brand||currentPO.section||currentPO.dept||"All Items";
+  var label=poLabel(currentPO);
   var now=new Date();
   var poNum="PO-"+now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0")+"-"+String(Math.floor(Math.random()*1000)).padStart(3,"0");
   var poDate=now.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
