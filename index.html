@@ -256,6 +256,27 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
 .api-status.ok{color:var(--green)}.api-status.err{color:var(--red)}
 
 @media(max-width:540px){.hero-stats{display:none}.hero-title{font-size:18px}.card-body{padding:1rem}.user-nm{display:none}.po-title{font-size:16px}.stat-val{font-size:20px}}
+
+/* manual qty */
+.mq-in{width:78px;padding:5px 6px;text-align:center;font-weight:700;font-size:13px;border:1.5px solid #f5c07a;border-radius:6px;background:#fffaf2;color:var(--navy)}
+.mq-in:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,124,30,.18)}
+.mq-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:9px 14px;background:#fffaf2;border:1px solid #f5c07a;border-radius:8px;font-size:12px;color:var(--text2)}
+.mq-bar strong{color:var(--navy)}
+.mq-bar button{padding:4px 10px;font-size:11px;background:transparent;color:var(--text3);border:1px solid var(--border,#dde3ec);border-radius:5px}
+/* department multi-select */
+.ms-wrap{position:relative}
+.ms-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;text-align:left;font-size:14px;background:#fff;color:var(--text,#0f1923);border:1.5px solid var(--border,#dde3ec);border-radius:8px}
+.ms-btn:disabled{opacity:.6;cursor:not-allowed}
+.ms-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ms-menu{position:absolute;z-index:60;top:calc(100% + 4px);left:0;min-width:100%;width:300px;max-width:90vw;background:#fff;border:1.5px solid var(--border,#dde3ec);border-radius:10px;box-shadow:0 10px 30px rgba(15,25,35,.18);padding:8px}
+.ms-menu input[type=text]{width:100%;margin-bottom:6px;font-size:13px}
+.ms-actions{display:flex;gap:6px;margin-bottom:6px}
+.ms-actions button{flex:1;padding:5px 8px;font-size:11px;font-weight:600;background:#f0f4f8;color:var(--navy);border-radius:6px}
+.ms-list{max-height:260px;overflow:auto}
+.ms-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:13px;cursor:pointer;user-select:none}
+.ms-row:hover{background:#f0f4f8}
+.ms-row input{width:16px;height:16px;flex:none;accent-color:var(--orange)}
+.ms-empty{padding:10px;text-align:center;font-size:12px;color:var(--text3)}
 </style>
 </head>
 <body>
@@ -432,9 +453,16 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
             Filter & Generate Purchase Order
           </div>
           <div class="filter-grid">
-            <div><span class="filter-lbl">Brand</span><select id="f-brand" onchange="refreshVendorOptions();resetPO()" disabled><option value="">All brands</option></select></div>
-            <div><span class="filter-lbl">Group / Section</span><select id="f-section" onchange="refreshVendorOptions();resetPO()" disabled><option value="">All sections</option></select></div>
-            <div><span class="filter-lbl">Department</span><select id="f-dept" onchange="refreshVendorOptions();resetPO()" disabled><option value="">All depts</option></select></div>
+            <div><span class="filter-lbl">Brand</span><select id="f-brand" onchange="refreshDeptOptions();refreshVendorOptions();resetPO()" disabled><option value="">All brands</option></select></div>
+            <div><span class="filter-lbl">Group / Section</span><select id="f-section" onchange="refreshDeptOptions();refreshVendorOptions();resetPO()" disabled><option value="">All sections</option></select></div>
+            <div class="ms-wrap" id="dept-ms"><span class="filter-lbl">Department</span>
+              <button type="button" class="ms-btn" id="f-dept-btn" onclick="toggleDeptMenu(event)" disabled><span id="f-dept-txt">All depts</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <div class="ms-menu" id="dept-menu" style="display:none" onclick="event.stopPropagation()">
+                <input id="dept-search" type="text" placeholder="Search department…" oninput="renderDeptMenu()">
+                <div class="ms-actions"><button type="button" onclick="deptSelectAll()">Select all</button><button type="button" onclick="deptClear()">Clear</button></div>
+                <div class="ms-list" id="dept-list"></div>
+              </div>
+            </div>
             <div><span class="filter-lbl">Vendor</span><select id="f-vendor" onchange="resetPO()" disabled><option value="">All vendors</option></select></div>
             <div><span class="filter-lbl">Item Search</span><input id="f-search" type="text" placeholder="Search item name…" oninput="resetPO()" disabled></div>
             <div><span class="filter-lbl">Item Code</span><input id="f-code" type="text" placeholder="Search code…" oninput="resetPO()" disabled></div>
@@ -464,12 +492,13 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 Export Excel
               </button>
-              <button class="btn-pdf" type="button" onclick="exportPDF()">
+              <button class="btn-pdf" id="btn-pdf" type="button" onclick="exportPDF()" style="display:none">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 Export PDF
               </button>
             </div>
           </div>
+          <div class="mq-bar" id="mq-bar"><span id="mq-summary">Enter <strong>Manual Order Qty</strong> against the items you want to order — Export PDF appears once you have entered quantities.</span><button type="button" id="mq-clear" onclick="clearManualQty()" style="display:none">Clear quantities</button></div>
           <div class="legend">
             <span><span class="ldot red"></span> Out of stock (order now)</span>
             <span><span class="ldot gray"></span> Low stock (order soon)</span>
@@ -535,134 +564,111 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
 <!-- HIDDEN APPS SCRIPT CODE (for copy) -->
 <textarea id="gas-code" style="position:absolute;left:-9999px;top:0" readonly>
 // ═══════════════════════════════════════════════════════
-// Sewa Gift Palace — Block SKU Apps Script
+// Sewa Gift Palace — Block SKU Apps Script (v2)
 // Deploy as Web App: Execute as Me, Anyone can access
+// Block   -> appends the Item Code as a new row at the bottom of Blocked_SKU (column A)
+// Unblock -> removes that Item Code from Blocked_SKU
+// The IMS "Blocked" column is only written when it is NOT a formula.
 // ═══════════════════════════════════════════════════════
 
-var SHEET_ID      = "1pKJ3vBepekFkTcD8FkszVEfozFMs-0QchHtLcKsy7b8";
-var BLOCKED_TAB   = "Blocked_SKU";
-var IMS_TAB       = "Inventory Manag. (IMS)_2026";
+var SHEET_ID    = "1pKJ3vBepekFkTcD8FkszVEfozFMs-0QchHtLcKsy7b8";
+var BLOCKED_TAB = "Blocked_SKU";
+var IMS_TAB     = "Inventory Manag. (IMS)_2026";
 
-function doGet(e) {
-  return handleRequest(e);
+function doGet(e)  { return handleRequest(e); }
+function doPost(e) { return handleRequest(e); }
+
+function out_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
-function doPost(e) {
-  return handleRequest(e);
+// last row that really has a value in column A
+function lastRowA_(sh) {
+  var max = sh.getLastRow();
+  if (max < 1) return 0;
+  var vals = sh.getRange(1, 1, max, 1).getValues();
+  for (var i = vals.length - 1; i >= 0; i--) {
+    if (String(vals[i][0]).trim() !== "") return i + 1;
+  }
+  return 0;
+}
+
+function setImsBlocked_(ss, code, value) {
+  var ims = ss.getSheetByName(IMS_TAB);
+  if (!ims) return;
+  var last = ims.getLastRow();
+  if (last < 2) return;
+  var codes = ims.getRange(2, 1, last - 1, 1).getValues();
+  for (var r = 0; r < codes.length; r++) {
+    if (String(codes[r][0]).trim() === code) {
+      var cell = ims.getRange(r + 2, 2);
+      if (!cell.getFormula()) cell.setValue(value);   // never overwrite a formula
+      break;
+    }
+  }
 }
 
 function handleRequest(e) {
-  var headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Content-Type": "application/json"
-  };
-
   try {
-    var params = e.parameter || {};
+    var params = (e && e.parameter) || {};
     var action = params.action || "ping";
+    if (action === "ping") return out_({ok:true, msg:"Connected to Sewa PO Script"});
 
-    if (action === "ping") {
-      return ContentService.createTextOutput(JSON.stringify({ok:true,msg:"Connected to Sewa PO Script"}))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
+    var code = String(params.itemCode || "").trim();
     var ss = SpreadsheetApp.openById(SHEET_ID);
 
-    if (action === "block") {
-      var itemCode = params.itemCode;
-      var itemName = params.itemName || "";
-      var brand    = params.brand || "";
-      var dept     = params.dept  || "";
-      if (!itemCode) throw new Error("itemCode is required");
-
-      var blockedSheet = ss.getSheetByName(BLOCKED_TAB);
-      if (!blockedSheet) {
-        blockedSheet = ss.insertSheet(BLOCKED_TAB);
-        blockedSheet.appendRow(["Item Code","Item Name","Brand","Department","Blocked By","Blocked Date"]);
-      }
-
-      // Check for duplicate
-      var data = blockedSheet.getDataRange().getValues();
-      for (var i = 1; i < data.length; i++) {
-        if (String(data[i][0]).trim() === String(itemCode).trim()) {
-          return ContentService.createTextOutput(JSON.stringify({ok:true,msg:"Already blocked",duplicate:true}))
-            .setMimeType(ContentService.MimeType.JSON);
-        }
-      }
-
-      // Add new row
-      blockedSheet.appendRow([
-        itemCode, itemName, brand, dept,
-        "PO Creator App",
-        new Date().toLocaleDateString("en-IN")
-      ]);
-
-      // Also update IMS Blocked column
-      var imsSheet = ss.getSheetByName(IMS_TAB);
-      if (imsSheet) {
-        var imsData = imsSheet.getDataRange().getValues();
-        for (var r = 1; r < imsData.length; r++) {
-          if (String(imsData[r][0]).trim() === String(itemCode).trim()) {
-            imsSheet.getRange(r + 1, 2).setValue("BLOCK");
-            break;
-          }
-        }
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({ok:true,msg:"Blocked successfully"}))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    if (action === "unblock") {
-      var itemCode = params.itemCode;
-      if (!itemCode) throw new Error("itemCode is required");
-
-      var blockedSheet = ss.getSheetByName(BLOCKED_TAB);
-      if (blockedSheet) {
-        var data = blockedSheet.getDataRange().getValues();
-        for (var i = data.length - 1; i >= 1; i--) {
-          if (String(data[i][0]).trim() === String(itemCode).trim()) {
-            blockedSheet.deleteRow(i + 1);
-          }
-        }
-      }
-
-      // Update IMS
-      var imsSheet = ss.getSheetByName(IMS_TAB);
-      if (imsSheet) {
-        var imsData = imsSheet.getDataRange().getValues();
-        for (var r = 1; r < imsData.length; r++) {
-          if (String(imsData[r][0]).trim() === String(itemCode).trim()) {
-            imsSheet.getRange(r + 1, 2).setValue("OK");
-            break;
-          }
-        }
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({ok:true,msg:"Unblocked successfully"}))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
     if (action === "list") {
-      var blockedSheet = ss.getSheetByName(BLOCKED_TAB);
-      if (!blockedSheet) return ContentService.createTextOutput(JSON.stringify({ok:true,items:[]}))
-        .setMimeType(ContentService.MimeType.JSON);
-      var data = blockedSheet.getDataRange().getValues();
+      var sh0 = ss.getSheetByName(BLOCKED_TAB);
       var items = [];
-      for (var i = 1; i < data.length; i++) {
-        if (data[i][0]) items.push({code:data[i][0],name:data[i][1],brand:data[i][2],dept:data[i][3],date:data[i][5]});
+      if (sh0) {
+        var n = lastRowA_(sh0);
+        var v = n ? sh0.getRange(1, 1, n, 1).getValues() : [];
+        for (var i = 0; i < v.length; i++) {
+          var c = String(v[i][0]).trim();
+          if (c && /^[0-9A-Za-z\-_.]+$/.test(c) && c.toLowerCase() !== "item code") items.push({code:c});
+        }
       }
-      return ContentService.createTextOutput(JSON.stringify({ok:true,items:items}))
-        .setMimeType(ContentService.MimeType.JSON);
+      return out_({ok:true, items:items});
+    }
+
+    if (!code) throw new Error("itemCode is required");
+    var lock = LockService.getScriptLock();
+    lock.waitLock(25000);
+    try {
+      var sh = ss.getSheetByName(BLOCKED_TAB) || ss.insertSheet(BLOCKED_TAB);
+
+      if (action === "block") {
+        var n2 = lastRowA_(sh);
+        var col = n2 ? sh.getRange(1, 1, n2, 1).getValues() : [];
+        for (var k = 0; k < col.length; k++) {
+          if (String(col[k][0]).trim() === code) return out_({ok:true, duplicate:true, msg:"Already in Blocked_SKU"});
+        }
+        var value = /^[0-9]+$/.test(code) ? Number(code) : code;   // numeric like the existing rows
+        sh.getRange(n2 + 1, 1).setValue(value);                     // one SKU per row, appended below the last entry
+        setImsBlocked_(ss, code, "BLOCK");
+        SpreadsheetApp.flush();
+        return out_({ok:true, msg:"Added to Blocked_SKU", row:n2 + 1});
+      }
+
+      if (action === "unblock") {
+        var n3 = lastRowA_(sh);
+        if (n3) {
+          var col3 = sh.getRange(1, 1, n3, 1).getValues();
+          for (var j = col3.length - 1; j >= 0; j--) {
+            if (String(col3[j][0]).trim() === code) sh.deleteRow(j + 1);
+          }
+        }
+        setImsBlocked_(ss, code, "OK");
+        SpreadsheetApp.flush();
+        return out_({ok:true, msg:"Removed from Blocked_SKU"});
+      }
+    } finally {
+      lock.releaseLock();
     }
 
     throw new Error("Unknown action: " + action);
-
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.message}))
-      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return out_({ok:false, error:err.message});
   }
 }
 </textarea>
@@ -801,6 +807,7 @@ function doLogin() {
 }
 function doLogout() {
   clearInterval(syncTimer);
+  manualQty={};saveMQ();
   currentUser=null;csvRows=null;currentPO=null;
   document.getElementById("login-screen").style.display="flex";
   document.getElementById("app-screen").style.display="none";
@@ -882,6 +889,7 @@ function syncSheet() {
       mapColumns(rows[0]);
       rebuildSheetBlocked();
       updateBlockedBadge();
+      flushPendingBlocks();
       if (currentTabView==="blocked") renderBlockedList();
       document.getElementById("error-card").style.display = "none";
       populateFilters();
@@ -991,6 +999,7 @@ function saveGasUrl() {
         statusEl.textContent="✓ Connected successfully: "+data.msg;
         statusEl.className="api-status ok";
         showToast("Google Apps Script connected! Block feature is ready.","success");
+        flushPendingBlocks();
       } else {
         statusEl.textContent="✗ Error: "+(data.error||"Unknown error");
         statusEl.className="api-status err";
@@ -1014,32 +1023,92 @@ function copyGasCode(){
 // ── FILTERS ──────────────────────────────────────────────────────────
 function populateFilters(){
   if(!csvRows||csvRows.length<2)return;
-  var brands={},sections={},depts={};
+  var brands={},sections={};
   for(var i=1;i<csvRows.length;i++){
     var r=csvRows[i];if(!r)continue;
     if(r[C.BRAND]&&r[C.BRAND].trim())brands[r[C.BRAND].trim()]=1;
     if(r[C.SECTION]&&r[C.SECTION].trim())sections[r[C.SECTION].trim()]=1;
-    if(r[C.DEPT]&&r[C.DEPT].trim())depts[r[C.DEPT].trim()]=1;
   }
   fillSel("f-brand",Object.keys(brands).sort());
   fillSel("f-section",Object.keys(sections).sort());
-  fillSel("f-dept",Object.keys(depts).sort());
+  refreshDeptOptions();
   refreshVendorOptions();
-  ["f-brand","f-section","f-dept","f-vendor","f-search","f-code","btn-gen"].forEach(function(id){document.getElementById(id).disabled=false;});
+  ["f-brand","f-section","f-dept-btn","f-vendor","f-search","f-code","btn-gen"].forEach(function(id){document.getElementById(id).disabled=false;});
 }
-// Vendor list follows the Brand / Section / Department already chosen
+// ── Department multi-select (checkboxes) ──
+var deptOptions=[], selDepts={};   // selDepts: {DEPT NAME: true}; nothing ticked = all departments
+function selectedDeptList(){return Object.keys(selDepts);}
+function deptMatches(rowDept){
+  var k=Object.keys(selDepts);if(!k.length)return true;
+  return !!selDepts[(rowDept||"").trim()];
+}
+function refreshDeptOptions(){
+  if(!csvRows||csvRows.length<2)return;
+  var brand=document.getElementById("f-brand").value.toUpperCase();
+  var section=document.getElementById("f-section").value.toUpperCase();
+  var d={};
+  for(var i=1;i<csvRows.length;i++){
+    var r=csvRows[i];if(!r)continue;
+    var v=(r[C.DEPT]||"").trim();if(!v)continue;
+    if(brand&&(r[C.BRAND]||"").trim().toUpperCase()!==brand)continue;
+    if(section&&(r[C.SECTION]||"").trim().toUpperCase()!==section)continue;
+    d[v]=1;
+  }
+  deptOptions=Object.keys(d).sort();
+  for(var k in selDepts){if(!d[k])delete selDepts[k];}   // drop ticks that no longer exist
+  renderDeptMenu();updateDeptBtn();
+}
+function updateDeptBtn(){
+  var k=selectedDeptList(),t=document.getElementById("f-dept-txt");
+  t.textContent=!k.length?"All depts":(k.length===1?k[0]:k.length+" departments selected");
+}
+function renderDeptMenu(){
+  var q=(document.getElementById("dept-search").value||"").trim().toLowerCase();
+  var list=document.getElementById("dept-list"),html="";
+  for(var i=0;i<deptOptions.length;i++){
+    var n=deptOptions[i];
+    if(q&&n.toLowerCase().indexOf(q)<0)continue;
+    html+='<label class="ms-row"><input type="checkbox" data-i="'+i+'"'+(selDepts[n]?" checked":"")+'><span>'+n.replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</span></label>';
+  }
+  list.innerHTML=html||'<div class="ms-empty">No department found</div>';
+}
+function deptChanged(){updateDeptBtn();refreshVendorOptions();resetPO();}
+function deptSelectAll(){
+  var q=(document.getElementById("dept-search").value||"").trim().toLowerCase();
+  for(var i=0;i<deptOptions.length;i++){var n=deptOptions[i];if(!q||n.toLowerCase().indexOf(q)>=0)selDepts[n]=true;}
+  renderDeptMenu();deptChanged();
+}
+function deptClear(){selDepts={};renderDeptMenu();deptChanged();}
+function toggleDeptMenu(ev){
+  ev.stopPropagation();
+  var m=document.getElementById("dept-menu");
+  m.style.display=m.style.display==="none"?"block":"none";
+  if(m.style.display==="block"){document.getElementById("dept-search").value="";renderDeptMenu();document.getElementById("dept-search").focus();}
+}
+document.addEventListener("click",function(e){
+  var m=document.getElementById("dept-menu");
+  if(m&&m.style.display!=="none"&&!document.getElementById("dept-ms").contains(e.target))m.style.display="none";
+});
+document.addEventListener("change",function(e){
+  var t=e.target;
+  if(t&&t.matches&&t.matches("#dept-list input[type=checkbox]")){
+    var n=deptOptions[Number(t.getAttribute("data-i"))];
+    if(t.checked)selDepts[n]=true;else delete selDepts[n];
+    deptChanged();
+  }
+});
+// Vendor list follows the Brand / Section / Department(s) already chosen
 function refreshVendorOptions(){
   if(!csvRows||csvRows.length<2)return;
   var brand=document.getElementById("f-brand").value.toUpperCase();
   var section=document.getElementById("f-section").value.toUpperCase();
-  var dept=document.getElementById("f-dept").value.toUpperCase();
   var sel=document.getElementById("f-vendor"),cur=sel.value,vendors={};
   for(var i=1;i<csvRows.length;i++){
     var r=csvRows[i];if(!r)continue;
     var v=(r[C.VENDOR]||"").trim();if(!v)continue;
     if(brand&&(r[C.BRAND]||"").trim().toUpperCase()!==brand)continue;
     if(section&&(r[C.SECTION]||"").trim().toUpperCase()!==section)continue;
-    if(dept&&(r[C.DEPT]||"").trim().toUpperCase()!==dept)continue;
+    if(!deptMatches(r[C.DEPT]))continue;
     vendors[v]=1;
   }
   var list=Object.keys(vendors).sort();
@@ -1060,12 +1129,52 @@ function fillSel(id,items){
 }
 function resetPO(){currentPO=null;document.getElementById("po-output").style.display="none";}
 
+
+// ── MANUAL ORDER QTY ─────────────────────────────────────────────────
+var manualQty={};
+try{manualQty=JSON.parse(sessionStorage.getItem("sewa_manual_qty")||"{}");}catch(e){manualQty={};}
+function saveMQ(){try{sessionStorage.setItem("sewa_manual_qty",JSON.stringify(manualQty));}catch(e){}}
+function mqVal(code){var v=Number(manualQty[code]);return(isNaN(v)||v<=0)?0:v;}
+function setManualQty(el){
+  var c=el.getAttribute("data-code"),v=Number(el.value);
+  if(el.value===""||isNaN(v)||v<=0){delete manualQty[c];}else{manualQty[c]=Math.floor(v);}
+  saveMQ();updateManualSummary();
+}
+function mqKey(ev){
+  if(ev.key!=="Enter")return;
+  ev.preventDefault();
+  var all=Array.prototype.slice.call(document.querySelectorAll("#po-output .mq-in"));
+  var i=all.indexOf(ev.target);if(i>=0&&all[i+1]){all[i+1].focus();all[i+1].select();}
+}
+function mqItems(){return currentPO?currentPO.items.filter(function(x){return mqVal(x.code)>0;}):[];}
+function updateManualSummary(){
+  var btn=document.getElementById("btn-pdf"),sum=document.getElementById("mq-summary"),clr=document.getElementById("mq-clear");
+  if(!currentPO){btn.style.display="none";return;}
+  var arr=mqItems(),u=0,v=0;
+  for(var i=0;i<arr.length;i++){var q=mqVal(arr[i].code);u+=q;v+=q*arr[i].rsp;}
+  if(arr.length){
+    sum.innerHTML='Manual order: <strong>'+arr.length+' item'+(arr.length===1?'':'s')+'</strong> &nbsp;·&nbsp; <strong>'+u.toLocaleString("en-IN")+' units</strong> &nbsp;·&nbsp; <strong>₹'+v.toLocaleString("en-IN")+'</strong>';
+    btn.style.display="flex";clr.style.display="inline-block";
+  }else{
+    sum.innerHTML='Enter <strong>Manual Order Qty</strong> against the items you want to order — Export PDF appears once you have entered quantities.';
+    btn.style.display="none";clr.style.display="none";
+  }
+}
+function clearManualQty(){
+  if(!Object.keys(manualQty).length)return;
+  if(!confirm("Clear all manual order quantities?"))return;
+  manualQty={};saveMQ();
+  var ins=document.querySelectorAll("#po-output .mq-in");for(var i=0;i<ins.length;i++)ins[i].value="";
+  updateManualSummary();
+}
+
 // ── GENERATE PO ──────────────────────────────────────────────────────
 function generatePO(){
   if(!csvRows)return;
   var brand=document.getElementById("f-brand").value;
   var section=document.getElementById("f-section").value;
-  var dept=document.getElementById("f-dept").value;
+  var deptSel=selectedDeptList();
+  var dept=deptSel.length===1?deptSel[0]:(deptSel.length>1?deptSel.length+" Departments":"");
   var vendor=document.getElementById("f-vendor").value;
   var search=document.getElementById("f-search").value.trim().toLowerCase();
   var code=document.getElementById("f-code").value.trim().toLowerCase();
@@ -1076,7 +1185,7 @@ function generatePO(){
     var r=csvRows[i];if(!r||r.length<45)continue;
     if(brand&&(r[C.BRAND]||"").trim().toUpperCase()!==brand.toUpperCase())continue;
     if(section&&(r[C.SECTION]||"").trim().toUpperCase()!==section.toUpperCase())continue;
-    if(dept&&(r[C.DEPT]||"").trim().toUpperCase()!==dept.toUpperCase())continue;
+    if(!deptMatches(r[C.DEPT]))continue;
     if(vendor&&(r[C.VENDOR]||"").trim().toUpperCase()!==vendor.toUpperCase())continue;
     if(search&&!(r[C.NAME]||"").toLowerCase().includes(search))continue;
     if(code&&!(r[C.CODE]||"").toLowerCase().includes(code))continue;
@@ -1120,7 +1229,7 @@ function generatePO(){
 }
 
 // ── RENDER PO ─────────────────────────────────────────────────────────
-function renderPO(){
+function renderPO(noScroll){
   if(!currentPO)return;
   var items=currentPO.items,brand=currentPO.brand,section=currentPO.section,dept=currentPO.dept;
   var label=poLabel(currentPO);
@@ -1152,10 +1261,10 @@ function renderPO(){
   else{nw.style.display="none";}
 
   // Table header with Block column
-  var TH=["#","Item Code","Item Name","Dept","RSP (₹)","MAX Lvl","Last Stock","Reorder Qty","Value (₹)","Action"];
+  var TH=["#","Item Code","Item Name","Dept","RSP (₹)","MAX Lvl","Last Stock","Reorder Qty","Value (₹)","Policy","Manual Order Qty","Action"];
   var thRow="<tr>";
   for(var ti=0;ti<TH.length;ti++){
-    var align=ti>=4&&ti<9?"r":ti===9?"c":"";
+    var align=ti>=4&&ti<9?"r":ti>=9?"c":"";
     thRow+='<th class="'+align+'">'+TH[ti]+"</th>";
   }
   thRow+="</tr>";
@@ -1167,7 +1276,7 @@ function renderPO(){
     var depts=Object.keys(groups).sort();
     for(var di=0;di<depts.length;di++){
       var dn=depts[di];
-      html+='<tr class="dept-row"><td colspan="10">▸ '+dn+"</td></tr>";
+      html+='<tr class="dept-row"><td colspan="12">▸ '+dn+"</td></tr>";
       var gi=groups[dn];
       for(var k=0;k<gi.length;k++){
         var it=gi[k];
@@ -1202,6 +1311,8 @@ function renderPO(){
           '<td class="c'+negCls+'">'+it.stock+'</td>'+
           '<td class="r '+qtyCls+'">'+it.reorder+'</td>'+
           '<td class="r '+qtyCls+'">₹'+val.toLocaleString("en-IN")+'</td>'+
+          '<td class="c" style="font-weight:700">'+((it.policy===null||it.policy===undefined||it.policy==="")?"":String(it.policy).replace(/&/g,"&amp;").replace(/</g,"&lt;"))+'</td>'+
+          '<td class="c"><input class="mq-in" type="number" min="0" step="1" inputmode="numeric" data-code="'+String(it.code).replace(/"/g,"&quot;")+'" value="'+(mqVal(it.code)||"")+'" oninput="setManualQty(this)" onkeydown="mqKey(event)" title="Enter your own order quantity"></td>'+
           '<td class="c">'+blockBtnHtml+'</td>'+
           '</tr>';
       }
@@ -1218,7 +1329,7 @@ function renderPO(){
       '<td colspan="8">Total — '+needOrder.length+' items &nbsp;·&nbsp; Blocked items excluded</td>'+
       '<td class="r">'+totalUnits.toLocaleString("en-IN")+" units</td>"+
       '<td class="r acc">₹'+totalRSP.toLocaleString("en-IN")+'</td>'+
-      '<td></td></tr></table>';
+      '<td colspan="3"></td></tr></table>';
   }
   if(purpleItems.length){orderHTML+='<div class="banner purple"><div class="bdot purple"></div>Blocked Items — Verify<span class="bcount">'+purpleItems.length+' items</span></div><div style="background:var(--purple-bg);border:1px solid var(--purple-bd);border-radius:var(--r);padding:9px 14px;margin-bottom:8px;font-size:12px;color:var(--purple)">⚠ Blocked in IMS but have reorder quantities. Verify before ordering.</div><div class="tbl-wrap t-purple"><table><thead>'+thRow+'</thead><tbody>'+buildTable(purpleItems,"purple")+'</tbody></table></div>';}
   if(!redItems.length&&!grayItems.length&&!purpleItems.length){orderHTML='<div class="empty-state empty-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#38a169"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div style="font-weight:600;font-size:15px;color:var(--green)">All stock levels are sufficient</div><div style="font-size:13px;margin-top:6px">No purchase order needed.</div></div>';}
@@ -1231,59 +1342,77 @@ function renderPO(){
   var out=document.getElementById("po-output");
   out.style.display="block";
   out.classList.remove("fade-in");void out.offsetWidth;out.classList.add("fade-in");
-  setTimeout(function(){out.scrollIntoView({behavior:"smooth",block:"start"});},50);
+  if(!noScroll)setTimeout(function(){out.scrollIntoView({behavior:"smooth",block:"start"});},50);
+  updateManualSummary();
 }
 
 // ── BLOCK SKU ────────────────────────────────────────────────────────
+// The SKU code is appended as one new row at the bottom of the Blocked_SKU tab (via the Apps Script web app).
+// If the sheet cannot be reached right now, the SKU stays blocked on this device and is retried automatically.
+var pendingBlocks=[];
+try{pendingBlocks=JSON.parse(localStorage.getItem("sewa_pending_blocks")||"[]");}catch(e){pendingBlocks=[];}
+var pendingFlushing=false, gasHintShown=false;
+function savePending(){try{localStorage.setItem("sewa_pending_blocks",JSON.stringify(pendingBlocks));}catch(e){}}
+function writeBlockToSheet(it){
+  var url=gasUrl+"?action=block&itemCode="+encodeURIComponent(it.code)+
+    "&itemName="+encodeURIComponent(it.name||"")+"&brand="+encodeURIComponent(it.brand||"")+"&dept="+encodeURIComponent(it.dept||"");
+  return fetch(url,{mode:"cors"}).then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok)throw new Error((d&&d.error)||"error");
+    return d;
+  });
+}
+function flushPendingBlocks(){
+  if(!gasUrl||!pendingBlocks.length||pendingFlushing)return;
+  pendingFlushing=true;
+  var q=pendingBlocks.slice();
+  (function next(){
+    if(!q.length){pendingFlushing=false;return;}
+    var it=q.shift();
+    writeBlockToSheet(it).then(function(){
+      pendingBlocks=pendingBlocks.filter(function(x){return x.code!==it.code;});savePending();next();
+    }).catch(function(){pendingFlushing=false;});
+  })();
+}
 function blockSKU(code, name, brand, dept, btnEl) {
   if (!code) { showToast("Item code is missing — cannot block this SKU","error"); return; }
-  if (blockedSkus.hasOwnProperty(code)) { showToast("This SKU is already blocked","warning"); return; }
+  if (blockedSkus.hasOwnProperty(code)||sheetBlocked.hasOwnProperty(code)) { showToast("This SKU is already blocked","warning"); return; }
 
-  // Immediately update UI
+  // Button feedback
   btnEl.className="block-btn blocking";
   btnEl.innerHTML='<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10"/></svg> Blocking…';
   btnEl.disabled=true;
 
-  // Save to local state
-  blockedSkus[code]={code:code,name:name,brand:brand,dept:dept,date:new Date().toLocaleDateString("en-IN")};
+  // 1) Block immediately on this device so it can never appear in a PO
+  var rec={code:code,name:name,brand:brand,dept:dept,date:new Date().toLocaleDateString("en-IN")};
+  blockedSkus[code]=rec;
   localStorage.setItem("sewa_blocked_skus",JSON.stringify(blockedSkus));
   updateBlockedBadge();
+  document.getElementById("h-blocked").textContent=blockedCount();
+  if (currentTabView==="blocked") renderBlockedList();
 
-  // Try to write to Google Sheet via Apps Script
+  // 2) Append to the Blocked_SKU tab
+  var pend={code:code,name:name,brand:brand,dept:dept};
+  pendingBlocks=pendingBlocks.filter(function(x){return x.code!==code;});pendingBlocks.push(pend);savePending();
   if (gasUrl) {
-    var url=gasUrl+"?action=block&itemCode="+encodeURIComponent(code)+
-      "&itemName="+encodeURIComponent(name)+
-      "&brand="+encodeURIComponent(brand)+
-      "&dept="+encodeURIComponent(dept);
-    fetch(url,{mode:"cors"})
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(data.ok){
-          if(data.duplicate){showToast("SKU "+code+" already in Blocked_SKU sheet","info");}
-          else{showToast("✓ SKU "+code+" blocked & added to Blocked_SKU sheet","success",5000);}
-        }else{
-          showToast("Saved locally but sheet write failed: "+(data.error||"error"),"warning",5000);
-        }
-      })
-      .catch(function(){
-        showToast("Saved locally. Sheet sync failed — check Apps Script URL in setup.","warning",5000);
-      });
-  } else {
-    showToast("SKU "+code+" blocked locally. Set up Apps Script to sync to sheet.","info",5000);
+    writeBlockToSheet(pend).then(function(d){
+      pendingBlocks=pendingBlocks.filter(function(x){return x.code!==code;});savePending();
+      showToast(d.duplicate?("SKU "+code+" was already in the Blocked_SKU tab"):("✓ SKU "+code+" added to the Blocked_SKU tab"),"success");
+    }).catch(function(){
+      showToast("SKU "+code+" is blocked here, but the sheet could not be reached. It will be retried automatically.","warning",6000);
+    });
+  } else if (!gasHintShown) {
+    gasHintShown=true;
+    showToast("SKU blocked on this device. To also save it in the Blocked_SKU tab, connect Google Sheets once under ⚙ Setup (Step 2).","info",8000);
   }
 
-  // Update button
+  // 3) Show "Blocked", then take the item out of the PO on screen
   setTimeout(function(){
     btnEl.className="block-btn blocked-done";
     btnEl.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Blocked';
-    btnEl.disabled=true;
-  },600);
-
-  // Update hero stats
-  document.getElementById("h-blocked").textContent=blockedCount();
-
-  // Refresh blocked list if on that tab
-  if (currentTabView==="blocked") renderBlockedList();
+  },400);
+  setTimeout(function(){
+    if(currentPO){currentPO.items=currentPO.items.filter(function(x){return x.code!==code;});renderPO(true);}
+  },900);
 }
 
 // ── UNBLOCK SKU ──────────────────────────────────────────────────────
@@ -1396,7 +1525,7 @@ function exportExcel(){
   var orderI=redI.concat(grayI);
   var totalU=orderI.reduce(function(a,x){return a+(Number(x.reorder)||0);},0);
   var totalV=orderI.reduce(function(a,x){return a+(Number(x.reorder)||0)*(Number(x.rsp)||0);},0);
-  var hdr=["S.No.","Item Code","Item Name","Department","RSP (Rs.)","MAX Level","Last Stock","Reorder Qty","Value (Rs.)"];
+  var hdr=["S.No.","Item Code","Item Name","Department","RSP (Rs.)","MAX Level","Last Stock","Reorder Qty","Value (Rs.)","Policy","Manual Order Qty"];
 
   function cleanVal(v){
     if(v===null||v===undefined)return "";
@@ -1414,7 +1543,9 @@ function exportExcel(){
       it.maxLvl!==null&&it.maxLvl!==undefined?cleanVal(it.maxLvl):"",
       cleanVal(it.stock),
       cleanVal(it.reorder),
-      cleanVal((Number(it.reorder)||0)*(Number(it.rsp)||0))
+      cleanVal((Number(it.reorder)||0)*(Number(it.rsp)||0)),
+      cleanVal(it.policy),
+      mqVal(it.code)||""
     ];
   }
 
@@ -1464,7 +1595,7 @@ function exportExcel(){
   try {
     var wb=XLSX.utils.book_new();
     var ws=XLSX.utils.aoa_to_sheet(data);
-    ws["!cols"]=[{wch:6},{wch:14},{wch:44},{wch:20},{wch:11},{wch:11},{wch:12},{wch:12},{wch:14}];
+    ws["!cols"]=[{wch:6},{wch:14},{wch:44},{wch:20},{wch:11},{wch:11},{wch:12},{wch:12},{wch:14},{wch:9},{wch:17}];
     XLSX.utils.book_append_sheet(wb,ws,"Purchase Order");
     var filename=label+"_PO_"+poNum+".xlsx";
     XLSX.writeFile(wb,filename);
@@ -1479,7 +1610,8 @@ function exportExcel(){
 // ── EXPORT PDF ────────────────────────────────────────────────────────
 function exportPDF(){
   if(!currentPO)return;
-  var items=currentPO.items;
+  var items=mqItems();   // only the items you entered a Manual Order Qty for
+  if(!items.length){showToast("Enter a Manual Order Qty first","warning");return;}
   var label=poLabel(currentPO);
   var now=new Date();
   var poNum="PO-"+now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0")+"-"+String(Math.floor(Math.random()*1000)).padStart(3,"0");
@@ -1489,21 +1621,21 @@ function exportPDF(){
   var grayI=items.filter(function(x){return x.colorTag==="gray";});
   var blkI=items.filter(function(x){return x.colorTag==="purple";});
   var greenI=items.filter(function(x){return x.colorTag==="green";});
-  var orderI=redI.concat(grayI);
-  var totalU=orderI.reduce(function(a,x){return a+x.reorder;},0);
-  var totalV=orderI.reduce(function(a,x){return a+x.reorder*x.rsp;},0);
+  var orderI=items;
+  var totalU=orderI.reduce(function(a,x){return a+mqVal(x.code);},0);
+  var totalV=orderI.reduce(function(a,x){return a+mqVal(x.code)*x.rsp;},0);
   function fmt(n){return Number(n).toLocaleString("en-IN");}
   function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
   function groupByDept(arr){var m={};for(var i=0;i<arr.length;i++){var d=arr[i].dept||"OTHER";if(!m[d])m[d]=[];m[d].push(arr[i]);}return Object.keys(m).sort().map(function(k){return{dept:k,rows:m[k]};});}
-  var TH=["S.No.","Item Code","Department","Item Name","RSP (&#8377;)","MAX Level","Last date Stock","Order Qty","Value (&#8377;) RSP &times; Qty","Policy"];
+  var TH=["S.No.","Item Code","Department","Item Name","RSP (&#8377;)","MAX Level","Last date Stock","Order Qty","Value (&#8377;) RSP &times; Manual Qty","Policy","Manual Order Qty"];
   function td(v,align,ex,bg){return '<td style="padding:4px 6px;font-size:10px;border:1px solid #dde3ec;background:'+bg+';text-align:'+(align||"left")+';'+(ex||"")+'">'+v+'</td>';}
   function buildRows(arr,qClr){
     var html="",sno=1,groups=groupByDept(arr);
     for(var gi=0;gi<groups.length;gi++){
       var g=groups[gi];
-      html+='<tr><td colspan="10" style="padding:5px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;background:#e8eef8;color:#1a2e4a;border:1px solid #c5d3e8">&#9658; '+esc(g.dept)+'</td></tr>';
+      html+='<tr><td colspan="11" style="padding:5px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;background:#e8eef8;color:#1a2e4a;border:1px solid #c5d3e8">&#9658; '+esc(g.dept)+'</td></tr>';
       for(var ri=0;ri<g.rows.length;ri++){
-        var it=g.rows[ri],bg=ri%2===0?"#fff":"#f8fafc",val=it.reorder*it.rsp;
+        var it=g.rows[ri],bg=ri%2===0?"#fff":"#f8fafc",mq=mqVal(it.code),val=mq*it.rsp;
         var negS=it.isNeg?"color:#c0392b;font-weight:700;":"";
         var pol=(it.policy===null||it.policy===undefined||it.policy==="")?"":esc(it.policy);
         html+='<tr>'+
@@ -1517,6 +1649,7 @@ function exportPDF(){
           td(it.reorder,"center","color:"+qClr+";font-weight:700",bg)+
           td("&#8377;"+fmt(val),"right","color:"+qClr+";font-weight:700",bg)+
           td(pol,"center","font-weight:700",bg)+
+          td(fmt(mq),"center","font-weight:700;font-size:12px;color:#1a2e4a;background:#fff3e0",bg)+
           '</tr>';
       }
     }
@@ -1527,18 +1660,18 @@ function exportPDF(){
     return '<div class="sec-hdr" style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;font-size:14px;font-weight:700;color:'+clr+'">'+
       '<span style="width:12px;height:12px;border-radius:50%;background:'+dotClr+';display:inline-block"></span>'+
       title+' <span style="font-weight:400;font-size:12px;color:#555">&nbsp;('+arr.length+' items)</span></div>'+
-      '<table><colgroup><col class="c0"><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"><col class="c8"><col class="c9"></colgroup>'+
-      '<thead><tr style="background:#1a2e4a">'+TH.map(function(h,i){return '<th style="padding:7px 6px;font-size:10px;font-weight:700;color:#fff;text-align:'+(i>=4?(i===9?"center":"right"):"left")+';border:1px solid #0d1e32">'+h+'</th>';}).join("")+'</tr></thead>'+
+      '<table><colgroup><col class="c0"><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"><col class="c8"><col class="c9"><col class="c10"></colgroup>'+
+      '<thead><tr style="background:#1a2e4a">'+TH.map(function(h,i){return '<th style="padding:7px 6px;font-size:10px;font-weight:700;color:#fff;text-align:'+(i>=4?(i>=9?"center":"right"):"left")+';border:1px solid #0d1e32">'+h+'</th>';}).join("")+'</tr></thead>'+
       '<tbody>'+buildRows(arr,qClr)+'</tbody></table>';
   }
-  var stats=[{lbl:"OUT OF STOCK",val:redI.length,bg:"#fff5f5",clr:"#c0392b"},{lbl:"LOW STOCK",val:grayI.length,bg:"#f7fafc",clr:"#4a5568"},{lbl:"BLOCKED",val:blkI.length,bg:"#faf5ff",clr:"#553c9a"},{lbl:"ORDER UNITS",val:fmt(totalU),bg:"#eef2f8",clr:"#1a2e4a"},{lbl:"RSP VALUE",val:"&#8377;"+fmt(totalV),bg:"#fff8f0",clr:"#e87c1e"}];
+  var stats=[{lbl:"OUT OF STOCK",val:redI.length,bg:"#fff5f5",clr:"#c0392b"},{lbl:"LOW STOCK",val:grayI.length,bg:"#f7fafc",clr:"#4a5568"},{lbl:"BLOCKED",val:blkI.length,bg:"#faf5ff",clr:"#553c9a"},{lbl:"MANUAL ORDER UNITS",val:fmt(totalU),bg:"#eef2f8",clr:"#1a2e4a"},{lbl:"ORDER VALUE (RSP)",val:"&#8377;"+fmt(totalV),bg:"#fff8f0",clr:"#e87c1e"}];
   var css='@page{size:A4 portrait;margin:8mm}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
     'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#0f1923;background:#eef1f5;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
     '.page{max-width:1200px;margin:16px auto;background:#fff;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.12);overflow:hidden}'+
     'table{width:100%;border-collapse:collapse;table-layout:fixed}'+
     'th,td{overflow:hidden;word-break:break-word}'+
-    '.c0{width:5%}.c1{width:9%}.c2{width:11%}.c3{width:24%}.c4{width:8%}.c5{width:7%}.c6{width:9%}.c7{width:8%}.c8{width:12%}.c9{width:7%}'+
+    '.c0{width:4%}.c1{width:8%}.c2{width:10%}.c3{width:21%}.c4{width:7%}.c5{width:6%}.c6{width:8%}.c7{width:7%}.c8{width:11%}.c9{width:6%}.c10{width:12%}'+
     '@media print{body{background:#fff}.page{max-width:none;width:100%;margin:0;border-radius:0;box-shadow:none}.no-print{display:none}tr{break-inside:avoid}.sec-hdr{break-after:avoid}thead{display:table-header-group}table th,table td{font-size:8px!important;padding:3px 3px!important;white-space:normal}}';
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(label)+' PO '+poNum+'</title><style>'+css+'</style></head><body>'+
     '<div class="page">'+
@@ -1549,11 +1682,11 @@ function exportPDF(){
     stats.map(function(s){return '<div style="flex:1;padding:10px 14px;background:'+s.bg+';border-right:1px solid #dde3ec"><div style="font-size:10px;font-weight:700;letter-spacing:.5px;color:'+s.clr+';margin-bottom:3px">'+s.lbl+'</div><div style="font-size:22px;font-weight:700;color:'+s.clr+'">'+s.val+'</div></div>';}).join("")+
     '</div>'+
     '<div style="padding:8px 18px 18px">'+
-    buildSection("ITEMS TO ORDER &mdash; Out of Stock","#c0392b","#c0392b",redI,"#c0392b")+
-    buildSection("ITEMS TO ORDER &mdash; Low Stock","#e87c1e","#e87c1e",grayI,"#4a5568")+
+    buildSection("ORDER &mdash; Out of Stock","#c0392b","#c0392b",redI,"#c0392b")+
+    buildSection("ORDER &mdash; Low Stock","#e87c1e","#e87c1e",grayI,"#4a5568")+
     (orderI.length?'<table style="margin:10px 0 4px"><tr><td style="padding:8px 12px;font-size:12px;font-weight:700;background:#1a2e4a;color:#fff">TOTAL &mdash; '+orderI.length+' items</td><td style="padding:8px 12px;font-size:12px;font-weight:700;background:#1a2e4a;color:#fff;text-align:center;white-space:nowrap">'+fmt(totalU)+' units</td><td style="padding:8px 12px;font-size:12px;font-weight:700;background:#e87c1e;color:#fff;text-align:right;white-space:nowrap">&#8377;'+fmt(totalV)+'</td></tr></table>':"")+
     buildSection("BLOCKED ITEMS &mdash; Verify","#553c9a","#553c9a",blkI,"#553c9a")+
-    buildSection("SUFFICIENT STOCK","#1a6b3a","#1a6b3a",greenI,"#1a6b3a")+
+    buildSection("SUFFICIENT STOCK &mdash; ordered manually","#1a6b3a","#1a6b3a",greenI,"#1a6b3a")+
     '</div>'+
     '<div style="padding:12px 18px;border-top:1px solid #dde3ec;display:flex;gap:24px">'+
     ["Prepared By","Checked By","Authorized By"].map(function(l){return '<div style="flex:1"><div style="font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:22px">'+l+'</div><div style="border-top:1px solid #1a2e4a;padding-top:4px;font-size:10px;color:#888">Signature &amp; Date</div></div>';}).join("")+
