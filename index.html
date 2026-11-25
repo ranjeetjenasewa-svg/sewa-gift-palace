@@ -707,6 +707,7 @@ var C = {
   LAST_STOCK:43,   // "Last date Stock" (col AR)
   REORDER:44,      // "Re-order qty"    (col AS) - pre-calculated by sheet
   VENDOR:48,       // "Vendor name" (col AW)
+  CP:49,           // "CP" cost price (col AX)
   POLICY:46        // "(Sales-Based Inventory) Reorder Policy" (col AU)
 };
 // Find columns by header name so a moved/inserted sheet column can never shift the data
@@ -725,6 +726,7 @@ function mapColumns(hdr) {
     LAST_STOCK:find(function(x){return x.indexOf("last date stock")===0;}),
     REORDER:   find(function(x){return x.indexOf("re-order qty")===0||x.indexOf("reorder qty")===0;}),
     VENDOR:    find(function(x){return x.indexOf("vendor name")===0;}),
+    CP:        find(function(x){return x==="cp"||x.indexOf("cost price")===0||x==="cp (rs.)"||x==="cp price";}),
     POLICY:    find(function(x){return x.indexOf("(sales-based")===0||x.indexOf("sales-based")>=0||x.indexOf("reorder policy")>=0;})
   };
   for (var k in m) { if (m[k] >= 0) C[k] = m[k]; }
@@ -1236,6 +1238,7 @@ function generatePO(){
     var maxLvl=num(r[C.MAX_LVL]);
     var stock=num(r[C.LAST_STOCK]);if(stock===null)stock=0;
     var reorder=num(r[C.REORDER])||0;
+    var cp=num(r[C.CP]);
     if(stock<0)negCount++;
     var hasMissing=maxLvl===null;
     var needsPO=reorder>0;
@@ -1251,7 +1254,7 @@ function generatePO(){
     items.push({
       code:itemCode,name:r[C.NAME]||"",brand:r[C.BRAND]||"",
       dept:r[C.DEPT]||"",section:r[C.SECTION]||"",
-      rsp:rsp,maxLvl:maxLvl,stock:stock,reorder:reorder,
+      rsp:rsp,cp:cp,maxLvl:maxLvl,stock:stock,reorder:reorder,
       needsPO:needsPO,isNeg:stock<0,isBlocked:isBlocked,
       isBlockedLocal:isBlockedLocal,isBlockedSheet:isBlockedSheet,
       hasMissing:hasMissing,colorTag:colorTag,
@@ -1295,10 +1298,10 @@ function renderPO(noScroll){
   else{nw.style.display="none";}
 
   // Table header with Block column
-  var TH=["#","Item Code","Item Name","Dept","RSP (₹)","MAX Lvl","Last Stock","Reorder Qty","Value (₹)","Policy","Manual Order Qty","Action"];
+  var TH=["#","Item Code","Item Name","Dept","RSP (₹)","CP (₹)","MAX Lvl","Last Stock","Reorder Qty","Value (₹)","Policy","Manual Order Qty","Action"];
   var thRow="<tr>";
   for(var ti=0;ti<TH.length;ti++){
-    var align=ti>=4&&ti<9?"r":ti>=9?"c":"";
+    var align=ti>=4&&ti<10?"r":ti>=10?"c":"";
     thRow+='<th class="'+align+'">'+TH[ti]+"</th>";
   }
   thRow+="</tr>";
@@ -1310,7 +1313,7 @@ function renderPO(noScroll){
     var depts=Object.keys(groups).sort();
     for(var di=0;di<depts.length;di++){
       var dn=depts[di];
-      html+='<tr class="dept-row"><td colspan="12">▸ '+dn+"</td></tr>";
+      html+='<tr class="dept-row"><td colspan="13">▸ '+dn+"</td></tr>";
       var gi=groups[dn];
       for(var k=0;k<gi.length;k++){
         var it=gi[k];
@@ -1341,6 +1344,7 @@ function renderPO(noScroll){
           '<td>'+it.name+blkTag+warnTag+'</td>'+
           '<td style="font-size:11px;color:var(--text3)">'+it.dept+'</td>'+
           '<td class="r">₹'+it.rsp.toLocaleString("en-IN")+'</td>'+
+          '<td class="r" style="color:var(--text2)">'+(it.cp!==null&&it.cp!==undefined?"₹"+it.cp.toLocaleString("en-IN"):"—")+'</td>'+
           '<td class="r" style="color:var(--text2)">'+(it.maxLvl!==null?it.maxLvl:"—")+'</td>'+
           '<td class="c'+negCls+'">'+it.stock+'</td>'+
           '<td class="r '+qtyCls+'">'+it.reorder+'</td>'+
@@ -1360,7 +1364,7 @@ function renderPO(noScroll){
   if(needOrder.length){
     orderHTML+='<table style="width:100%;border-collapse:collapse;margin-bottom:18px">'+
       '<tr class="totals-row">'+
-      '<td colspan="8">Total — '+needOrder.length+' items &nbsp;·&nbsp; Blocked items excluded</td>'+
+      '<td colspan="9">Total — '+needOrder.length+' items &nbsp;·&nbsp; Blocked items excluded</td>'+
       '<td class="r">'+totalUnits.toLocaleString("en-IN")+" units</td>"+
       '<td class="r acc">₹'+totalRSP.toLocaleString("en-IN")+'</td>'+
       '<td colspan="3"></td></tr></table>';
@@ -1558,7 +1562,7 @@ function exportExcel(){
   var orderI=redI.concat(grayI);
   var totalU=orderI.reduce(function(a,x){return a+(Number(x.reorder)||0);},0);
   var totalV=orderI.reduce(function(a,x){return a+(Number(x.reorder)||0)*(Number(x.rsp)||0);},0);
-  var hdr=["S.No.","Item Code","Item Name","Department","RSP (Rs.)","MAX Level","Last Stock","Reorder Qty","Value (Rs.)","Policy","Manual Order Qty"];
+  var hdr=["S.No.","Item Code","Item Name","Department","RSP (Rs.)","CP (Rs.)","MAX Level","Last Stock","Reorder Qty","Value (Rs.)","Policy","Manual Order Qty"];
 
   function cleanVal(v){
     if(v===null||v===undefined)return "";
@@ -1573,6 +1577,7 @@ function exportExcel(){
       String(it.name||"").substring(0,80),
       String(it.dept||""),
       cleanVal(it.rsp),
+      it.cp!==null&&it.cp!==undefined?cleanVal(it.cp):"",
       it.maxLvl!==null&&it.maxLvl!==undefined?cleanVal(it.maxLvl):"",
       cleanVal(it.stock),
       cleanVal(it.reorder),
@@ -1585,7 +1590,6 @@ function exportExcel(){
   var data=[];
   // Header block
   data.push(["SEWA GIFT PALACE - PURCHASE ORDER"]);
-  data.push(["Christofin Impex | New Delhi"]);
   data.push([]);
   data.push(["PO Number:",poNum,"","PO Date:",poDate]);
   data.push(["Filter:",poLabel(currentPO)]);
@@ -1628,7 +1632,7 @@ function exportExcel(){
   try {
     var wb=XLSX.utils.book_new();
     var ws=XLSX.utils.aoa_to_sheet(data);
-    ws["!cols"]=[{wch:6},{wch:14},{wch:44},{wch:20},{wch:11},{wch:11},{wch:12},{wch:12},{wch:14},{wch:9},{wch:17}];
+    ws["!cols"]=[{wch:6},{wch:14},{wch:44},{wch:20},{wch:11},{wch:11},{wch:11},{wch:12},{wch:12},{wch:14},{wch:9},{wch:17}];
     XLSX.utils.book_append_sheet(wb,ws,"Purchase Order");
     var filename=label+"_PO_"+poNum+".xlsx";
     XLSX.writeFile(wb,filename);
@@ -1660,13 +1664,13 @@ function exportPDF(){
   function fmt(n){return Number(n).toLocaleString("en-IN");}
   function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
   function groupByDept(arr){var m={};for(var i=0;i<arr.length;i++){var d=arr[i].dept||"OTHER";if(!m[d])m[d]=[];m[d].push(arr[i]);}return Object.keys(m).sort().map(function(k){return{dept:k,rows:m[k]};});}
-  var TH=["S.No.","Item Code","Department","Item Name","RSP (&#8377;)","MAX Level","Last date Stock","Order Qty","Value (&#8377;) RSP &times; Manual Qty","Policy","Manual Order Qty"];
+  var TH=["S.No.","Item Code","Department","Item Name","RSP (&#8377;)","CP (&#8377;)","MAX Level","Last date Stock","Order Qty","Value (&#8377;) RSP &times; Manual Qty","Policy","Manual Order Qty"];
   function td(v,align,ex,bg){return '<td style="padding:4px 6px;font-size:10px;border:1px solid #dde3ec;background:'+bg+';text-align:'+(align||"left")+';'+(ex||"")+'">'+v+'</td>';}
   function buildRows(arr,qClr){
     var html="",sno=1,groups=groupByDept(arr);
     for(var gi=0;gi<groups.length;gi++){
       var g=groups[gi];
-      html+='<tr><td colspan="11" style="padding:5px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;background:#e8eef8;color:#1a2e4a;border:1px solid #c5d3e8">&#9658; '+esc(g.dept)+'</td></tr>';
+      html+='<tr><td colspan="12" style="padding:5px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;background:#e8eef8;color:#1a2e4a;border:1px solid #c5d3e8">&#9658; '+esc(g.dept)+'</td></tr>';
       for(var ri=0;ri<g.rows.length;ri++){
         var it=g.rows[ri],bg=ri%2===0?"#fff":"#f8fafc",mq=mqVal(it.code),val=mq*it.rsp;
         var negS=it.isNeg?"color:#c0392b;font-weight:700;":"";
@@ -1677,6 +1681,7 @@ function exportPDF(){
           td('<span style="color:#555">'+esc(it.dept)+'</span>',"left","",bg)+
           td(esc(it.name)+(it.isBlocked?' <span style="font-size:8px;font-weight:700;color:#553c9a;background:#faf5ff;border:1px solid #c4b5fd;border-radius:3px;padding:0 3px">BLOCK</span>':""),"left","",bg)+
           td("&#8377;"+fmt(it.rsp),"right","",bg)+
+          td(it.cp!==null&&it.cp!==undefined?"&#8377;"+fmt(it.cp):"&mdash;","right","color:#555",bg)+
           td(it.maxLvl!==null?it.maxLvl:"&mdash;","center","color:#666",bg)+
           td(it.stock,"center",negS,bg)+
           td(it.reorder,"center","color:"+qClr+";font-weight:700",bg)+
@@ -1693,8 +1698,8 @@ function exportPDF(){
     return '<div class="sec-hdr" style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;font-size:14px;font-weight:700;color:'+clr+'">'+
       '<span style="width:12px;height:12px;border-radius:50%;background:'+dotClr+';display:inline-block"></span>'+
       title+' <span style="font-weight:400;font-size:12px;color:#555">&nbsp;('+arr.length+' items)</span></div>'+
-      '<table><colgroup><col class="c0"><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"><col class="c8"><col class="c9"><col class="c10"></colgroup>'+
-      '<thead><tr style="background:#1a2e4a">'+TH.map(function(h,i){return '<th style="padding:7px 6px;font-size:10px;font-weight:700;color:#fff;text-align:'+(i>=4?(i>=9?"center":"right"):"left")+';border:1px solid #0d1e32">'+h+'</th>';}).join("")+'</tr></thead>'+
+      '<table><colgroup><col class="c0"><col class="c1"><col class="c2"><col class="c3"><col class="c4"><col class="c5"><col class="c6"><col class="c7"><col class="c8"><col class="c9"><col class="c10"><col class="c11"></colgroup>'+
+      '<thead><tr style="background:#1a2e4a">'+TH.map(function(h,i){return '<th style="padding:7px 6px;font-size:10px;font-weight:700;color:#fff;text-align:'+(i>=4?(i>=10?"center":"right"):"left")+';border:1px solid #0d1e32">'+h+'</th>';}).join("")+'</tr></thead>'+
       '<tbody>'+buildRows(arr,qClr)+'</tbody></table>';
   }
   var stats=[{lbl:"OUT OF STOCK",val:redI.length,bg:"#fff5f5",clr:"#c0392b"},{lbl:"LOW STOCK",val:grayI.length,bg:"#f7fafc",clr:"#4a5568"},{lbl:"BLOCKED",val:blkI.length,bg:"#faf5ff",clr:"#553c9a"},{lbl:"MANUAL ORDER UNITS",val:fmt(totalU),bg:"#eef2f8",clr:"#1a2e4a"},{lbl:"ORDER VALUE (RSP)",val:"&#8377;"+fmt(totalV),bg:"#fff8f0",clr:"#e87c1e"}];
@@ -1704,11 +1709,11 @@ function exportPDF(){
     '.page{max-width:1200px;margin:16px auto;background:#fff;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.12);overflow:hidden}'+
     'table{width:100%;border-collapse:collapse;table-layout:fixed}'+
     'th,td{overflow:hidden;word-break:break-word}'+
-    '.c0{width:4%}.c1{width:8%}.c2{width:10%}.c3{width:21%}.c4{width:7%}.c5{width:6%}.c6{width:8%}.c7{width:7%}.c8{width:11%}.c9{width:6%}.c10{width:12%}'+
+    '.c0{width:4%}.c1{width:8%}.c2{width:9%}.c3{width:19%}.c4{width:6%}.c5{width:6%}.c6{width:6%}.c7{width:7%}.c8{width:6%}.c9{width:10%}.c10{width:6%}.c11{width:11%}'+
     '@media print{body{background:#fff}.page{max-width:none;width:100%;margin:0;border-radius:0;box-shadow:none}.no-print{display:none}tr{break-inside:avoid}.sec-hdr{break-after:avoid}thead{display:table-header-group}table th,table td{font-size:8px!important;padding:3px 3px!important;white-space:normal}}';
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(label)+' PO '+poNum+'</title><style>'+css+'</style></head><body>'+
     '<div class="page">'+
-    '<div style="background:#1a2e4a;padding:16px;text-align:center"><div style="font-size:24px;font-weight:700;color:#fff;letter-spacing:.5px">SEWA GIFT PALACE</div><div style="font-size:11px;color:rgba(255,255,255,.65);letter-spacing:2.5px;text-transform:uppercase;margin-top:3px">Christofin Impex &middot; New Delhi</div></div>'+
+    '<div style="background:#1a2e4a;padding:16px;text-align:center"><div style="font-size:24px;font-weight:700;color:#fff;letter-spacing:.5px">SEWA GIFT PALACE</div></div>'+
     '<div style="background:#e87c1e;padding:8px;text-align:center;font-size:15px;font-weight:700;color:#fff;letter-spacing:.6px">PURCHASE ORDER &mdash; '+esc(label.toUpperCase())+'</div>'+
     '<div style="padding:7px 16px;background:#f0f4f8;border-bottom:1px solid #dde3ec;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:10px;color:#555"><span><strong>Stock as of Day Latest</strong> &nbsp;|&nbsp; &#9679; = Needs Order &nbsp; &#9679; = Sufficient Stock</span><span><strong>PO No:</strong> '+poNum+' &nbsp;|&nbsp; <strong>Date:</strong> '+poDate+' &nbsp;|&nbsp; '+genTime+'</span></div>'+
     '<div style="display:flex;border-bottom:1.5px solid #dde3ec">'+
@@ -1724,7 +1729,7 @@ function exportPDF(){
     '<div style="padding:12px 18px;border-top:1px solid #dde3ec;display:flex;gap:24px">'+
     ["Prepared By","Checked By","Authorized By"].map(function(l){return '<div style="flex:1"><div style="font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:22px">'+l+'</div><div style="border-top:1px solid #1a2e4a;padding-top:4px;font-size:10px;color:#888">Signature &amp; Date</div></div>';}).join("")+
     '</div>'+
-    '<div style="padding:7px 16px;border-top:1px solid #e8ecf0;font-size:9px;color:#aaa;text-align:center">SEWA GIFT PALACE / CHRISTOFIN IMPEX &middot; '+poNum+' &middot; '+genTime+'</div>'+
+    '<div style="padding:7px 16px;border-top:1px solid #e8ecf0;font-size:9px;color:#aaa;text-align:center">SEWA GIFT PALACE &middot; '+poNum+' &middot; '+genTime+'</div>'+
     '</div>'+
     '<div class="no-print" style="text-align:center;padding:14px"><button onclick="window.print()" style="background:#1a2e4a;color:#fff;border:none;padding:10px 26px;font-size:14px;font-weight:700;border-radius:5px;cursor:pointer">Print / Save as PDF</button> &nbsp;<span style="font-size:11px;color:#888">Print dialog: Layout = Portrait, Margins = None, enable Background graphics</span></div>'+
     '</body></html>';
