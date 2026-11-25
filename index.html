@@ -291,6 +291,47 @@ tbody tr:hover td{background:rgba(26,46,74,.025)}
 .ms-row:hover{background:#f0f4f8}
 .ms-row input{width:16px;height:16px;flex:none;accent-color:var(--orange)}
 .ms-empty{padding:10px;text-align:center;font-size:12px;color:var(--text3)}
+
+/* ── LAYOUT / ALIGNMENT POLISH ── */
+.hero-inner,.main-wrap{max-width:1280px}
+.main-wrap{padding:1.25rem clamp(.75rem,2vw,1.5rem) 5rem}
+.tbl-wrap,.banner,.stats-row,.card{box-sizing:border-box}
+.tbl-wrap{margin-bottom:18px}
+.banner{margin:14px 0 8px}
+table{table-layout:auto;min-width:0;width:100%}
+.totals-row td{padding:10px 8px;font-size:12.5px}
+@media(max-width:700px){.totals-row td{font-size:11px;padding:8px 5px}}
+.tbl-wrap th{padding:10px 8px;font-size:10px;letter-spacing:.3px}
+.tbl-wrap td{padding:8px;font-size:12.5px;vertical-align:middle}
+.tbl-wrap th:nth-child(1),.tbl-wrap td:nth-child(1){width:34px;text-align:center}
+.tbl-wrap th:nth-child(2),.tbl-wrap td:nth-child(2){width:84px}
+.tbl-wrap th:nth-child(3){min-width:200px}
+.tbl-wrap td:nth-child(3){min-width:200px;line-height:1.35}
+.tbl-wrap th:nth-child(4),.tbl-wrap td:nth-child(4){width:96px}
+.tbl-wrap th:nth-child(n+5):nth-child(-n+10),.tbl-wrap td:nth-child(n+5):nth-child(-n+10){text-align:right;white-space:nowrap}
+.tbl-wrap th:nth-child(n+11),.tbl-wrap td:nth-child(n+11){text-align:center;white-space:nowrap}
+.tbl-wrap th:nth-child(11),.tbl-wrap td:nth-child(11){width:56px}
+.tbl-wrap th:nth-child(12),.tbl-wrap td:nth-child(12){width:96px}
+.tbl-wrap th:nth-child(13),.tbl-wrap td:nth-child(13){width:84px}
+.tbl-wrap .dept-row td{text-align:left!important;width:auto!important;min-width:0!important}
+.tbl-wrap td.c,.tbl-wrap th.c{text-align:right}
+.mq-in{width:76px}
+.block-btn{white-space:nowrap}
+@media(max-width:1100px){
+  .tbl-wrap{overflow:auto}
+  .tbl-wrap table{min-width:980px}
+}
+@media(max-width:479px){
+  .stats-row>*:last-child:nth-child(odd){grid-column:1/-1}
+  nav{padding:0 .75rem}
+  .nav-brand-name{font-size:14px;white-space:nowrap}
+  .nav-brand-tag{display:none}
+}
+@media(max-width:799px){
+  .main-wrap{padding:1rem .75rem 4rem}
+  .banner{font-size:12.5px;padding:9px 12px}
+  .tbl-wrap{max-height:calc(100vh - 80px)}
+}
 </style>
 </head>
 <body>
