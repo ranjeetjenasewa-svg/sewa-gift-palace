@@ -177,6 +177,20 @@ table{width:100%;border-collapse:collapse;min-width:760px}
 .tbl-wrap.t-red thead tr{background:var(--red-bg)}.tbl-wrap.t-gray thead tr{background:var(--gray-bg)}.tbl-wrap.t-green thead tr{background:var(--green-bg)}.tbl-wrap.t-purple thead tr{background:var(--purple-bg)}
 th{padding:9px 11px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;text-align:left}
 .tbl-wrap.t-red th{color:var(--red);border-bottom:1.5px solid var(--red-bd)}.tbl-wrap.t-gray th{color:#4a5568;border-bottom:1.5px solid var(--gray-bd)}.tbl-wrap.t-green th{color:var(--green);border-bottom:1.5px solid var(--green-bd)}.tbl-wrap.t-purple th{color:var(--purple);border-bottom:1.5px solid var(--purple-bd)}
+/* ── STICKY TABLE HEADER (#, Item Code … Action) ── */
+.tbl-wrap th{position:sticky;top:0;z-index:5;background:#fff}
+.tbl-wrap.t-red th{background:var(--red-bg)}.tbl-wrap.t-gray th{background:var(--gray-bg)}.tbl-wrap.t-green th{background:var(--green-bg)}.tbl-wrap.t-purple th{background:var(--purple-bg)}
+.tbl-wrap th{box-shadow:0 1.5px 0 rgba(0,0,0,.08)}
+@media(min-width:800px){
+  .tbl-wrap{overflow:visible}
+  .tbl-wrap th{top:58px}                       /* sits right under the fixed top bar */
+  .tbl-wrap thead th:first-child{border-top-left-radius:8px}.tbl-wrap thead th:last-child{border-top-right-radius:8px}
+}
+@media(max-width:799px){
+  /* phones/tablets: table scrolls sideways, so it scrolls inside its own box and the header stays on top */
+  .tbl-wrap{overflow:auto;max-height:calc(100vh - 80px);-webkit-overflow-scrolling:touch}
+  .tbl-wrap th{top:0}
+}
 th.r,td.r{text-align:right}
 th.c,td.c{text-align:center}
 td{padding:8px 11px;font-size:12.5px;border-top:1px solid rgba(0,0,0,.045)}
@@ -736,6 +750,25 @@ function rebuildSheetBlocked(){
       sheetBlocked[code]={code:code,name:r[C.NAME]||"",brand:r[C.BRAND]||"",dept:r[C.DEPT]||"",date:"Google Sheet",fromSheet:true};
     }
   }
+  var idx=null;
+  for (var tc in tabBlocked){
+    if(sheetBlocked[tc])continue;
+    if(!idx){idx={};for(var j=1;j<csvRows.length;j++){var q=csvRows[j];if(q)idx[String(q[C.CODE]||"").trim()]=q;}}
+    var rr=idx[tc];
+    sheetBlocked[tc]={code:tc,name:rr?(rr[C.NAME]||""):"",brand:rr?(rr[C.BRAND]||""):"",dept:rr?(rr[C.DEPT]||""):"",date:"Blocked_SKU tab",fromSheet:true};
+  }
+}
+var tabBlocked = {};   // codes found in the Blocked_SKU tab (column A)
+function loadBlockedTab(){
+  var url="https://docs.google.com/spreadsheets/d/"+SHEET_ID+"/gviz/tq?tqx=out:csv&sheet=Blocked_SKU&t="+Date.now();
+  return fetch(url,{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error("HTTP_"+r.status);return r.text();}).then(function(t){
+    if(/^\s*<(!doctype|html)/i.test(t))throw new Error("not public");
+    var rows=parseCSV(t),m={};
+    for(var i=0;i<rows.length;i++){var c=String((rows[i]&&rows[i][0])||"").trim();if(/^[0-9A-Za-z][0-9A-Za-z\-_.]*$/.test(c)&&c.toLowerCase()!=="item code")m[c]=1;}
+    tabBlocked=m;rebuildSheetBlocked();updateBlockedBadge();
+    var hb=document.getElementById("h-blocked");if(hb)hb.textContent=blockedCount();
+    if(currentTabView==="blocked")renderBlockedList();
+  }).catch(function(){});
 }
 function allBlocked(){
   var m={},k;
@@ -890,6 +923,7 @@ function syncSheet() {
       rebuildSheetBlocked();
       updateBlockedBadge();
       flushPendingBlocks();
+      loadBlockedTab();
       if (currentTabView==="blocked") renderBlockedList();
       document.getElementById("error-card").style.display = "none";
       populateFilters();
@@ -1395,14 +1429,13 @@ function blockSKU(code, name, brand, dept, btnEl) {
   pendingBlocks=pendingBlocks.filter(function(x){return x.code!==code;});pendingBlocks.push(pend);savePending();
   if (gasUrl) {
     writeBlockToSheet(pend).then(function(d){
-      pendingBlocks=pendingBlocks.filter(function(x){return x.code!==code;});savePending();
+      pendingBlocks=pendingBlocks.filter(function(x){return x.code!==code;});savePending();tabBlocked[code]=1;
       showToast(d.duplicate?("SKU "+code+" was already in the Blocked_SKU tab"):("✓ SKU "+code+" added to the Blocked_SKU tab"),"success");
     }).catch(function(){
       showToast("SKU "+code+" is blocked here, but the sheet could not be reached. It will be retried automatically.","warning",6000);
     });
-  } else if (!gasHintShown) {
-    gasHintShown=true;
-    showToast("SKU blocked on this device. To also save it in the Blocked_SKU tab, connect Google Sheets once under ⚙ Setup (Step 2).","info",8000);
+  } else {
+    showToast("⚠ SKU "+code+" is blocked on this device ONLY — NOT saved in the Blocked_SKU tab. Connect the Apps Script URL in ⚙ Setup (Step 2) once.","warning",10000);
   }
 
   // 3) Show "Blocked", then take the item out of the PO on screen
@@ -1427,7 +1460,7 @@ function unblockSKU(code) {
   localStorage.setItem("sewa_blocked_skus",JSON.stringify(blockedSkus));
   function finish(){
     if (fromSheet) {
-      delete sheetBlocked[code];
+      delete sheetBlocked[code];delete tabBlocked[code];
       if (csvRows) { for (var i=1;i<csvRows.length;i++){ var r=csvRows[i]; if(r && String(r[C.CODE]||"").trim()===code){ r[C.BLOCKED]="OK"; break; } } }
     }
     updateBlockedBadge(); renderBlockedList(); resetPO();
@@ -1610,8 +1643,8 @@ function exportExcel(){
 // ── EXPORT PDF ────────────────────────────────────────────────────────
 function exportPDF(){
   if(!currentPO)return;
-  var items=mqItems();   // only the items you entered a Manual Order Qty for
-  if(!items.length){showToast("Enter a Manual Order Qty first","warning");return;}
+  var items=currentPO.items.slice();   // always the complete list; blank Manual Order Qty where nothing was entered
+  if(!mqItems().length){showToast("Enter a Manual Order Qty first","warning");return;}
   var label=poLabel(currentPO);
   var now=new Date();
   var poNum="PO-"+now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0")+"-"+String(Math.floor(Math.random()*1000)).padStart(3,"0");
@@ -1647,9 +1680,9 @@ function exportPDF(){
           td(it.maxLvl!==null?it.maxLvl:"&mdash;","center","color:#666",bg)+
           td(it.stock,"center",negS,bg)+
           td(it.reorder,"center","color:"+qClr+";font-weight:700",bg)+
-          td("&#8377;"+fmt(val),"right","color:"+qClr+";font-weight:700",bg)+
+          td(mq?"&#8377;"+fmt(val):"","right","color:"+qClr+";font-weight:700",bg)+
           td(pol,"center","font-weight:700",bg)+
-          td(fmt(mq),"center","font-weight:700;font-size:12px;color:#1a2e4a;background:#fff3e0",bg)+
+          td(mq?fmt(mq):"","center","font-weight:700;font-size:12px;color:#1a2e4a",bg)+
           '</tr>';
       }
     }
@@ -1686,7 +1719,7 @@ function exportPDF(){
     buildSection("ORDER &mdash; Low Stock","#e87c1e","#e87c1e",grayI,"#4a5568")+
     (orderI.length?'<table style="margin:10px 0 4px"><tr><td style="padding:8px 12px;font-size:12px;font-weight:700;background:#1a2e4a;color:#fff">TOTAL &mdash; '+orderI.length+' items</td><td style="padding:8px 12px;font-size:12px;font-weight:700;background:#1a2e4a;color:#fff;text-align:center;white-space:nowrap">'+fmt(totalU)+' units</td><td style="padding:8px 12px;font-size:12px;font-weight:700;background:#e87c1e;color:#fff;text-align:right;white-space:nowrap">&#8377;'+fmt(totalV)+'</td></tr></table>':"")+
     buildSection("BLOCKED ITEMS &mdash; Verify","#553c9a","#553c9a",blkI,"#553c9a")+
-    buildSection("SUFFICIENT STOCK &mdash; ordered manually","#1a6b3a","#1a6b3a",greenI,"#1a6b3a")+
+    buildSection("SUFFICIENT STOCK","#1a6b3a","#1a6b3a",greenI,"#1a6b3a")+
     '</div>'+
     '<div style="padding:12px 18px;border-top:1px solid #dde3ec;display:flex;gap:24px">'+
     ["Prepared By","Checked By","Authorized By"].map(function(l){return '<div style="flex:1"><div style="font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:22px">'+l+'</div><div style="border-top:1px solid #1a2e4a;padding-top:4px;font-size:10px;color:#888">Signature &amp; Date</div></div>';}).join("")+
