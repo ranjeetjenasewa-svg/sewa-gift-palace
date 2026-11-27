@@ -362,11 +362,14 @@
       <option value="partial">Partially Paid</option>
       <option value="paid">Fully Paid</option>
     </select>
-    <label for="filterFUDate" style="font-size:11px;font-weight:700;color:#1a237e;margin-left:6px">📅 Follow-up Date</label>
-    <input type="date" id="filterFUDate" onchange="renderOutstanding()" title="Show parties whose follow-up / promised payment is on this date">
+    <label for="filterFUDate" style="font-size:11px;font-weight:700;color:#1a237e;margin-left:6px">📅 Follow-up From</label>
+    <input type="date" id="filterFUDate" onchange="renderOutstanding()" title="Follow-up date: from (leave 'To' empty for a single day)">
+    <label for="filterFUDateTo" style="font-size:11px;font-weight:700;color:#1a237e">To</label>
+    <input type="date" id="filterFUDateTo" onchange="renderOutstanding()" title="Follow-up date: to">
     <button class="btn btn-sm" type="button" onclick="setOFUToday()" style="background:#e8eaf6">Today</button>
     <button class="btn btn-sm" type="button" id="fuDateClear" onclick="clearOFUDate()" style="display:none;background:#ffebee;color:#c62828">✕ Clear</button>
     <span id="countLabel" style="margin-left:auto;font-size:11px;color:#888"></span>
+    <button class="btn btn-sm" type="button" onclick="openBulkFU('o')" style="background:#6a1b9a;color:#fff" title="Change follow-up date of many parties at once">🔁 Bulk Follow-up Date</button>
     <button class="btn btn-sm" type="button" onclick="exportOutstandingPDF()" style="background:#e65100;color:#fff" title="Print / save the current view as PDF">🖨️ PDF</button>
   </div>
 
@@ -537,8 +540,10 @@
   <!-- Sub-tab: Follow-up Report (by follow-up / promised payment date) -->
   <div class="sub-pane" id="sub-rpt-followup">
     <div class="toolbar">
-      <label for="rfuDate" style="font-size:11px;font-weight:700;color:#1a237e">📅 Follow-up Date</label>
-      <input type="date" id="rfuDate" onchange="renderFUReport()" title="Parties whose follow-up / promised payment is on this date">
+      <label for="rfuDate" style="font-size:11px;font-weight:700;color:#1a237e">📅 Follow-up From</label>
+      <input type="date" id="rfuDate" onchange="renderFUReport()" title="Follow-up date: from (leave 'To' empty for a single day)">
+      <label for="rfuDateTo" style="font-size:11px;font-weight:700;color:#1a237e">To</label>
+      <input type="date" id="rfuDateTo" onchange="renderFUReport()" title="Follow-up date: to">
       <button class="btn btn-sm" type="button" onclick="setFUToday()" style="background:#e8eaf6">Today</button>
       <button class="btn btn-sm" type="button" onclick="clearFUDate()" style="background:#ffebee;color:#c62828">✕ Clear</button>
       <select id="rfuSalesman" onchange="renderFUReport()">
@@ -546,6 +551,7 @@
       </select>
       <input type="text" id="rfuSearch" placeholder="🔍 Search party…" oninput="renderFUReport()">
       <span id="rfuCount" style="margin-left:auto;font-size:11px;color:#888"></span>
+      <button class="btn btn-sm" type="button" onclick="openBulkFU('r')" style="background:#6a1b9a;color:#fff" title="Change follow-up date of many parties at once">🔁 Bulk Follow-up Date</button>
       <button class="btn btn-success btn-sm" type="button" onclick="exportFU('csv')">⬇️ Excel (CSV)</button>
       <button class="btn btn-sm" type="button" onclick="exportFU('pdf')" style="background:#e65100;color:#fff">🖨️ Print / PDF</button>
     </div>
@@ -787,6 +793,68 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('fuModal')">Cancel</button>
       <button class="btn btn-primary" onclick="submitFollowUp()">💾 Save Follow-Up</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="bulkModal">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-header">
+      <h3>🔁 Bulk Follow-up Date Update</h3>
+      <button class="modal-close" onclick="closeModal('bulkModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Update method</label>
+          <select id="bk-mode" onchange="bulkRefresh()">
+            <option value="set">Set one date for all selected</option>
+            <option value="shift">Move each party's date by N days (+ / -)</option>
+          </select>
+        </div>
+        <div class="form-group" id="bk-setBox">
+          <label>New Follow-up Date *</label>
+          <input id="bk-date" type="date" onchange="bulkRefresh()">
+          <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">
+            <button class="btn btn-sm" type="button" onclick="bulkQuick(1)">Tomorrow</button>
+            <button class="btn btn-sm" type="button" onclick="bulkQuick(2)">+2 days</button>
+            <button class="btn btn-sm" type="button" onclick="bulkQuick(5)">+5 days</button>
+            <button class="btn btn-sm" type="button" onclick="bulkQuick(7)">+7 days</button>
+          </div>
+        </div>
+        <div class="form-group" id="bk-shiftBox" style="display:none">
+          <label>Days to move (e.g. 5, or -2) *</label>
+          <input id="bk-shift" type="number" step="1" value="5" oninput="bulkRefresh()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Remark (optional - blank keeps the old remark)</label>
+          <input id="bk-remark" type="text" placeholder="e.g. Party asked for more time">
+        </div>
+        <div class="form-group">
+          <label>Staff Name *</label>
+          <input id="bk-staff" type="text" placeholder="Your name">
+        </div>
+      </div>
+      <label style="display:flex;gap:6px;align-items:center;font-size:12px;margin:2px 0 8px">
+        <input type="checkbox" id="bk-count"> Also add +1 to COUNT OF FOLLOW UP
+      </label>
+      <div style="font-size:12px;font-weight:700;color:#1a237e;margin-bottom:4px" id="bk-info"></div>
+      <div class="tbl-wrap" style="max-height:300px;overflow:auto">
+        <table>
+          <thead><tr>
+            <th style="width:30px"><input type="checkbox" id="bk-all" checked onchange="bulkToggleAll(this.checked)"></th>
+            <th>Party</th><th>Salesman</th><th class="num">Outstanding</th><th>Current Date</th><th>New Date</th>
+          </tr></thead>
+          <tbody id="bk-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:#666;margin-top:6px">MASTER OUT ka FOLLOW UP DATE column automatically update hoga, aur har party ki purani history safe rahegi.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('bulkModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitBulkFU()">💾 Update Selected</button>
     </div>
   </div>
 </div>
@@ -1502,8 +1570,8 @@ function getCollected(party){
 }
 
 
-function setFUToday(){ _rfuTouched=true; document.getElementById('rfuDate').value=todayISO(); renderFUReport(); }
-function clearFUDate(){ _rfuTouched=true; document.getElementById('rfuDate').value=''; renderFUReport(); }
+function setFUToday(){ _rfuTouched=true; document.getElementById('rfuDate').value=todayISO(); document.getElementById('rfuDateTo').value=''; renderFUReport(); }
+function clearFUDate(){ _rfuTouched=true; document.getElementById('rfuDate').value=''; document.getElementById('rfuDateTo').value=''; renderFUReport(); }
 
 function fuScheduleOf(p){
   /* date this party's payment follow-up is scheduled for: latest follow-up's promised date,
@@ -1516,10 +1584,20 @@ function fuScheduleOf(p){
 
 function fuIds(src){
   return src==='o'
-    ? {date:'filterFUDate',sm:'filterSalesman',q:'searchParty',chips:'ofuChips',body:'ofuBody',count:'countLabel'}
-    : {date:'rfuDate',sm:'rfuSalesman',q:'rfuSearch',chips:'fuChips',body:'fuRepBody',count:'rfuCount'};
+    ? {date:'filterFUDate',to:'filterFUDateTo',sm:'filterSalesman',q:'searchParty',chips:'ofuChips',body:'ofuBody',count:'countLabel'}
+    : {date:'rfuDate',to:'rfuDateTo',sm:'rfuSalesman',q:'rfuSearch',chips:'fuChips',body:'fuRepBody',count:'rfuCount'};
 }
-function getFURows(D,src){
+function fuRange(src){
+  /* From / To follow-up dates (yyyy-mm-dd). Only one filled = that single day. Reversed dates are swapped. */
+  const I=fuIds(src);
+  let a=document.getElementById(I.date).value, b=document.getElementById(I.to).value;
+  if(!a && b) a=b;
+  if(!b) b=a;
+  if(a && b && b<a){ const t=a; a=b; b=t; }
+  return {from:a, to:b, on:!!a};
+}
+function fuRangeText(R){ return R.from===R.to ? fmtDate(R.from) : fmtDate(R.from)+' to '+fmtDate(R.to); }
+function getFURows(R,src){
   const I=fuIds(src);
   const smF=document.getElementById(I.sm).value;
   const qF =document.getElementById(I.q).value.toLowerCase();
@@ -1528,7 +1606,8 @@ function getFURows(D,src){
     if(smF && p.salesman!==smF) return;
     if(qF && !p.party.toLowerCase().includes(qF) && !String(p.salesmanArea||'').toLowerCase().includes(qF)) return;
     const s=fuScheduleOf(p);
-    if(s.date!==D) return;
+    if(!s.date || s.date<R.from || s.date>R.to) return;
+    const D=s.date;
     const pays=DB.payByParty[p.party]||[];
     let prev=0, onDay=0;
     pays.forEach(x=>{ if(x.paymentDate<D) prev+=x.amount; else if(x.paymentDate===D) onDay+=x.amount; });
@@ -1536,38 +1615,38 @@ function getFURows(D,src){
     const done = rem<=0 || (s.amt>0 ? onDay>=s.amt : onDay>0);
     rows.push({p:p, s:s, prev:prev, onDay:onDay, rem:rem, done:done});
   });
-  rows.sort((a,b)=> (a.done-b.done) || String(a.p.salesman).localeCompare(String(b.p.salesman)) || (b.p.closing-a.p.closing));
+  rows.sort((a,b)=> String(a.s.date).localeCompare(String(b.s.date)) || (a.done-b.done) || String(a.p.salesman).localeCompare(String(b.p.salesman)) || (b.p.closing-a.p.closing));
   return rows;
 }
 
 function renderFUReport(src){
   src=(src==='o')?'o':'r';
   const I=fuIds(src);
-  const D=document.getElementById(I.date).value;
+  const R=fuRange(src);
   const tb=document.getElementById(I.body);
-  if(!D){
+  if(!R.on){
     document.getElementById(I.chips).innerHTML='';
-    tb.innerHTML='<tr><td colspan="16" class="empty">Select a follow-up date to see the parties scheduled for that day</td></tr>';
+    tb.innerHTML='<tr><td colspan="16" class="empty">Select a follow-up date (or From - To dates) to see the parties scheduled</td></tr>';
     document.getElementById(I.count).textContent='';
     return;
   }
   const smF=document.getElementById(I.sm).value;
-  const rows=getFURows(D,src);
+  const rows=getFURows(R,src);
 
   const T={out:0,a1:0,a2:0,a3:0,a4:0,a5:0,a6:0,prom:0,prev:0,rem:0,got:0,done:0};
   rows.forEach(r=>{ const p=r.p; T.out+=p.closing; T.a1+=p.d0_30; T.a2+=p.d31_60; T.a3+=p.d61_90; T.a4+=p.d91_120; T.a5+=p.d121_150; T.a6+=p.d151plus;
     T.prom+=r.s.amt; T.prev+=r.prev; T.rem+=r.rem; T.got+=r.onDay; if(r.done) T.done++; });
 
   document.getElementById(I.chips).innerHTML=
-    '<div class="fu-chip"><span>Follow-ups on '+fmtDate(D)+'</span><b>'+rows.length+' parties</b></div>'+
+    '<div class="fu-chip"><span>Follow-ups: '+fuRangeText(R)+'</span><b>'+rows.length+' parties</b></div>'+
     '<div class="fu-chip"><span>Total Outstanding</span><b>'+inr(T.out)+'</b></div>'+
     '<div class="fu-chip"><span>Promised Amount</span><b>'+inr(T.prom)+'</b></div>'+
-    '<div class="fu-chip grn"><span>Collected on this date</span><b>'+inr(T.got)+' · '+T.done+' done</b></div>'+
+    '<div class="fu-chip grn"><span>Collected on follow-up date</span><b>'+inr(T.got)+' · '+T.done+' done</b></div>'+
     '<div class="fu-chip red"><span>Still Pending</span><b>'+inr(T.rem)+' · '+(rows.length-T.done)+' parties</b></div>';
 
   const ag=v=>(v>0?inr(v):'—');
   if(!rows.length){
-    tb.innerHTML='<tr><td colspan="16" class="empty">No follow-up scheduled for '+fmtDate(D)+(smF?' ('+smF+')':'')+'</td></tr>';
+    tb.innerHTML='<tr><td colspan="16" class="empty">No follow-up scheduled for '+fuRangeText(R)+(smF?' ('+smF+')':'')+'</td></tr>';
   } else {
     let html=rows.map(r=>{
       const p=r.p;
@@ -1575,7 +1654,7 @@ function renderFUReport(src){
         ? '<span class="st-badge st-paid">Collected</span>'+(r.onDay>0?'<div style="font-size:10px;color:#666">Recd '+inr(r.onDay)+'</div>':'')
         : '<span class="st-badge st-pend">Pending</span>'+(r.onDay>0?'<div style="font-size:10px;color:#666">Recd '+inr(r.onDay)+' so far</div>':'');
       return '<tr class="'+(r.done?'fu-done':'fu-pend')+'">'+
-        '<td style="white-space:nowrap">'+fmtDate(D)+'</td>'+
+        '<td style="white-space:nowrap">'+fmtDate(r.s.date)+'</td>'+
         '<td><strong>'+p.party+'</strong></td>'+
         '<td style="font-size:11px">'+(p.salesman||'')+(p.salesmanArea&&p.salesmanArea!==p.salesman?'<div style="color:#888">'+p.salesmanArea+'</div>':'')+'</td>'+
         '<td class="num bold">'+inr(p.closing)+'</td>'+
@@ -1600,32 +1679,32 @@ function renderFUReport(src){
       '<td class="num bold" style="color:#c62828">'+inr(T.rem)+'</td><td colspan="3"></td></tr>';
     tb.innerHTML=html;
   }
-  document.getElementById(I.count).textContent=rows.length+' follow-ups on '+fmtDate(D);
+  document.getElementById(I.count).textContent=rows.length+' follow-ups: '+fuRangeText(R);
 }
 
 /* ── Export of the follow-up report (Excel/CSV and Print/PDF): same columns, ageing included ── */
 function fuExportTable(src){
   const I=fuIds(src);
-  const D=document.getElementById(I.date).value;
-  if(!D){ toast('Select a follow-up date first','warn'); return null; }
-  const rows=getFURows(D,src);
-  if(!rows.length){ toast('No follow-ups on '+fmtDate(D)+' to export','warn'); return null; }
+  const R=fuRange(src);
+  if(!R.on){ toast('Select a follow-up date first','warn'); return null; }
+  const rows=getFURows(R,src);
+  if(!rows.length){ toast('No follow-ups on '+fuRangeText(R)+' to export','warn'); return null; }
   const head=['Follow-up Date','Party Name','Salesman','Total Outstanding','( 0 - 30 ) Days','( 31 - 60 ) Days','( 61 - 90 ) Days',
     '( 91 - 120 ) Days','( 121 - 150 ) Days','(>= 151 ) Days','Promised Amount','Previous Collection','Remaining Pending','Payment Status','Collected On Date','Remark'];
   const num=v=>Number(v)||0;
   const body=rows.map(r=>{ const p=r.p;
-    return [fmtDate(D),p.party,p.salesmanArea||p.salesman,num(p.closing),num(p.d0_30),num(p.d31_60),num(p.d61_90),num(p.d91_120),num(p.d121_150),num(p.d151plus),
+    return [fmtDate(r.s.date),p.party,p.salesmanArea||p.salesman,num(p.closing),num(p.d0_30),num(p.d31_60),num(p.d61_90),num(p.d91_120),num(p.d121_150),num(p.d151plus),
       num(r.s.amt),num(r.prev),num(r.rem),r.done?'Collected':'Pending',num(r.onDay),r.s.remark||''];});
   const tot=['TOTAL ('+rows.length+' parties)','',''];
   for(let c=3;c<=14;c++){ tot.push(c===13 ? '' : body.reduce((a,r)=>a+r[c],0)); }
   tot.push('');
-  return {D:D, head:head, body:body, tot:tot, sm:document.getElementById(I.sm).value};
+  return {D:fuRangeText(R), R:R, head:head, body:body, tot:tot, sm:document.getElementById(I.sm).value};
 }
 
 function exportFU(format,src){
   src=(src==='o')?'o':'r';
   const t=fuExportTable(src); if(!t) return;
-  const dmyD=fmtDate(t.D);
+  const dmyD=t.D;
   if(format==='csv'){
     const q=v=>{ const s=String(v); return /[",\n]/.test(s)?'"'+s.split('"').join('""')+'"':s; };
     const lines=[['Christofin Impex - Follow-up Report'],['Follow-up Date: '+dmyD+(t.sm?'  |  Salesman: '+t.sm:'')],[],t.head].concat(t.body).concat([t.tot]);
@@ -1633,7 +1712,7 @@ function exportFU(format,src){
     const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
-    a.href=url; a.download='Follow_Up_Report_'+dmyD+(t.sm?'_'+t.sm.split(' ').join('_'):'')+'.csv'; a.click();
+    a.href=url; a.download='Follow_Up_Report_'+dmyD.split(' to ').join('_to_')+(t.sm?'_'+t.sm.split(' ').join('_'):'')+'.csv'; a.click();
     URL.revokeObjectURL(url);
     toast('Excel file downloaded ✓');
   } else {
@@ -1656,7 +1735,7 @@ function exportFU(format,src){
   }
 }
 function exportOutstandingPDF(){
-  if(document.getElementById('filterFUDate').value){ exportFU('pdf','o'); return; }
+  if(fuRange('o').on){ exportFU('pdf','o'); return; }
   const list=_outList||[];
   if(!list.length){ toast('No parties to export','warn'); return; }
   const esc=s=>String(s).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;');
@@ -1698,11 +1777,11 @@ function nowText(){
 }
 
 var _outList=[];
-function setOFUToday(){ document.getElementById('filterFUDate').value=todayISO(); renderOutstanding(); }
-function clearOFUDate(){ document.getElementById('filterFUDate').value=''; renderOutstanding(); }
+function setOFUToday(){ document.getElementById('filterFUDate').value=todayISO(); document.getElementById('filterFUDateTo').value=''; renderOutstanding(); }
+function clearOFUDate(){ document.getElementById('filterFUDate').value=''; document.getElementById('filterFUDateTo').value=''; renderOutstanding(); }
 
 function renderOutstanding(){
-  const fuOn=!!document.getElementById('filterFUDate').value;
+  const fuOn=fuRange('o').on;
   document.getElementById('fuDateClear').style.display = fuOn ? '' : 'none';
   document.getElementById('fuReport').classList.toggle('show',fuOn);
   document.getElementById('outWrap').style.display = fuOn ? 'none' : '';
@@ -1947,6 +2026,91 @@ function submitFollowUp(){
     })
     .withFailureHandler(e=>{ unlockSave('fu',FU_BTN); toast('Error: '+((e&&e.message)||e),'err'); })
     .saveFollowUp(JSON.stringify(data));
+}
+
+
+/* ── Bulk follow-up date update ── */
+var _bulkList=[];
+function addDaysISO(iso,n){
+  const a=String(iso).split('-').map(Number);
+  return new Date(Date.UTC(a[0],a[1]-1,a[2]+n)).toISOString().slice(0,10);
+}
+function openBulkFU(src){
+  src=(src==='o')?'o':'r';
+  let parties;
+  if(fuRange(src).on){ parties=getFURows(fuRange(src),src).map(r=>r.p); }
+  else if(src==='o'){ parties=(_outList||[]).slice(); }
+  else { toast('Select follow-up date (From / To) first','warn'); return; }
+  if(!parties.length){ toast('No parties in the current view','warn'); return; }
+  _bulkList=parties.map(p=>({p:p, cur:fuScheduleOf(p).date||p.followUpDate||''}));
+  document.getElementById('bk-mode').value='set';
+  document.getElementById('bk-date').value='';
+  document.getElementById('bk-shift').value='5';
+  document.getElementById('bk-remark').value='';
+  document.getElementById('bk-count').checked=false;
+  document.getElementById('bk-all').checked=true;
+  const st=document.getElementById('bk-staff'); try{ if(!st.value) st.value=localStorage.getItem('chr_bulk_staff')||''; }catch(e){}
+  bulkRender();
+  openModal('bulkModal');
+}
+function bulkQuick(n){ document.getElementById('bk-mode').value='set'; document.getElementById('bk-date').value=addDaysISO(todayISO(),n); bulkRefresh(); }
+function bulkNewDate(it){
+  const mode=document.getElementById('bk-mode').value;
+  if(mode==='set') return document.getElementById('bk-date').value||'';
+  const n=parseInt(document.getElementById('bk-shift').value,10);
+  if(isNaN(n)) return '';
+  return addDaysISO(it.cur||todayISO(), n);
+}
+function bulkRender(){
+  document.getElementById('bk-body').innerHTML=_bulkList.map((it,i)=>
+    '<tr><td><input type="checkbox" class="bk-chk" data-i="'+i+'" checked onchange="bulkRefresh()"></td>'+
+    '<td><strong>'+it.p.party+'</strong></td><td style="font-size:11px">'+(it.p.salesman||'')+'</td>'+
+    '<td class="num">'+inr(getNetPending(it.p))+'</td>'+
+    '<td>'+(fmtDate(it.cur)||'—')+'</td><td class="bk-new" style="font-weight:700;color:#6a1b9a"></td></tr>').join('');
+  bulkRefresh();
+}
+function bulkChecked(){ return Array.from(document.querySelectorAll('#bk-body .bk-chk')).map(c=>c.checked); }
+function bulkRefresh(){
+  const mode=document.getElementById('bk-mode').value;
+  document.getElementById('bk-setBox').style.display = mode==='set'?'':'none';
+  document.getElementById('bk-shiftBox').style.display = mode==='shift'?'':'none';
+  const chk=bulkChecked();
+  const cells=document.querySelectorAll('#bk-body .bk-new');
+  let n=0;
+  _bulkList.forEach((it,i)=>{
+    const d=bulkNewDate(it);
+    cells[i].textContent = chk[i] ? (fmtDate(d)||'—') : '';
+    if(chk[i]) n++;
+  });
+  document.getElementById('bk-info').textContent=n+' of '+_bulkList.length+' parties selected';
+  document.getElementById('bk-all').checked = n===_bulkList.length;
+}
+function bulkToggleAll(v){ document.querySelectorAll('#bk-body .bk-chk').forEach(c=>{ c.checked=v; }); bulkRefresh(); }
+function submitBulkFU(){
+  const chk=bulkChecked();
+  const items=[];
+  _bulkList.forEach((it,i)=>{
+    if(!chk[i]) return;
+    const d=bulkNewDate(it);
+    if(d) items.push({party:it.p.party, salesman:it.p.salesman, date:d, outstandingAmt:inr(getNetPending(it.p))});
+  });
+  const staff=document.getElementById('bk-staff').value.trim();
+  if(!items.length){ toast('Select parties and enter the new date / days','warn'); return; }
+  if(!staff){ toast('Enter staff name','warn'); return; }
+  try{ localStorage.setItem('chr_bulk_staff',staff); }catch(e){}
+  const BTN='button[onclick="submitBulkFU()"]';
+  if(!lockSave('bk',BTN,'⏳ Updating…')) return;
+  google.script.run
+    .withSuccessHandler(raw=>{
+      unlockSave('bk',BTN);
+      var r={}; try{ r=JSON.parse(raw)||{}; }catch(e){}
+      if(r.success===false){ toast(r.message||'Update failed','err'); return; }
+      closeModal('bulkModal');
+      toast((r.message||'Follow-up dates updated')+' ✓', r.missing&&r.missing.length?'warn':'ok', 5000);
+      loadData(false);
+    })
+    .withFailureHandler(e=>{ unlockSave('bk',BTN); toast('Error: '+((e&&e.message)||e),'err'); })
+    .bulkSaveFollowUp(JSON.stringify({items:items, remark:document.getElementById('bk-remark').value.trim(), staffName:staff, countIt:document.getElementById('bk-count').checked}));
 }
 
 /* ── WhatsApp Modal ── */
