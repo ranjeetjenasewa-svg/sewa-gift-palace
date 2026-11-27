@@ -804,6 +804,18 @@
       <button class="modal-close" onclick="closeModal('bulkModal')">✕</button>
     </div>
     <div class="modal-body">
+      <div style="background:#f3e5f5;border:1px solid #ce93d8;border-radius:8px;padding:8px 10px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:#6a1b9a;margin-bottom:6px">STEP 1 - Choose parties by their CURRENT follow-up date</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <label for="bk-from" style="font-size:11px;font-weight:700">From</label>
+          <input id="bk-from" type="date" onchange="bulkFilter()">
+          <label for="bk-to" style="font-size:11px;font-weight:700">To</label>
+          <input id="bk-to" type="date" onchange="bulkFilter()">
+          <select id="bk-sm" onchange="bulkFilter()"><option value="">All Salesmen</option></select>
+          <button class="btn btn-sm" type="button" onclick="bulkFilterToday()" style="background:#e8eaf6">Today</button>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:#6a1b9a;margin-bottom:6px">STEP 2 - Set the new follow-up date</div>
       <div class="form-row">
         <div class="form-group">
           <label>Update method</label>
@@ -2037,22 +2049,37 @@ function addDaysISO(iso,n){
 }
 function openBulkFU(src){
   src=(src==='o')?'o':'r';
-  let parties;
-  if(fuRange(src).on){ parties=getFURows(fuRange(src),src).map(r=>r.p); }
-  else if(src==='o'){ parties=(_outList||[]).slice(); }
-  else { toast('Select follow-up date (From / To) first','warn'); return; }
-  if(!parties.length){ toast('No parties in the current view','warn'); return; }
-  _bulkList=parties.map(p=>({p:p, cur:fuScheduleOf(p).date||p.followUpDate||''}));
+  _bulkAll=DB.parties.map(p=>({p:p, cur:fuScheduleOf(p).date||p.followUpDate||''}));
+  const R=fuRange(src), I=fuIds(src);
+  document.getElementById('bk-from').value=R.on?R.from:'';
+  document.getElementById('bk-to').value=(R.on&&R.to!==R.from)?R.to:'';
+  const sm=document.getElementById('bk-sm');
+  const names=Array.from(new Set(DB.parties.map(p=>p.salesman).filter(Boolean))).sort();
+  sm.innerHTML='<option value="">All Salesmen</option>'+names.map(n=>'<option value="'+String(n).split('"').join('&quot;')+'">'+n+'</option>').join('');
+  sm.value=document.getElementById(I.sm).value||'';
   document.getElementById('bk-mode').value='set';
   document.getElementById('bk-date').value='';
   document.getElementById('bk-shift').value='5';
   document.getElementById('bk-remark').value='';
   document.getElementById('bk-count').checked=false;
-  document.getElementById('bk-all').checked=true;
   const st=document.getElementById('bk-staff'); try{ if(!st.value) st.value=localStorage.getItem('chr_bulk_staff')||''; }catch(e){}
-  bulkRender();
+  bulkFilter();
   openModal('bulkModal');
 }
+var _bulkAll=[];
+function bulkFilterToday(){ document.getElementById('bk-from').value=todayISO(); document.getElementById('bk-to').value=''; bulkFilter(); }
+function bulkFilter(){
+  let a=document.getElementById('bk-from').value, b=document.getElementById('bk-to').value;
+  if(!a && b) a=b;
+  if(!b) b=a;
+  if(a && b && b<a){ const t=a; a=b; b=t; }
+  const sm=document.getElementById('bk-sm').value;
+  _bulkList = a ? _bulkAll.filter(it=> it.cur && it.cur>=a && it.cur<=b && (!sm || it.p.salesman===sm)) : [];
+  document.getElementById('bk-all').checked=true;
+  bulkRender();
+  if(!a) document.getElementById('bk-info').textContent='Choose the follow-up date above to see the parties';
+}
+
 function bulkQuick(n){ document.getElementById('bk-mode').value='set'; document.getElementById('bk-date').value=addDaysISO(todayISO(),n); bulkRefresh(); }
 function bulkNewDate(it){
   const mode=document.getElementById('bk-mode').value;
@@ -2062,7 +2089,7 @@ function bulkNewDate(it){
   return addDaysISO(it.cur||todayISO(), n);
 }
 function bulkRender(){
-  document.getElementById('bk-body').innerHTML=_bulkList.map((it,i)=>
+  document.getElementById('bk-body').innerHTML=!_bulkList.length ? '<tr><td colspan="6" class="empty">No parties with this follow-up date</td></tr>' : _bulkList.map((it,i)=>
     '<tr><td><input type="checkbox" class="bk-chk" data-i="'+i+'" checked onchange="bulkRefresh()"></td>'+
     '<td><strong>'+it.p.party+'</strong></td><td style="font-size:11px">'+(it.p.salesman||'')+'</td>'+
     '<td class="num">'+inr(getNetPending(it.p))+'</td>'+
@@ -2076,6 +2103,7 @@ function bulkRefresh(){
   document.getElementById('bk-shiftBox').style.display = mode==='shift'?'':'none';
   const chk=bulkChecked();
   const cells=document.querySelectorAll('#bk-body .bk-new');
+  if(!_bulkList.length){ document.getElementById('bk-info').textContent='0 parties'; return; }
   let n=0;
   _bulkList.forEach((it,i)=>{
     const d=bulkNewDate(it);
