@@ -659,7 +659,10 @@ function renderAction(rows){
     <span class="ac-sep ac-s" style="margin-left:auto">|</span>
     <span class="ac-s">Shortfall: <strong style="color:var(--red)">${inr(totalShortfall,true)}</strong></span>
     <span class="ac-sep ac-s">|</span>
-    <span class="ac-s">Adj. Shortfall: <strong style="color:${adjColor}">${inr(adjShortfall,true)}</strong></span>
+    <span class="ac-s" style="display:flex;flex-direction:column;gap:1px">
+      <span>Adj. Shortfall: <strong style="color:${adjColor}">${inr(adjShortfall,true)}</strong></span>
+      ${tExtraAC>0?`<span style="font-size:10px;color:var(--green)">▲ Extra deposited: +${inr(tExtraAC)}</span>`:''}
+    </span>
   `;
   const tbody=document.getElementById('acBody');
   if(!sorted.length){tbody.innerHTML='<tr class="empty-row"><td colspan="13">No entries in this date range.</td></tr>';return;}
