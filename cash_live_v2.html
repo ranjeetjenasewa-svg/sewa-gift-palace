@@ -832,115 +832,146 @@ function exportPDF(){
   const tSF=rows.filter(r=>r[C.calc]<0).reduce((s,r)=>s+r[C.calc],0);
   const tExtra=extraInRange.reduce((s,e)=>s+e.amount,0);
   const adj=tSF+tExtra;
-  // Header
-  doc.setFillColor(15,23,42);doc.rect(0,0,W,22,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(241,245,249);
-  doc.text('SEWA GIFT PALACE — CASH FLOW REPORT',14,9);
+
+  // ── HEADER: plain white background, large title (matches old PDF) ──
+  let y=14;
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(15,23,42);
+  doc.text('Cash Flow Report - Sewa Gift Palace',14,y);
+  y+=6;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,80);
   const rStr=filterFrom&&filterTo?`Period: ${numToDate(filterFrom)} to ${numToDate(filterTo)}`:'All Time';
-  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(148,163,184);
-  doc.text(rStr,14,14.5);
-  doc.text('Generated: '+new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),14,19);
-  doc.text('Total Entries: '+rows.length+' | Verified: '+appRows.length+' | Pending: '+highRows.length,100,14.5);
-  // KPI row
-  doc.setFillColor(248,250,252);doc.rect(0,22,W,20,'F');
-  const kpis=[['Total Collection',pf(tCol)],['Total Expenses',pf(tExp)],['Bank Deposits',pf(tDep)],['Net Cash',pf(tCol-tExp,true)],['Total Shortfall',pf(tSF,true)],['Extra Deposits',pf(tExtra)],['Adjusted Shortfall',pf(adj,true)]];
-  let kx=14;
-  kpis.forEach(([lbl,val],idx)=>{
-    doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(100,116,139);doc.text(lbl,kx,27.5);
+  const genDate=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric'});
+  doc.text(`Generated: ${genDate} | ${rStr}`,14,y);
+  y+=5;
+  doc.text(`Records: ${rows.length}    High Action Entries: ${rows.filter(r=>r[C.calc]<0).length}`,14,y);
+  y+=4;
+  doc.setDrawColor(200,200,200);doc.line(14,y,W-14,y);
+  y+=6;
+
+  // ── KPI ROW: no background box, just label+value columns ──
+  const kpis=[
+    ['Total Collection',pf(tCol),false],
+    ['Total Expenses',pf(tExp),false],
+    ['Bank Deposits',pf(tDep),false],
+    ['Net Cash',pf(tCol-tExp,true),(tCol-tExp)<0],
+    ['Total Shortfall',pf(tSF,true),tSF<0],
+    ['Extra Deposits',pf(tExtra),false],
+    ['Adj. Shortfall',pf(adj,true),adj<0],
+  ];
+  const kw=(W-28)/kpis.length;
+  kpis.forEach(([lbl,val,isRed],i)=>{
+    const kx=14+i*kw;
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(100,116,139);
+    doc.text(lbl,kx,y);
     doc.setFont('helvetica','bold');doc.setFontSize(8.5);
-    if(idx===4&&tSF<0)doc.setTextColor(185,28,28);
-    else if(idx===6&&adj<0)doc.setTextColor(220,38,38);
-    else if(idx===6&&adj>0)doc.setTextColor(21,128,61);
-    else doc.setTextColor(15,23,42);
-    doc.text(val,kx,34);kx+=26;
+    doc.setTextColor(isRed?185:15,isRed?28:23,isRed?28:42);
+    doc.text(val,kx,y+5.5);
   });
-  doc.setDrawColor(226,232,240);doc.line(0,42,W,42);
-  const CS={0:{cellWidth:5,halign:'center'},1:{cellWidth:16,halign:'center'},2:{cellWidth:18,halign:'right'},3:{cellWidth:15,halign:'right'},4:{cellWidth:20,halign:'right'},5:{cellWidth:17,halign:'right'},6:{cellWidth:15,halign:'right'},7:{cellWidth:18,halign:'right'},8:{cellWidth:18,halign:'right'},9:{cellWidth:16,halign:'left'},10:{cellWidth:14,halign:'left'}};
-  const CS_APP={0:{cellWidth:5,halign:'center'},1:{cellWidth:15,halign:'center'},2:{cellWidth:17,halign:'right'},3:{cellWidth:14,halign:'right'},4:{cellWidth:18,halign:'right'},5:{cellWidth:14,halign:'right'},6:{cellWidth:13,halign:'right'},7:{cellWidth:16,halign:'right'},8:{cellWidth:16,halign:'right'},9:{cellWidth:14,halign:'left'},10:{cellWidth:13,halign:'left'},11:{cellWidth:17,halign:'center'}};
-  const TH=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook','Bank Dep.','Shortfall','Acct No.','Dep. By']];
-  const TH_APP=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook','Bank Dep.','Shortfall','Acct No.','Dep. By','Checked By']];
+  y+=13;
+  doc.setDrawColor(200,200,200);doc.line(14,y,W-14,y);
+  y+=6;
+
+  // ── SHARED TABLE CONFIG ──
+  const CS={0:{cellWidth:5,halign:'center'},1:{cellWidth:17,halign:'center'},2:{cellWidth:19,halign:'right'},3:{cellWidth:15,halign:'right'},4:{cellWidth:20,halign:'right'},5:{cellWidth:16,halign:'right'},6:{cellWidth:15,halign:'right'},7:{cellWidth:18,halign:'right'},8:{cellWidth:18,halign:'right'},9:{cellWidth:16,halign:'left'},10:{cellWidth:14,halign:'left'}};
+  const TH=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook Dep.','Bank Deposit','Shortfall','Acct No.','Dep. By']];
   const toRow=(r,i)=>[i+1,r[C.dt],pf(r[C.col]),pf(r[C.exp]),pf(r[C.td]),r[C.ed]?pf(r[C.ed]):'—',r[C.db]?pf(r[C.db]):'—',pf(r[C.ad]),pf(r[C.calc],true),r[C.acct]||'—',r[C.staff]||'—'];
-  const toRowApp=(r,i)=>[i+1,r[C.dt],pf(r[C.col]),pf(r[C.exp]),pf(r[C.td]),r[C.ed]?pf(r[C.ed]):'—',r[C.db]?pf(r[C.db]):'—',pf(r[C.ad]),pf(r[C.calc],true),r[C.acct]||'—',r[C.staff]||'—',r[C.chkby]||'✓ Approved'];
-  // Section 1
-  doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(15,40,90);
-  doc.text('All Daily Entries — Date-wise Report ('+highRows.length+')',14,48);
-  doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
-  doc.text('Shortfall: '+highRows.filter(r=>r[C.calc]<0).length+' entries  |  Surplus: '+highRows.filter(r=>r[C.calc]>=0).length+' entries',14,52.5);
-  doc.autoTable({startY:55,head:TH,body:highRows.map(toRow),headStyles:{fillColor:[15,40,90],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5},columnStyles:CS,margin:{left:14,right:14},
-    didParseCell:(data)=>{
-      if(data.section==='body'&&highRows[data.row]){
-        const r=highRows[data.row];
-        if(r[C.calc]<0){
-          data.cell.styles.fillColor=[254,226,226]; // light red bg
-          if(data.column.index===8){data.cell.styles.textColor=scol(r[C.calc]);data.cell.styles.fontStyle='bold';}
-        } else {
-          data.cell.styles.fillColor=[220,252,231]; // light green bg
-          if(data.column.index===8){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}
-        }
-      }
-    },
+
+  // Shortfall column text: green (surplus) | yellow-orange (small) | orange (mid) | red (large)
+  // Uses existing scol(): calc>=0→green, |calc|<500→amber, |calc|<1000→orange, else→red
+  const colorCell=(data,arr)=>{
+    if(data.section==='body'&&arr[data.row]&&data.column.index===8){
+      data.cell.styles.textColor=scol(arr[data.row][C.calc]);
+      data.cell.styles.fontStyle='bold';
+    }
+  };
+
+  // ── SECTION 1: ALL DAILY ENTRIES ──
+  const negCnt=highRows.filter(r=>r[C.calc]<0).length;
+  const posCnt=highRows.filter(r=>r[C.calc]>=0).length;
+  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(15,40,90);
+  doc.text(`All Daily Entries — Date-wise Report (${highRows.length})`,14,y);
+  y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,80);
+  doc.text(`Shortfall entries: ${negCnt} (action required) | Surplus entries: ${posCnt} (green)`,14,y);
+  doc.autoTable({
+    startY:y+5,head:TH,body:highRows.map(toRow),
+    headStyles:{fillColor:[15,23,42],textColor:255,fontStyle:'bold',fontSize:7},
+    bodyStyles:{fontSize:7,textColor:[30,30,30],fillColor:[255,255,255]},
+    alternateRowStyles:{fillColor:[248,250,252]},
+    columnStyles:CS,margin:{left:14,right:14},
+    didParseCell:(data)=>colorCell(data,highRows),
   });
-  // Section 2: Approved
+
+  // ── SECTION 2: APPROVED ENTRIES ──
   if(appRows.length){
-    let y2=doc.lastAutoTable.finalY+10;if(y2>pH-40){doc.addPage();y2=15;}
-    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(14,116,144);
-    doc.text('Verified / Approved Entries ('+appRows.length+')',14,y2);
-    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
-    doc.text('Shortfall: '+appRows.filter(r=>r[C.calc]<0).length+' entries  |  Surplus: '+appRows.filter(r=>r[C.calc]>=0).length+' entries',14,y2+4.5);
-    doc.autoTable({startY:y2+8,head:TH_APP,body:appRows.map(toRowApp),headStyles:{fillColor:[14,116,144],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5,textColor:[60,60,60]},columnStyles:CS_APP,margin:{left:14,right:14},
-      didParseCell:(data)=>{
-        if(data.section==='body'&&appRows[data.row]){
-          const r=appRows[data.row];
-          if(r[C.calc]<0){
-            data.cell.styles.fillColor=[254,226,226];
-            if(data.column.index===8){data.cell.styles.textColor=scol(r[C.calc]);data.cell.styles.fontStyle='bold';}
-          } else {
-            data.cell.styles.fillColor=[220,252,231];
-            if(data.column.index===8){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}
-          }
-          if(data.column.index===11){data.cell.styles.textColor=[14,116,144];data.cell.styles.fontStyle='bold';}
-        }
-      },
+    let y2=doc.lastAutoTable.finalY+10;if(y2>pH-45){doc.addPage();y2=15;}
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(214,119,43);
+    doc.text(`Approved Entries — For Reference (${appRows.length})`,14,y2);
+    y2+=5;
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,80);
+    doc.text('These shortfall entries have been reviewed and approved by Sanjay Sir.',14,y2);
+    doc.autoTable({
+      startY:y2+5,head:TH,body:appRows.map(toRow),
+      headStyles:{fillColor:[14,116,144],textColor:255,fontStyle:'bold',fontSize:7},
+      bodyStyles:{fontSize:7,textColor:[30,30,30],fillColor:[255,255,255]},
+      alternateRowStyles:{fillColor:[240,249,255]},
+      columnStyles:CS,margin:{left:14,right:14},
+      didParseCell:(data)=>colorCell(data,appRows),
     });
   }
-  // Section 3: Missing dates
+
+  // ── SECTION 3: MISSING DATES (amber chips, matches old PDF) ──
+  let missEndY=doc.lastAutoTable?doc.lastAutoTable.finalY:y;
   if(miss.length){
-    let y3=doc.lastAutoTable?doc.lastAutoTable.finalY+10:70;if(y3>pH-40){doc.addPage();y3=15;}
-    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(146,64,14);
-    doc.text('Missing Dates ('+miss.length+')',14,y3);
-    let mx=14,my=y3+7;
-    miss.forEach(d=>{doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(146,64,14);doc.text(d,mx,my);mx+=22;if(mx>W-20){mx=14;my+=5;}});
+    let y3=missEndY+10;if(y3>pH-50){doc.addPage();y3=15;}
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(214,119,43);
+    doc.text(`Missing Dates — No Data Available (${miss.length})`,14,y3);
+    y3+=5;
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,80);
+    doc.text('Entries pending for these dates — no data available. Please update.',14,y3);
+    y3+=9;
+    let mx=14,my=y3;
+    miss.forEach(d=>{
+      if(mx>W-44){mx=14;my+=12;}
+      doc.setDrawColor(214,119,43);doc.setFillColor(255,251,235);
+      doc.roundedRect(mx,my-6,32,9,2,2,'FD');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(146,64,14);
+      doc.text(d,mx+16,my,{align:'center'});
+      mx+=36;
+    });
+    missEndY=my+8;
   }
-  // Section 4: Extra Deposits
+
+  // ── SECTION 4: EXTRA DEPOSITS (new section, same plain style) ──
   if(extraInRange.length){
-    doc.addPage();
-    doc.setFillColor(109,40,217);doc.rect(0,0,W,16,'F');
-    doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
-    doc.text('Extra Bank Deposits',14,10.5);
-    doc.autoTable({startY:20,head:[['#','Deposit Date','Amount','Deposited By','Note']],body:extraInRange.map((e,i)=>[i+1,formatISO(e.date),pf(e.amount),e.by,e.note||'—']),
-      headStyles:{fillColor:[109,40,217],textColor:255,fontStyle:'bold',fontSize:7},bodyStyles:{fontSize:7.5},alternateRowStyles:{fillColor:[245,243,255]},
-      columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:28,halign:'center'},2:{cellWidth:30,halign:'right'},3:{cellWidth:40},4:{cellWidth:60}},margin:{left:14,right:14},
+    let y4=missEndY+8;if(y4>pH-55){doc.addPage();y4=15;}
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(109,40,217);
+    doc.text(`Extra Bank Deposits (${extraInRange.length})`,14,y4);
+    y4+=5;
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,80,80);
+    doc.text(`Total Extra: ${pf(tExtra)}   |   Adjusted Shortfall: ${pf(adj,true)}`,14,y4);
+    doc.autoTable({
+      startY:y4+5,
+      head:[['#','Deposit Date','Amount','Deposited By','Note']],
+      body:extraInRange.map((e,i)=>[i+1,formatISO(e.date),pf(e.amount),e.by||'—',e.note||'—']),
+      headStyles:{fillColor:[109,40,217],textColor:255,fontStyle:'bold',fontSize:7},
+      bodyStyles:{fontSize:7,textColor:[30,30,30],fillColor:[255,255,255]},
+      alternateRowStyles:{fillColor:[245,243,255]},
+      columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:28,halign:'center'},2:{cellWidth:30,halign:'right'},3:{cellWidth:40},4:{cellWidth:60}},
+      margin:{left:14,right:14},
       didParseCell:(data)=>{if(data.section==='body'&&data.column.index===2){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}},
     });
-    const fy=doc.lastAutoTable.finalY+6;
-    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(109,40,217);doc.text('Total Extra Deposits:',14,fy);
-    doc.setTextColor(21,128,61);doc.text(pf(tExtra),80,fy);
-    if(tSF<0){
-      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(80,80,80);doc.text('Adjusted Shortfall after Extra Deposits:',14,fy+5);
-      doc.setFont('helvetica','bold');
-      if(adj<0)doc.setTextColor(185,28,28);else doc.setTextColor(21,128,61);
-      doc.text(pf(adj,true),80,fy+5);
-    }
   }
-  // Page numbers
+
+  // ── FOOTER: "Page X of Y — Sewa Gift Palace Cash Flow" centered ──
   const pgCnt=doc.internal.getNumberOfPages();
   for(let i=1;i<=pgCnt;i++){
-    doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(148,163,184);
-    doc.text(`Page ${i} of ${pgCnt}`,W-15,pH-5,{align:'right'});
-    doc.text('Sewa Gift Palace — Confidential',14,pH-5);
+    doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(150,150,150);
+    doc.text(`Page ${i} of ${pgCnt} — Sewa Gift Palace Cash Flow`,W/2,pH-5,{align:'center'});
   }
+
   const tag=filterFrom&&filterTo?`_${numToDate(filterFrom).replace(/\//g,'-')}_to_${numToDate(filterTo).replace(/\//g,'-')}`:'';
-  doc.save(`SGP_CashFlow${tag}.pdf`);
+  doc.save(`SewaGiftPalace_CashFlow${tag}.pdf`);
 }
 
 // ═══ EXCEL ═══
