@@ -875,17 +875,17 @@ function exportPDF(){
   // Total = 182mm (A4 210 - 14 margin×2 = 182)
   const CS={
     0:{cellWidth:5,halign:'center'},   // #
-    1:{cellWidth:19,halign:'center'},  // Date (10 chars — 06/11/2026)
+    1:{cellWidth:18,halign:'center'},  // Date
     2:{cellWidth:19,halign:'right'},   // Cash Col.
-    3:{cellWidth:15,halign:'right'},   // Cash Exp.
+    3:{cellWidth:17,halign:'right'},   // Cash Exp.  ← was 15, was wrapping
     4:{cellWidth:19,halign:'right'},   // To Deposit
-    5:{cellWidth:15,halign:'right'},   // Extra Dep.
-    6:{cellWidth:20,halign:'right'},   // DayBook Dep. (was 15 — was wrapping!)
+    5:{cellWidth:18,halign:'right'},   // Extra Dep. ← was 15, was wrapping
+    6:{cellWidth:20,halign:'right'},   // DayBook Dep.
     7:{cellWidth:20,halign:'right'},   // Bank Deposit
-    8:{cellWidth:20,halign:'right'},   // Shortfall (up to 13 chars)
-    9:{cellWidth:16,halign:'left'},    // Acct No.
-    10:{cellWidth:14,halign:'left'},   // Dep. By
-  }; // 5+19+19+15+19+15+20+20+20+16+14 = 182
+    8:{cellWidth:20,halign:'right'},   // Shortfall
+    9:{cellWidth:14,halign:'left'},    // Acct No.
+    10:{cellWidth:12,halign:'left'},   // Dep. By
+  }; // 5+18+19+17+19+18+20+20+20+14+12 = 182
   const TH=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook Dep.','Bank Deposit','Shortfall','Acct No.','Dep. By']];
   const toRow=(r,i)=>[i+1,r[C.dt],pf(r[C.col]),pf(r[C.exp]),pf(r[C.td]),r[C.ed]?pf(r[C.ed]):'—',r[C.db]?pf(r[C.db]):'—',pf(r[C.ad]),pf(r[C.calc],true),r[C.acct]||'—',r[C.staff]||'—'];
 
