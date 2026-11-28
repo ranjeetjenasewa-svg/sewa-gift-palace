@@ -876,12 +876,12 @@ function exportPDF(){
   const TH=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook Dep.','Bank Deposit','Shortfall','Acct No.','Dep. By']];
   const toRow=(r,i)=>[i+1,r[C.dt],pf(r[C.col]),pf(r[C.exp]),pf(r[C.td]),r[C.ed]?pf(r[C.ed]):'—',r[C.db]?pf(r[C.db]):'—',pf(r[C.ad]),pf(r[C.calc],true),r[C.acct]||'—',r[C.staff]||'—'];
 
-  // Shortfall column text: green (surplus) | yellow-orange (small) | orange (mid) | red (large)
-  // Uses existing scol(): calc>=0→green, |calc|<500→amber, |calc|<1000→orange, else→red
+  // Shortfall column text: green (surplus) | amber (small) | orange (mid) | red (large)
+  // data.row is an object in autotable 3.5.x — must use data.row.index
   const colorCell=(data,arr)=>{
-    if(data.section==='body'&&arr[data.row]&&data.column.index===8){
-      data.cell.styles.textColor=scol(arr[data.row][C.calc]);
-      data.cell.styles.fontStyle='bold';
+    if(data.section==='body'&&data.column.index===8){
+      const r=arr[data.row.index];
+      if(r){data.cell.styles.textColor=scol(r[C.calc]);data.cell.styles.fontStyle='bold';}
     }
   };
 
@@ -959,7 +959,7 @@ function exportPDF(){
       alternateRowStyles:{fillColor:[245,243,255]},
       columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:28,halign:'center'},2:{cellWidth:30,halign:'right'},3:{cellWidth:40},4:{cellWidth:60}},
       margin:{left:14,right:14},
-      didParseCell:(data)=>{if(data.section==='body'&&data.column.index===2){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}},
+      didParseCell:(data)=>{if(data.section==='body'&&data.column.index===2){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}},  // amount col green
     });
   }
 
