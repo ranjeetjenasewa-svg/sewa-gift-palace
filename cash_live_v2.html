@@ -11,59 +11,52 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <style>
-/* ═══ TOKENS ═══ */
 :root{
   --bg:#f1f5f9;--surface:#fff;--surface-2:#f8fafc;
   --border:#e2e8f0;--border-2:#cbd5e1;
   --fg:#0f172a;--fg-2:#475569;--fg-mute:#94a3b8;
   --blue:#1e40af;--blue-2:#3b82f6;--blue-dim:#dbeafe;
   --green:#15803d;--green-2:#22c55e;--green-dim:#dcfce7;
-  --amber:#b45309;--amber-dim:#fef3c7;
   --red:#dc2626;--red-dim:#fee2e2;
   --purple:#7c3aed;--purple-dim:#ede9fe;
   --teal:#0f766e;--teal-dim:#ccfbf1;
-  --orange:#ea580c;--orange-dim:#ffedd5;
+  --orange:#ea580c;
   --sh-sm:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
   --sh:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
   --sh-lg:0 10px 25px rgba(0,0,0,.12),0 4px 6px rgba(0,0,0,.05);
   --r:12px;--r-sm:8px;--r-xs:5px;
-  --hdr-bg:#0f172a;--hdr-fg:#f1f5f9;--hdr-fg-2:#94a3b8;
   --hdr-h:60px;--nav-h:46px;--flt-h:50px;
   --sticky-h:calc(var(--hdr-h) + var(--nav-h) + var(--flt-h));
 }
-/* ═══ RESET ═══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;font-size:14px;line-height:1.5;overflow-x:hidden}
 input,select,button,textarea{font-family:inherit;font-size:inherit}
 table{border-collapse:collapse;width:100%}
-a{text-decoration:none;color:inherit}
-/* ═══ HEADER ═══ */
-#hdr{position:fixed;top:0;left:0;right:0;height:var(--hdr-h);background:var(--hdr-bg);display:flex;align-items:center;padding:0 20px;gap:12px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+/* HEADER */
+#hdr{position:fixed;top:0;left:0;right:0;height:var(--hdr-h);background:#0f172a;display:flex;align-items:center;padding:0 20px;gap:12px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .hdr-brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.hdr-icon{font-size:22px}
-.hdr-t1{font-size:16px;font-weight:900;color:var(--hdr-fg);letter-spacing:-.4px}
-.hdr-t2{font-size:11px;color:var(--hdr-fg-2);font-weight:500;letter-spacing:.3px}
+.hdr-t1{font-size:16px;font-weight:900;color:#f1f5f9;letter-spacing:-.4px}
+.hdr-t2{font-size:11px;color:#94a3b8;font-weight:500;letter-spacing:.3px}
 .hdr-sep{width:1px;height:28px;background:rgba(255,255,255,.12)}
 .hdr-meta{display:flex;flex-direction:column;gap:1px}
-.hdr-sync{font-size:11px;color:var(--hdr-fg-2);display:flex;align-items:center;gap:5px}
-.hdr-recs{font-size:12px;font-weight:700;color:var(--hdr-fg)}
-.hdr-actions{display:flex;gap:6px;margin-left:auto}
-.hdr-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--r-sm);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:var(--hdr-fg);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.hdr-sync{font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:5px}
+.hdr-recs{font-size:12px;font-weight:700;color:#f1f5f9}
+.hdr-actions{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.hdr-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--r-sm);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#f1f5f9;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none}
 .hdr-btn:hover{background:rgba(255,255,255,.18)}
-.hdr-btn.red-btn{background:#dc2626;border-color:#dc2626}.hdr-btn.red-btn:hover{background:#b91c1c}
-.hdr-btn.grn-btn{background:#15803d;border-color:#15803d}.hdr-btn.grn-btn:hover{background:#166534}
-.hdr-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;flex-shrink:0}
+.hdr-btn.red{background:#dc2626;border-color:#dc2626}.hdr-btn.red:hover{background:#b91c1c}
+.hdr-btn.grn{background:#15803d;border-color:#15803d}.hdr-btn.grn:hover{background:#166534}
+.hdr-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
 .hdr-spinner.on{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* ═══ STICKY BAR ═══ */
+/* STICKY */
 #sticky{position:fixed;top:var(--hdr-h);left:0;right:0;z-index:90;background:var(--surface);box-shadow:0 2px 6px rgba(0,0,0,.08)}
 .tab-nav{display:flex;align-items:center;overflow-x:auto;padding:0 20px;border-bottom:2px solid var(--border);scrollbar-width:none}
 .tab-nav::-webkit-scrollbar{display:none}
 .tab-btn{display:flex;align-items:center;gap:6px;padding:12px 16px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;color:var(--fg-mute);font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;white-space:nowrap}
 .tab-btn:hover{color:var(--fg-2)}
 .tab-btn.active{color:var(--blue);border-bottom-color:var(--blue-2)}
-.tab-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center;line-height:1.5}
-/* ═══ FILTER BAR ═══ */
+.tab-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center;line-height:1.5;display:none}
 .filter-bar{display:flex;align-items:center;gap:7px;padding:7px 20px;overflow-x:auto;scrollbar-width:none;min-height:var(--flt-h)}
 .filter-bar::-webkit-scrollbar{display:none}
 .qf-btn{padding:5px 13px;border-radius:16px;border:1.5px solid var(--border-2);background:var(--surface-2);color:var(--fg-2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -74,21 +67,20 @@ a{text-decoration:none;color:inherit}
 .date-wrap span{font-size:11px;color:var(--fg-mute);font-weight:600;white-space:nowrap}
 input[type="date"]{padding:5px 8px;border:1.5px solid var(--border-2);border-radius:var(--r-sm);background:var(--surface-2);color:var(--fg);font-size:12px;cursor:pointer;min-width:122px}
 input[type="date"]:focus{outline:none;border-color:var(--blue-2)}
-/* ═══ MAIN ═══ */
-#main{padding:20px;padding-top:calc(var(--sticky-h) + 24px);max-width:1600px;margin:0 auto;min-height:calc(100vh - var(--sticky-h))}
-/* ═══ ALERT BANNER ═══ */
-#alertBan{position:fixed;top:var(--sticky-h);left:0;right:0;z-index:80;background:linear-gradient(90deg,#b91c1c,#dc2626);color:#fff;padding:9px 20px;display:flex;align-items:center;gap:10px;font-size:13px;animation:slideD .3s ease}
+/* ALERT */
+#alertBan{position:fixed;top:var(--sticky-h);left:0;right:0;z-index:80;background:linear-gradient(90deg,#b91c1c,#dc2626);color:#fff;padding:9px 20px;display:flex;align-items:center;gap:10px;font-size:13px}
 #alertBan.hidden{display:none}
-@keyframes slideD{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 .ban-dismiss{margin-left:auto;cursor:pointer;opacity:.8;font-size:18px;line-height:1}
 .ban-dismiss:hover{opacity:1}
 body.has-alert #main{padding-top:calc(var(--sticky-h) + 48px + 24px)}
-/* ═══ LOADING ═══ */
-#loadOverlay{position:fixed;inset:0;background:rgba(241,245,249,.9);backdrop-filter:blur(6px);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+/* LOAD */
+#loadOverlay{position:fixed;inset:0;background:rgba(241,245,249,.92);backdrop-filter:blur(6px);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
 #loadOverlay.hidden{display:none}
 .load-spin{width:42px;height:42px;border:4px solid var(--border-2);border-top-color:var(--blue-2);border-radius:50%;animation:spin .8s linear infinite}
 .load-txt{font-size:14px;font-weight:600;color:var(--fg-2)}
-/* ═══ KPI GRID ═══ */
+/* MAIN */
+#main{padding:20px;padding-top:calc(var(--sticky-h) + 24px);max-width:1600px;margin:0 auto}
+/* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:20px}
 @media(max-width:1400px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
@@ -98,35 +90,35 @@ body.has-alert #main{padding-top:calc(var(--sticky-h) + 48px + 24px)}
 .kpi-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--fg-mute)}
 .kpi-val{font-size:19px;font-weight:800;color:var(--fg);font-family:'JetBrains Mono',monospace;line-height:1.1}
 .kpi-hint{font-size:11px;color:var(--fg-mute);margin-top:2px}
-.kpi-blue{border-left-color:var(--blue-2)}.kpi-orange{border-left-color:#f59e0b}.kpi-teal{border-left-color:#14b8a6}.kpi-green{border-left-color:var(--green-2)}.kpi-red{border-left-color:var(--red)}.kpi-purple{border-left-color:var(--purple)}.kpi-indigo{border-left-color:#6366f1}
-.c-green{color:var(--green)!important}.c-red{color:var(--red)!important}.c-amber{color:var(--amber)!important}.c-mute{color:var(--fg-mute)!important}.c-blue{color:var(--blue)!important}
-/* ═══ CHARTS ═══ */
+.k-blue{border-left-color:var(--blue-2)}.k-orange{border-left-color:#f59e0b}.k-teal{border-left-color:#14b8a6}.k-green{border-left-color:var(--green-2)}.k-red{border-left-color:var(--red)}.k-purple{border-left-color:var(--purple)}.k-indigo{border-left-color:#6366f1}
+.c-green{color:var(--green)!important}.c-red{color:var(--red)!important}.c-blue{color:var(--blue)!important}.c-mute{color:var(--fg-mute)!important}
+/* CHARTS */
 .chart-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px}
 @media(max-width:900px){.chart-row{grid-template-columns:1fr}}
 .chart-card{background:var(--surface);border-radius:var(--r);padding:20px;box-shadow:var(--sh-sm)}
 .chart-ttl{font-size:13px;font-weight:700;color:var(--fg-2);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-/* ═══ TABLES ═══ */
+/* TABLES */
 .tbl-wrap{overflow-x:auto;border-radius:var(--r);box-shadow:var(--sh-sm);background:var(--surface)}
 .info-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .info-txt{font-size:12.5px;color:var(--fg-2)}
 .data-tbl{border-collapse:collapse;width:100%;min-width:960px}
-.data-tbl th{background:#0f172a;color:#e2e8f0;padding:9px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0;z-index:1}
+.data-tbl th{background:#0f172a;color:#e2e8f0;padding:9px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
 .data-tbl th.r{text-align:right}
 .data-tbl td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
 .data-tbl tr:last-child td{border-bottom:none}
 .data-tbl tbody tr:hover td{background:rgba(241,245,249,.7)}
 .data-tbl tr.row-neg td{background:#fff9f9}.data-tbl tr.row-neg:hover td{background:#fee2e2}
 .data-tbl tr.row-pos td{background:#f0fdf4}.data-tbl tr.row-pos:hover td{background:#dcfce7}
-.data-tbl tr.row-approved td{background:#f8fafc;opacity:.82}
+.data-tbl tr.row-app td{background:#f8fafc;opacity:.82}
 .data-tbl tfoot td{background:var(--surface-2);font-weight:700;font-size:13px;padding:10px;border-top:2.5px solid var(--border-2)}
 .r{text-align:right}.mono{font-family:'JetBrains Mono',monospace;font-size:12.5px}
 .dchip{background:var(--blue-dim);color:var(--blue);padding:2px 7px;border-radius:4px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .mute{color:var(--fg-mute)}
-/* ═══ FILTER ROW ═══ */
+/* FILTER ROW */
 .f-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
 select.fsel{padding:7px 10px;border:1.5px solid var(--border-2);border-radius:var(--r-sm);background:var(--surface);color:var(--fg);font-size:13px;cursor:pointer;min-width:140px}
 select.fsel:focus{outline:none;border-color:var(--blue-2)}
-/* ═══ BADGES ═══ */
+/* BADGES */
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;line-height:1}
 .b-surplus{background:var(--green-dim);color:var(--green)}
 .b-approved{background:var(--blue-dim);color:var(--blue)}
@@ -135,31 +127,30 @@ select.fsel:focus{outline:none;border-color:var(--blue-2)}
 .b-medium{background:#fef3c7;color:#92400e}
 .b-low{background:#fefce8;color:#854d0e}
 .b-pending{background:var(--red-dim);color:var(--red)}
-/* ═══ BUTTONS ═══ */
+/* BUTTONS */
 .btn-primary{background:var(--blue-2);color:#fff;border:none;padding:8px 18px;border-radius:var(--r-sm);font-weight:700;cursor:pointer;transition:all .15s;font-size:13px;display:inline-flex;align-items:center;gap:6px}
 .btn-primary:hover{background:var(--blue)}
 .btn-ghost{background:transparent;color:var(--fg-2);border:1.5px solid var(--border-2);padding:7px 16px;border-radius:var(--r-sm);font-weight:600;cursor:pointer;transition:all .15s;font-size:13px}
 .btn-ghost:hover{background:var(--surface-2);color:var(--fg)}
 .btn-approve{background:none;border:1.5px solid var(--border-2);color:var(--fg-2);padding:4px 9px;border-radius:var(--r-xs);cursor:pointer;font-size:11px;font-weight:700;transition:all .15s;white-space:nowrap}
 .btn-approve:hover{border-color:var(--green-2);color:var(--green);background:var(--green-dim)}
-.btn-approve.done{background:var(--green-dim);border-color:var(--green-2);color:var(--green);cursor:default}
 .btn-del{background:none;border:1.5px solid var(--border);color:var(--fg-mute);padding:3px 8px;border-radius:var(--r-xs);cursor:pointer;font-size:11.5px;font-weight:600;transition:all .15s}
 .btn-del:hover{border-color:var(--red);color:var(--red)}
 .btn-del.confirm{border-color:var(--red);color:var(--red);background:var(--red-dim)}
 .src-link{font-size:11px;color:var(--blue);font-weight:600;text-decoration:none}
 .src-link:hover{text-decoration:underline}
-/* ═══ SEVERITY BAR ═══ */
+/* SEVERITY */
 .sev-wrap{display:flex;flex-direction:column;gap:3px}
 .sev-bar{height:3px;background:var(--border);border-radius:2px;width:76px}
 .sev-fill{height:100%;border-radius:2px}
-/* ═══ MODALS ═══ */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal-overlay.hidden{display:none}
+/* MODALS */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-ov.hidden{display:none}
 .modal-box{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh-lg);width:100%;max-width:460px;animation:popIn .2s ease}
 @keyframes popIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
 .modal-hdr{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .modal-hdr h3{font-size:16px;font-weight:800;color:var(--fg)}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--fg-mute);line-height:1;padding:0 2px;transition:color .15s}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--fg-mute);line-height:1;padding:0 2px}
 .modal-close:hover{color:var(--fg)}
 .modal-body{padding:22px;display:flex;flex-direction:column;gap:14px}
 .form-row{display:flex;flex-direction:column;gap:5px}
@@ -168,74 +159,41 @@ select.fsel:focus{outline:none;border-color:var(--blue-2)}
 .form-row input:focus{outline:none;border-color:var(--blue-2);background:var(--surface)}
 .modal-hint{font-size:12px;color:var(--fg-mute);line-height:1.5;padding:10px 12px;background:var(--blue-dim);border-radius:var(--r-xs);border-left:3px solid var(--blue-2)}
 .modal-ftr{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-/* ═══ SETUP SCREEN ═══ */
-#setupScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-#setupScreen.hidden{display:none}
-.setup-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh-lg);padding:44px 40px;width:100%;max-width:500px;text-align:center}
-.setup-icon{font-size:52px;margin-bottom:16px}
-.setup-t1{font-size:26px;font-weight:900;color:var(--fg);margin-bottom:8px}
-.setup-t2{font-size:14px;color:var(--fg-2);margin-bottom:28px;line-height:1.6}
-.setup-form{text-align:left;display:flex;flex-direction:column;gap:14px;margin-bottom:20px}
-.setup-err{background:var(--red-dim);color:var(--red);padding:10px 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;display:none;text-align:left}
-/* ═══ EXTRA DEPOSITS TAB ═══ */
+/* EXTRA DEP */
 .extra-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px}
 .extra-kpis{display:flex;gap:10px;flex-wrap:wrap}
 .mini-kpi{background:var(--surface);border-radius:var(--r-sm);padding:12px 16px;box-shadow:var(--sh-sm);min-width:140px;border-left:3px solid}
-.mini-kpi.mk-blue{border-left-color:var(--blue-2)}.mini-kpi.mk-purple{border-left-color:var(--purple)}.mini-kpi.mk-green{border-left-color:var(--green-2)}
+.mini-kpi.mk-blue{border-left-color:var(--blue-2)}.mini-kpi.mk-purple{border-left-color:var(--purple)}.mini-kpi.mk-green{border-left-color:var(--green-2)}.mini-kpi.mk-red{border-left-color:var(--red)}
 .mk-lbl{font-size:10.5px;font-weight:700;color:var(--fg-mute);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
 .mk-val{font-size:17px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--fg)}
 .month-grp{margin-bottom:20px}
 .month-grp-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(90deg,#1e40af,#2563eb);border-radius:var(--r-sm) var(--r-sm) 0 0;color:#fff}
 .mg-name{font-size:14px;font-weight:800}
 .mg-total{font-size:14px;font-weight:800;font-family:'JetBrains Mono',monospace}
-.extra-tbl{min-width:600px}
 .empty-state{text-align:center;padding:52px 20px;color:var(--fg-mute);font-size:14px}
 .empty-state .ei{font-size:44px;display:block;margin-bottom:12px}
 .empty-state strong{display:block;color:var(--fg-2);font-size:16px;margin-bottom:6px}
-/* ═══ ANALYTICS TAB ═══ */
-.analytics-chart-wrap{background:var(--surface);border-radius:var(--r);padding:20px;box-shadow:var(--sh-sm);margin-bottom:16px}
-.analytics-tbl{min-width:960px}
-.analytics-tbl th{background:#1e40af!important}
-/* ═══ ACTION TAB ═══ */
+/* ANALYTICS */
+.analytics-wrap{background:var(--surface);border-radius:var(--r);padding:20px;box-shadow:var(--sh-sm);margin-bottom:16px}
+/* ACTION INFO */
 .action-info{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;background:var(--surface);border-radius:var(--r-sm);padding:12px 16px;box-shadow:var(--sh-sm);align-items:center}
 .ac-s{font-size:12.5px;color:var(--fg-2)}.ac-s strong{font-weight:800;color:var(--fg)}
-.ac-s.red strong{color:var(--red)}.ac-s.grn strong{color:var(--green)}.ac-s.sep{padding:0 4px;color:var(--border-2)}
-.action-tbl{min-width:1100px}
-/* ═══ MISC ═══ */
+.ac-s.rv strong{color:var(--red)}.ac-s.gv strong{color:var(--green)}.ac-sep{padding:0 4px;color:var(--border-2)}
+/* MISC */
 .panel{display:none}.panel.active{display:block}
-.section-sep{margin:24px 0;border:none;border-top:2px solid var(--border)}
 .empty-row td{text-align:center;padding:36px!important;color:var(--fg-mute);font-size:14px}
 </style>
 </head>
 <body>
 
-<!-- ═══ LOADING OVERLAY ═══ -->
-<div id="loadOverlay" class="hidden">
+<!-- LOAD OVERLAY -->
+<div id="loadOverlay">
   <div class="load-spin"></div>
-  <div class="load-txt" id="loadTxt">Loading data…</div>
+  <div class="load-txt">Connecting to Google Sheets…</div>
 </div>
 
-<!-- ═══ CONFIG MODAL ═══ -->
-<div id="cfgModal" class="modal-overlay hidden">
-  <div class="modal-box">
-    <div class="modal-hdr">
-      <h3>⚙ Reconfigure Sheet</h3>
-      <button class="modal-close" onclick="closeCfgModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-row"><label>Google Sheet ID</label><input id="cfg_sid" placeholder="Paste Sheet ID from URL…"></div>
-      <div class="form-row"><label>Sheet GID (Tab Number)</label><input id="cfg_gid" placeholder="e.g. 1768276388"></div>
-      <div class="modal-hint">Find the Sheet ID in your Google Sheets URL after <strong>/d/</strong>. The GID is after <strong>#gid=</strong>.</div>
-    </div>
-    <div class="modal-ftr">
-      <button class="btn-ghost" onclick="closeCfgModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveCfg()">💾 Save & Load</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ EXTRA DEPOSIT MODAL ═══ -->
-<div id="edModal" class="modal-overlay hidden" onclick="if(event.target===this)closeEDModal()">
+<!-- EXTRA DEPOSIT MODAL -->
+<div id="edModal" class="modal-ov hidden" onclick="if(event.target===this)closeEDModal()">
   <div class="modal-box">
     <div class="modal-hdr">
       <h3>💰 Add Extra Bank Deposit</h3>
@@ -255,224 +213,177 @@ select.fsel:focus{outline:none;border-color:var(--blue-2)}
   </div>
 </div>
 
-<!-- ═══ SETUP SCREEN ═══ -->
-<div id="setupScreen">
-  <div class="setup-card">
-    <div class="setup-icon">💰</div>
-    <div class="setup-t1">Sewa Gift Palace</div>
-    <div class="setup-t2">Cash Flow Dashboard. Connect your Google Sheet to get started. The sheet must be shared publicly (Anyone with link can view).</div>
-    <div class="setup-form">
-      <div class="form-row"><label>Google Sheet ID</label><input id="setup_sid" placeholder="1OKGd4xQhGzH2_WTxP1R35IQTSE-Y49uAhGrq2NYELq4"></div>
-      <div class="form-row"><label>Sheet Tab GID</label><input id="setup_gid" placeholder="1768276388"></div>
+<!-- HEADER -->
+<header id="hdr">
+  <div class="hdr-brand">
+    <span style="font-size:22px">💰</span>
+    <div>
+      <div class="hdr-t1">Sewa Gift Palace</div>
+      <div class="hdr-t2">CASH FLOW DASHBOARD</div>
     </div>
-    <div class="setup-err" id="setupErr"></div>
-    <button class="btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="doSetup()">🚀 Connect & Load Data</button>
+  </div>
+  <div class="hdr-sep"></div>
+  <div class="hdr-meta">
+    <div class="hdr-recs" id="recCount">— records</div>
+    <div class="hdr-sync"><div class="hdr-spinner" id="spinner"></div><span id="syncTime">Not synced yet</span></div>
+  </div>
+  <div class="hdr-actions">
+    <button class="hdr-btn" onclick="fetchData()">🔄 Refresh</button>
+    <button class="hdr-btn red" onclick="exportPDF()">📄 PDF</button>
+    <button class="hdr-btn grn" onclick="exportExcel()">📊 Excel</button>
+    <a id="sheetLink" class="hdr-btn" href="https://docs.google.com/spreadsheets/d/1OKGd4xQhGzH2_WTxP1R35IQTSE-Y49uAhGrq2NYELq4/edit#gid=1768276388" target="_blank">🔗 Sheet</a>
+  </div>
+</header>
+
+<!-- STICKY -->
+<div id="sticky">
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="overview" onclick="showTab('overview')">📊 Overview</button>
+    <button class="tab-btn" data-tab="records" onclick="showTab('records')">📋 Daily Records</button>
+    <button class="tab-btn" data-tab="action" onclick="showTab('action')">⚠ Action Required <span class="tab-badge" id="actionBadge">0</span></button>
+    <button class="tab-btn" data-tab="extra" onclick="showTab('extra')">💳 Extra Deposits</button>
+    <button class="tab-btn" data-tab="analytics" onclick="showTab('analytics')">📈 Analytics</button>
+  </nav>
+  <div class="filter-bar">
+    <button class="qf-btn" onclick="setQF('today',this)">Today</button>
+    <button class="qf-btn" onclick="setQF('yesterday',this)">Yesterday</button>
+    <button class="qf-btn" onclick="setQF('week',this)">This Week</button>
+    <button class="qf-btn active" onclick="setQF('month',this)">This Month</button>
+    <button class="qf-btn" onclick="setQF('lastmonth',this)">Last Month</button>
+    <button class="qf-btn" onclick="setQF('all',this)">All Time</button>
+    <div class="f-sep"></div>
+    <div class="date-wrap">
+      <span>From</span><input type="date" id="dateFrom" onchange="onDateChange()">
+      <span>To</span><input type="date" id="dateTo" onchange="onDateChange()">
+    </div>
   </div>
 </div>
 
-<!-- ═══ MAIN APP ═══ -->
-<div id="app" class="hidden">
+<!-- ALERT BANNER -->
+<div id="alertBan" class="hidden">
+  <span>⚠</span>
+  <span><strong id="banCount">0</strong> entries have cash shortfalls — immediate action required</span>
+  <span class="ban-dismiss" onclick="dismissBanner()">✕</span>
+</div>
 
-  <!-- HEADER -->
-  <header id="hdr">
-    <div class="hdr-brand">
-      <span class="hdr-icon">💰</span>
-      <div>
-        <div class="hdr-t1">Sewa Gift Palace</div>
-        <div class="hdr-t2">CASH FLOW DASHBOARD</div>
+<!-- MAIN -->
+<main id="main">
+
+  <!-- OVERVIEW -->
+  <div id="panel_overview" class="panel active">
+    <div id="kpiGrid" class="kpi-grid"></div>
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-ttl">Monthly Trends — Last 8 Months</div>
+        <canvas id="chartBar" height="180"></canvas>
       </div>
-    </div>
-    <div class="hdr-sep"></div>
-    <div class="hdr-meta">
-      <div class="hdr-recs" id="recCount">— records</div>
-      <div class="hdr-sync" id="syncTime"><div class="hdr-spinner" id="spinner"></div>Not synced yet</div>
-    </div>
-    <div class="hdr-actions">
-      <button class="hdr-btn" onclick="fetchData()">🔄 Refresh</button>
-      <button class="hdr-btn" onclick="openCfgModal()">⚙</button>
-      <button class="hdr-btn red-btn" onclick="exportPDF()">📄 PDF</button>
-      <button class="hdr-btn grn-btn" onclick="exportExcel()">📊 Excel</button>
-      <a id="sheetLink" class="hdr-btn" href="#" target="_blank">🔗 Sheet</a>
-    </div>
-  </header>
-
-  <!-- STICKY NAV + FILTER -->
-  <div id="sticky">
-    <nav class="tab-nav">
-      <button class="tab-btn active" data-tab="overview" onclick="showTab('overview')">📊 Overview</button>
-      <button class="tab-btn" data-tab="records" onclick="showTab('records')">📋 Daily Records</button>
-      <button class="tab-btn" data-tab="action" onclick="showTab('action')">⚠ Action Required <span class="tab-badge" id="actionBadge">0</span></button>
-      <button class="tab-btn" data-tab="extra" onclick="showTab('extra')">💳 Extra Deposits</button>
-      <button class="tab-btn" data-tab="analytics" onclick="showTab('analytics')">📈 Analytics</button>
-    </nav>
-    <div class="filter-bar">
-      <button class="qf-btn" data-filter="today" onclick="setQF('today',this)">Today</button>
-      <button class="qf-btn" data-filter="yesterday" onclick="setQF('yesterday',this)">Yesterday</button>
-      <button class="qf-btn" data-filter="week" onclick="setQF('week',this)">This Week</button>
-      <button class="qf-btn active" data-filter="month" onclick="setQF('month',this)">This Month</button>
-      <button class="qf-btn" data-filter="lastmonth" onclick="setQF('lastmonth',this)">Last Month</button>
-      <button class="qf-btn" data-filter="all" onclick="setQF('all',this)">All Time</button>
-      <div class="f-sep"></div>
-      <div class="date-wrap">
-        <span>From</span><input type="date" id="dateFrom" onchange="onDateChange()">
-        <span>To</span><input type="date" id="dateTo" onchange="onDateChange()">
+      <div class="chart-card">
+        <div class="chart-ttl">Current Period Breakdown</div>
+        <canvas id="chartDonut" height="180"></canvas>
       </div>
     </div>
   </div>
 
-  <!-- ALERT BANNER -->
-  <div id="alertBan" class="hidden">
-    <span>⚠</span>
-    <span><strong id="banCount">0</strong> entries have cash shortfalls — immediate action required</span>
-    <span class="ban-dismiss" onclick="dismissBanner()">✕</span>
+  <!-- RECORDS -->
+  <div id="panel_records" class="panel">
+    <div class="f-row">
+      <select class="fsel" id="f_acct" onchange="renderRecords(getFiltered())"><option value="">All Accounts</option></select>
+      <select class="fsel" id="f_staff" onchange="renderRecords(getFiltered())"><option value="">All Staff</option></select>
+      <select class="fsel" id="f_status" onchange="renderRecords(getFiltered())">
+        <option value="">All Status</option>
+        <option value="neg">Shortfall Only</option>
+        <option value="pos">Surplus Only</option>
+        <option value="app">Approved Only</option>
+      </select>
+      <select class="fsel" id="f_sort" onchange="renderRecords(getFiltered())">
+        <option value="drev">Date: Newest First</option>
+        <option value="date">Date: Oldest First</option>
+        <option value="neg">Largest Shortfall First</option>
+      </select>
+      <button class="btn-ghost" onclick="resetRec()">↺ Reset</button>
+    </div>
+    <div class="info-row"><div class="info-txt" id="recInfo"></div></div>
+    <div class="tbl-wrap">
+      <table class="data-tbl">
+        <thead><tr>
+          <th style="width:30px">#</th><th>Date</th><th class="r">Cash Col.</th><th class="r">Cash Exp.</th>
+          <th class="r">To Deposit</th><th class="r">Extra Dep.</th><th class="r">DayBook</th>
+          <th class="r">Bank Dep.</th><th class="r">Calc</th><th>Account</th><th>Dep. By</th><th>Checked By</th><th>Status</th>
+        </tr></thead>
+        <tbody id="recBody"></tbody>
+        <tfoot><tr>
+          <td colspan="2" style="text-align:center;font-size:12px;color:var(--fg-mute)">TOTAL</td>
+          <td class="r mono" id="ft_col"></td><td class="r mono" id="ft_exp"></td><td class="r mono" id="ft_td"></td>
+          <td class="r mono" id="ft_ed"></td><td class="r mono" id="ft_db"></td><td class="r mono" id="ft_ad"></td>
+          <td class="r mono" id="ft_calc"></td><td colspan="4"></td>
+        </tr></tfoot>
+      </table>
+    </div>
   </div>
 
-  <!-- MAIN CONTENT -->
-  <main id="main">
-
-    <!-- OVERVIEW TAB -->
-    <div id="panel_overview" class="panel active">
-      <div id="kpiGrid" class="kpi-grid"></div>
-      <div class="chart-row">
-        <div class="chart-card">
-          <div class="chart-ttl">Monthly Trends — Last 8 Months</div>
-          <canvas id="chartBar" height="180"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="chart-ttl">Current Period Breakdown</div>
-          <canvas id="chartDonut" height="180"></canvas>
-        </div>
-      </div>
+  <!-- ACTION -->
+  <div id="panel_action" class="panel">
+    <div class="action-info" id="acInfo"></div>
+    <div class="tbl-wrap">
+      <table class="data-tbl" style="min-width:1100px">
+        <thead><tr>
+          <th style="width:30px">#</th><th>Date</th><th class="r">Cash Col.</th><th class="r">Cash Exp.</th>
+          <th class="r">To Deposit</th><th class="r">Extra Dep.</th><th class="r">Bank Dep.</th>
+          <th class="r">Shortfall</th><th>Severity</th><th>Account</th><th>Dep. By</th><th>Approve</th><th>Source</th>
+        </tr></thead>
+        <tbody id="acBody"></tbody>
+      </table>
     </div>
+  </div>
 
-    <!-- RECORDS TAB -->
-    <div id="panel_records" class="panel">
-      <div class="f-row">
-        <select class="fsel" id="f_acct" onchange="renderRecords(getFilteredRows())"><option value="">All Accounts</option></select>
-        <select class="fsel" id="f_staff" onchange="renderRecords(getFilteredRows())"><option value="">All Staff</option></select>
-        <select class="fsel" id="f_status" onchange="renderRecords(getFilteredRows())">
-          <option value="">All Status</option>
-          <option value="neg">Shortfall Only</option>
-          <option value="pos">Surplus Only</option>
-          <option value="app">Approved Only</option>
-        </select>
-        <select class="fsel" id="f_sort" onchange="renderRecords(getFilteredRows())">
-          <option value="drev">Date: Newest First</option>
-          <option value="date">Date: Oldest First</option>
-          <option value="neg">Largest Shortfall First</option>
-        </select>
-        <button class="btn-ghost" onclick="resetRecFilters()">↺ Reset</button>
-      </div>
-      <div class="info-row"><div class="info-txt" id="recInfo"></div></div>
-      <div class="tbl-wrap">
-        <table class="data-tbl">
-          <thead><tr>
-            <th style="width:30px">#</th>
-            <th>Date</th>
-            <th class="r">Cash Col.</th>
-            <th class="r">Cash Exp.</th>
-            <th class="r">To Deposit</th>
-            <th class="r">Extra Dep.</th>
-            <th class="r">DayBook</th>
-            <th class="r">Bank Dep.</th>
-            <th class="r">Calc</th>
-            <th>Account</th>
-            <th>Dep. By</th>
-            <th>Checked By</th>
-            <th>Status</th>
-          </tr></thead>
-          <tbody id="recBody"></tbody>
-          <tfoot><tr>
-            <td colspan="2" style="text-align:center;font-size:12px;color:var(--fg-mute)">TOTAL</td>
-            <td class="r mono" id="ft_col"></td>
-            <td class="r mono" id="ft_exp"></td>
-            <td class="r mono" id="ft_td"></td>
-            <td class="r mono" id="ft_ed"></td>
-            <td class="r mono" id="ft_db"></td>
-            <td class="r mono" id="ft_ad"></td>
-            <td class="r mono" id="ft_calc"></td>
-            <td colspan="4"></td>
-          </tr></tfoot>
-        </table>
-      </div>
+  <!-- EXTRA DEPOSITS -->
+  <div id="panel_extra" class="panel">
+    <div class="extra-top">
+      <div class="extra-kpis" id="extraKpis"></div>
+      <button class="btn-primary" onclick="openEDModal()">+ Add Extra Deposit</button>
     </div>
+    <div id="extraList"></div>
+  </div>
 
-    <!-- ACTION REQUIRED TAB -->
-    <div id="panel_action" class="panel">
-      <div class="action-info" id="acInfo"></div>
-      <div class="tbl-wrap">
-        <table class="data-tbl action-tbl">
-          <thead><tr>
-            <th style="width:30px">#</th>
-            <th>Date</th>
-            <th class="r">Cash Col.</th>
-            <th class="r">Cash Exp.</th>
-            <th class="r">To Deposit</th>
-            <th class="r">Extra Dep.</th>
-            <th class="r">Bank Dep.</th>
-            <th class="r">Shortfall</th>
-            <th>Severity</th>
-            <th>Account</th>
-            <th>Dep. By</th>
-            <th>Approve</th>
-            <th>Source</th>
-          </tr></thead>
-          <tbody id="acBody"></tbody>
-        </table>
-      </div>
+  <!-- ANALYTICS -->
+  <div id="panel_analytics" class="panel">
+    <div class="analytics-wrap">
+      <div class="chart-ttl">Monthly Cash Flow Overview — All Time</div>
+      <canvas id="chartMonthly" height="160"></canvas>
     </div>
-
-    <!-- EXTRA DEPOSITS TAB -->
-    <div id="panel_extra" class="panel">
-      <div class="extra-top">
-        <div class="extra-kpis" id="extraKpis"></div>
-        <button class="btn-primary" onclick="openEDModal()">+ Add Extra Deposit</button>
-      </div>
-      <div id="extraList"></div>
+    <div class="tbl-wrap">
+      <table class="data-tbl" style="min-width:960px">
+        <thead style="background:#1e40af"><tr>
+          <th>Month</th><th class="r">Entries</th><th class="r">Collection</th><th class="r">Expenses</th>
+          <th class="r">Net Cash</th><th class="r">Bank Deposits</th><th class="r">Total Shortfall</th>
+          <th class="r">Extra Deposits</th><th class="r">Adjusted Shortfall</th>
+        </tr></thead>
+        <tbody id="analyticsBody"></tbody>
+      </table>
     </div>
+  </div>
 
-    <!-- ANALYTICS TAB -->
-    <div id="panel_analytics" class="panel">
-      <div class="analytics-chart-wrap">
-        <div class="chart-ttl">Monthly Cash Flow Overview — All Time</div>
-        <canvas id="chartMonthly" height="160"></canvas>
-      </div>
-      <div class="tbl-wrap">
-        <table class="data-tbl analytics-tbl">
-          <thead><tr>
-            <th>Month</th>
-            <th class="r">Entries</th>
-            <th class="r">Collection</th>
-            <th class="r">Expenses</th>
-            <th class="r">Net Cash</th>
-            <th class="r">Bank Deposits</th>
-            <th class="r">Total Shortfall</th>
-            <th class="r">Extra Deposits</th>
-            <th class="r">Adjusted Shortfall</th>
-          </tr></thead>
-          <tbody id="analyticsBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-  </main>
-</div><!-- end #app -->
+</main>
 
 <script>
-// ═══ CONFIG & CONSTANTS ═══
-const LS_CFG  = 'sgp_v2_config';
-const LS_APR  = 'sgp_v2_approved';
-const LS_EXT  = 'sgp_v2_extra';
+// ═══ HARDCODED CONFIG ═══
+const SHEET_ID = '1OKGd4xQhGzH2_WTxP1R35IQTSE-Y49uAhGrq2NYELq4';
+const GID      = '1768276388';
+
+// ═══ STORAGE KEYS ═══
+const LS_APR = 'sgp_v2_approved';
+const LS_EXT = 'sgp_v2_extra';
+
+// ═══ COLUMN MAP ═══
 const C = {dt:0,col:1,exp:2,td:3,ad:4,calc:5,acct:6,staff:7,dd:8,note:9,ed:10,chkby:11,db:12,row:13};
 const MONTHS  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 // ═══ STATE ═══
-let sheetId = '', gid = '';
 let ROWS = [], approvedRows = {}, extraDeposits = [];
 let filterFrom = 0, filterTo = 0;
 let activeTab = 'overview';
-let chartBarInst = null, chartDonutInst = null, chartMonthlyInst = null;
+let chartBarI = null, chartDonutI = null, chartMonthlyI = null;
 let bannerDismissed = false;
 
 // ═══ HELPERS ═══
@@ -483,113 +394,56 @@ function inr(n, sign=false){
   if(s.length<=3){r=s;}else{r=s.slice(-3);let rem=s.slice(0,-3);while(rem.length>2){r=rem.slice(-2)+','+r;rem=rem.slice(0,-2);}r=rem+','+r;}
   return(sign&&!neg?'+':'')+(neg?'-':'')+'₹'+r;
 }
-function pf(n, sign=false){ // PDF format (Rs. prefix)
-  if(isNaN(n))return'—';
-  const neg=n<0,abs=Math.abs(n),s=Math.round(abs).toString();
-  let r='';
-  if(s.length<=3){r=s;}else{r=s.slice(-3);let rem=s.slice(0,-3);while(rem.length>2){r=rem.slice(-2)+','+r;rem=rem.slice(0,-2);}r=rem+','+r;}
-  return(sign&&!neg?'+':'')+(neg?'-':'')+'Rs.'+r;
+function pf(n,sign=false){
+  const v=inr(n,sign);return v==='—'?'—':v.replace('₹','Rs.');
 }
-function dnum(d){ // "DD/MM/YYYY" → YYYYMMDD number
-  if(!d)return 0;
-  const p=d.split('/');
-  if(p.length!==3)return 0;
+function dnum(d){
+  if(!d)return 0;const p=d.split('/');if(p.length!==3)return 0;
   return parseInt(p[2])*10000+parseInt(p[1])*100+parseInt(p[0]);
 }
-function numToDate(n){ // YYYYMMDD → "DD/MM/YYYY"
-  const s=String(n).padStart(8,'0');
-  return s.slice(6)+'/'+s.slice(4,6)+'/'+s.slice(0,4);
+function numToDate(n){
+  const s=String(n).padStart(8,'0');return s.slice(6)+'/'+s.slice(4,6)+'/'+s.slice(0,4);
 }
-function isoToNum(iso){ // "YYYY-MM-DD" → YYYYMMDD
-  if(!iso)return 0;
-  return parseInt(iso.replace(/-/g,''));
-}
-function numToISO(n){ // YYYYMMDD → "YYYY-MM-DD"
-  const s=String(n).padStart(8,'0');
-  return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
-}
-function formatISO(iso){ // "YYYY-MM-DD" → "DD/MM/YYYY"
-  if(!iso)return'—';
-  const p=iso.split('-');
-  return p[2]+'/'+p[1]+'/'+p[0];
-}
-function moKey(d){ // "DD/MM/YYYY" → "YYYY-MM"
-  const p=d.split('/');
-  return p.length===3?p[2]+'-'+p[1].padStart(2,'0'):'';
-}
-function moLabel(key){ // "YYYY-MM" → "October 2026"
-  const [yr,mo]=key.split('-');
-  return MONTHS[parseInt(mo)-1]+' '+yr;
-}
-function moLabel3(key){ // "YYYY-MM" → "Oct '26"
-  const [yr,mo]=key.split('-');
-  return MONTHS3[parseInt(mo)-1]+" '"+yr.slice(2);
-}
-function todayNum(){
-  const d=new Date();
-  return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
-}
-function isApproved(r){
-  return r[C.chkby]==='Approved'||approvedRows[r[C.row]]===true;
-}
-function sevInfo(calc){
-  const a=Math.abs(calc);
-  if(calc>=0)return{cls:'b-surplus',lbl:'✓ Surplus',col:'var(--green)',pct:0};
-  if(a<500) return{cls:'b-low',lbl:'Low',col:'#eab308',pct:15};
-  if(a<2000)return{cls:'b-medium',lbl:'Medium',col:var_orange,pct:40};
-  if(a<5000)return{cls:'b-high',lbl:'High',col:'#ea580c',pct:70};
-  return{cls:'b-critical',lbl:'Critical',col:'var(--red)',pct:100};
-}
-const var_orange='#f97316';
-function srcLink(r){
-  return`https://docs.google.com/spreadsheets/d/${sheetId}/edit#gid=${gid}&range=A${r[C.row]}`;
-}
+function isoToNum(iso){if(!iso)return 0;return parseInt(iso.replace(/-/g,''));}
+function numToISO(n){const s=String(n).padStart(8,'0');return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);}
+function formatISO(iso){if(!iso)return'—';const p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function moKey(d){const p=d.split('/');return p.length===3?p[2]+'-'+p[1].padStart(2,'0'):'';}
+function moLabel(key){const[yr,mo]=key.split('-');return MONTHS[parseInt(mo)-1]+' '+yr;}
+function moLabel3(key){const[yr,mo]=key.split('-');return MONTHS3[parseInt(mo)-1]+"'"+(yr.slice(2));}
+function todayNum(){const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();}
+function isApproved(r){return r[C.chkby]==='Approved'||approvedRows[r[C.row]]===true;}
+function srcLink(r){return`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=${GID}&range=A${r[C.row]}`;}
 
 // ═══ STORAGE ═══
-function loadConfig(){
-  try{const c=JSON.parse(localStorage.getItem(LS_CFG)||'{}');sheetId=c.sheetId||'';gid=c.gid||'';}catch(e){}
-}
-function saveConfig(){
-  localStorage.setItem(LS_CFG,JSON.stringify({sheetId,gid}));
-}
-function loadApproved(){
-  try{approvedRows=JSON.parse(localStorage.getItem(LS_APR+'_'+sheetId)||'{}');}catch(e){approvedRows={};}
-}
-function saveApproved(){
-  localStorage.setItem(LS_APR+'_'+sheetId,JSON.stringify(approvedRows));
-}
-function loadExtra(){
-  try{extraDeposits=JSON.parse(localStorage.getItem(LS_EXT+'_'+sheetId)||'[]');}catch(e){extraDeposits=[];}
-}
-function saveExtra(){
-  localStorage.setItem(LS_EXT+'_'+sheetId,JSON.stringify(extraDeposits));
-}
+function loadApproved(){try{approvedRows=JSON.parse(localStorage.getItem(LS_APR+'_'+SHEET_ID)||'{}');}catch(e){approvedRows={};}}
+function saveApproved(){localStorage.setItem(LS_APR+'_'+SHEET_ID,JSON.stringify(approvedRows));}
+function loadExtra(){try{extraDeposits=JSON.parse(localStorage.getItem(LS_EXT+'_'+SHEET_ID)||'[]');}catch(e){extraDeposits=[];}}
+function saveExtra(){localStorage.setItem(LS_EXT+'_'+SHEET_ID,JSON.stringify(extraDeposits));}
 
-// ═══ DATA FETCHING ═══
+// ═══ FETCH DATA ═══
 async function fetchData(){
-  if(!sheetId||!gid){return;}
-  showLoad(true,'Loading data from Google Sheets…');
+  showLoad(true);
   document.getElementById('spinner').classList.add('on');
+  document.getElementById('syncTime').textContent='Fetching…';
   try{
-    const url=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tq=select+*&headers=1&gid=${gid}`;
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq=select+*&headers=1&gid=${GID}`;
     const res=await fetch(url);
     if(!res.ok)throw new Error('HTTP '+res.status);
     const text=await res.text();
     const match=text.match(/setResponse\(([\s\S]*)\)/);
-    if(!match)throw new Error('Invalid response format');
+    if(!match)throw new Error('Invalid gviz response');
     const json=JSON.parse(match[1]);
     if(!json.table)throw new Error('No table in response');
     ROWS=parseGviz(json);
     document.getElementById('recCount').textContent=ROWS.length+' records';
     document.getElementById('syncTime').textContent='Updated '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-    document.getElementById('sheetLink').href=`https://docs.google.com/spreadsheets/d/${sheetId}/edit#gid=${gid}`;
     showLoad(false);
     document.getElementById('spinner').classList.remove('on');
     renderAll();
   }catch(e){
     showLoad(false);
     document.getElementById('spinner').classList.remove('on');
-    document.getElementById('syncTime').textContent='⚠ Load failed: '+e.message;
+    document.getElementById('syncTime').textContent='⚠ '+e.message;
   }
 }
 
@@ -600,68 +454,35 @@ function parseGviz(json){
     const g=idx=>r.c[idx]||null;
     const sv=idx=>{const c=g(idx);if(!c||c.v===null||c.v===undefined)return'';return String(c.f||c.v||'').trim();};
     const nv=idx=>{const c=g(idx);if(!c||c.v===null)return 0;const v=c.v;return typeof v==='number'?v:(parseFloat(String(v).replace(/[^0-9.-]/g,''))||0);};
-    // Parse date from gviz (may be formatted "DD/MM/YYYY" or Date() string)
     let dt=sv(1);
     if(!dt&&g(1)&&g(1).v){
       const m=String(g(1).v).match(/Date\((\d+),(\d+),(\d+)\)/);
       if(m)dt=String(m[3]).padStart(2,'0')+'/'+String(parseInt(m[2])+1).padStart(2,'0')+'/'+m[1];
     }
     if(!dt||!dt.includes('/'))return;
-    rows.push([
-      dt,     // 0:dt
-      nv(2),  // 1:col
-      nv(3),  // 2:exp
-      nv(4),  // 3:td
-      nv(7),  // 4:ad
-      nv(8),  // 5:calc
-      sv(9),  // 6:acct
-      sv(10), // 7:staff
-      sv(12), // 8:dd
-      sv(13), // 9:note
-      nv(5),  // 10:ed
-      sv(11), // 11:chkby
-      nv(6),  // 12:db
-      i+2,    // 13:row
-    ]);
+    rows.push([dt,nv(2),nv(3),nv(4),nv(7),nv(8),sv(9),sv(10),sv(12),sv(13),nv(5),sv(11),nv(6),i+2]);
   });
   return rows;
 }
 
 // ═══ FILTERS ═══
-function getFilteredRows(){
+function getFiltered(){
   if(!filterFrom&&!filterTo)return ROWS;
-  return ROWS.filter(r=>{
-    const n=dnum(r[C.dt]);
-    return(!filterFrom||n>=filterFrom)&&(!filterTo||n<=filterTo);
-  });
+  return ROWS.filter(r=>{const n=dnum(r[C.dt]);return(!filterFrom||n>=filterFrom)&&(!filterTo||n<=filterTo);});
 }
 function getExtraInRange(){
-  if(!extraDeposits.length)return[];
-  return extraDeposits.filter(e=>{
-    const n=isoToNum(e.date);
-    return(!filterFrom||n>=filterFrom)&&(!filterTo||n<=filterTo);
-  });
+  return extraDeposits.filter(e=>{const n=isoToNum(e.date);return(!filterFrom||n>=filterFrom)&&(!filterTo||n<=filterTo);});
 }
 function setQF(type,btn){
   document.querySelectorAll('.qf-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   const d=new Date();
-  if(type==='today'){
-    const n=todayNum();filterFrom=filterTo=n;
-  }else if(type==='yesterday'){
-    const y=new Date(d);y.setDate(d.getDate()-1);
-    filterFrom=filterTo=y.getFullYear()*10000+(y.getMonth()+1)*100+y.getDate();
-  }else if(type==='week'){
-    const dow=d.getDay();const st=new Date(d);st.setDate(d.getDate()-dow);
-    filterFrom=st.getFullYear()*10000+(st.getMonth()+1)*100+st.getDate();filterTo=todayNum();
-  }else if(type==='month'){
-    filterFrom=d.getFullYear()*10000+(d.getMonth()+1)*100+1;filterTo=todayNum();
-  }else if(type==='lastmonth'){
-    const lm=new Date(d.getFullYear(),d.getMonth()-1,1);
-    const lme=new Date(d.getFullYear(),d.getMonth(),0);
-    filterFrom=lm.getFullYear()*10000+(lm.getMonth()+1)*100+1;
-    filterTo=lme.getFullYear()*10000+(lme.getMonth()+1)*100+lme.getDate();
-  }else{filterFrom=filterTo=0;}
+  if(type==='today'){filterFrom=filterTo=todayNum();}
+  else if(type==='yesterday'){const y=new Date(d);y.setDate(d.getDate()-1);filterFrom=filterTo=y.getFullYear()*10000+(y.getMonth()+1)*100+y.getDate();}
+  else if(type==='week'){const dow=d.getDay();const st=new Date(d);st.setDate(d.getDate()-dow);filterFrom=st.getFullYear()*10000+(st.getMonth()+1)*100+st.getDate();filterTo=todayNum();}
+  else if(type==='month'){filterFrom=d.getFullYear()*10000+(d.getMonth()+1)*100+1;filterTo=todayNum();}
+  else if(type==='lastmonth'){const lm=new Date(d.getFullYear(),d.getMonth()-1,1);const lme=new Date(d.getFullYear(),d.getMonth(),0);filterFrom=lm.getFullYear()*10000+(lm.getMonth()+1)*100+1;filterTo=lme.getFullYear()*10000+(lme.getMonth()+1)*100+lme.getDate();}
+  else{filterFrom=filterTo=0;}
   updateDateInputs();renderAll();
 }
 function updateDateInputs(){
@@ -686,12 +507,11 @@ function showTab(tab){
 
 // ═══ RENDER ALL ═══
 function renderAll(){
-  const rows=getFilteredRows();
-  // Update badge
+  const rows=getFiltered();
+  loadApproved();
   const negUnapp=rows.filter(r=>r[C.calc]<0&&!isApproved(r)).length;
   const badge=document.getElementById('actionBadge');
   badge.textContent=negUnapp;badge.style.display=negUnapp?'inline-flex':'none';
-  // Alert banner
   if(negUnapp>0&&!bannerDismissed){
     document.getElementById('alertBan').classList.remove('hidden');
     document.getElementById('banCount').textContent=negUnapp;
@@ -707,7 +527,7 @@ function renderAll(){
   else if(activeTab==='analytics')renderAnalytics();
 }
 
-// ═══ OVERVIEW TAB ═══
+// ═══ OVERVIEW ═══
 function renderOverview(rows){
   const tCol=rows.reduce((s,r)=>s+r[C.col],0);
   const tExp=rows.reduce((s,r)=>s+r[C.exp],0);
@@ -719,93 +539,48 @@ function renderOverview(rows){
   const totalExtra=extraInRange.reduce((s,e)=>s+e.amount,0);
   const adjShortfall=totalShortfall+totalExtra;
   const negCnt=rows.filter(r=>r[C.calc]<0&&!isApproved(r)).length;
-
   document.getElementById('kpiGrid').innerHTML=`
-    <div class="kpi-card kpi-blue">
-      <div class="kpi-lbl">Total Collection</div>
-      <div class="kpi-val">${inr(tCol)}</div>
-      <div class="kpi-hint">${rows.length} entries</div>
-    </div>
-    <div class="kpi-card kpi-orange">
-      <div class="kpi-lbl">Total Expenses</div>
-      <div class="kpi-val">${inr(tExp)}</div>
-      <div class="kpi-hint">${tCol?((tExp/tCol)*100).toFixed(1):0}% of collection</div>
-    </div>
-    <div class="kpi-card ${netCash>=0?'kpi-green':'kpi-red'}">
-      <div class="kpi-lbl">Net Cash</div>
-      <div class="kpi-val ${netCash>=0?'c-green':'c-red'}">${inr(netCash,true)}</div>
-      <div class="kpi-hint">Collection − Expenses</div>
-    </div>
-    <div class="kpi-card kpi-teal">
-      <div class="kpi-lbl">Bank Deposits</div>
-      <div class="kpi-val">${inr(tDep)}</div>
-      <div class="kpi-hint">Required: ${inr(tTD)}</div>
-    </div>
-    <div class="kpi-card kpi-red">
-      <div class="kpi-lbl">Total Shortfall</div>
-      <div class="kpi-val ${totalShortfall<0?'c-red':'c-mute'}">${inr(totalShortfall,true)}</div>
-      <div class="kpi-hint">${negCnt} entries need action</div>
-    </div>
-    <div class="kpi-card kpi-purple">
-      <div class="kpi-lbl">Extra Deposits</div>
-      <div class="kpi-val ${totalExtra>0?'c-blue':'c-mute'}">${totalExtra>0?inr(totalExtra):'₹0'}</div>
-      <div class="kpi-hint">${extraInRange.length} manual entries</div>
-    </div>
-    <div class="kpi-card kpi-indigo">
-      <div class="kpi-lbl">Adjusted Shortfall</div>
-      <div class="kpi-val ${adjShortfall<0?'c-red':adjShortfall>0?'c-green':'c-mute'}">${inr(adjShortfall,true)}</div>
-      <div class="kpi-hint">Shortfall + Extra Deposits</div>
-    </div>
+    <div class="kpi-card k-blue"><div class="kpi-lbl">Total Collection</div><div class="kpi-val">${inr(tCol)}</div><div class="kpi-hint">${rows.length} entries</div></div>
+    <div class="kpi-card k-orange"><div class="kpi-lbl">Total Expenses</div><div class="kpi-val">${inr(tExp)}</div><div class="kpi-hint">${tCol?((tExp/tCol)*100).toFixed(1):0}% of collection</div></div>
+    <div class="kpi-card ${netCash>=0?'k-green':'k-red'}"><div class="kpi-lbl">Net Cash</div><div class="kpi-val ${netCash>=0?'c-green':'c-red'}">${inr(netCash,true)}</div><div class="kpi-hint">Collection − Expenses</div></div>
+    <div class="kpi-card k-teal"><div class="kpi-lbl">Bank Deposits</div><div class="kpi-val">${inr(tDep)}</div><div class="kpi-hint">Required: ${inr(tTD)}</div></div>
+    <div class="kpi-card k-red"><div class="kpi-lbl">Total Shortfall</div><div class="kpi-val ${totalShortfall<0?'c-red':'c-mute'}">${inr(totalShortfall,true)}</div><div class="kpi-hint">${negCnt} entries need action</div></div>
+    <div class="kpi-card k-purple"><div class="kpi-lbl">Extra Deposits</div><div class="kpi-val ${totalExtra>0?'c-blue':'c-mute'}">${totalExtra>0?inr(totalExtra):'₹0'}</div><div class="kpi-hint">${extraInRange.length} manual entries</div></div>
+    <div class="kpi-card k-indigo"><div class="kpi-lbl">Adjusted Shortfall</div><div class="kpi-val ${adjShortfall<0?'c-red':adjShortfall>0?'c-green':'c-mute'}">${inr(adjShortfall,true)}</div><div class="kpi-hint">After extra deposits</div></div>
   `;
-  renderOverviewCharts(rows);
+  renderCharts(rows);
 }
-
-function renderOverviewCharts(rows){
-  // Monthly data for bar chart (all months)
+function renderCharts(rows){
   const monthly={};
   ROWS.forEach(r=>{const k=moKey(r[C.dt]);if(!k)return;if(!monthly[k])monthly[k]={col:0,exp:0,ad:0};monthly[k].col+=r[C.col];monthly[k].exp+=r[C.exp];monthly[k].ad+=r[C.ad];});
   const allMo=Object.keys(monthly).sort().slice(-8);
-
-  if(chartBarInst){chartBarInst.destroy();chartBarInst=null;}
-  const barCtx=document.getElementById('chartBar').getContext('2d');
-  chartBarInst=new Chart(barCtx,{
-    type:'bar',
-    data:{
-      labels:allMo.map(moLabel3),
-      datasets:[
-        {label:'Collection',data:allMo.map(m=>monthly[m].col),backgroundColor:'rgba(59,130,246,.8)',borderRadius:3},
-        {label:'Expenses',data:allMo.map(m=>monthly[m].exp),backgroundColor:'rgba(245,158,11,.8)',borderRadius:3},
-        {label:'Bank Dep.',data:allMo.map(m=>monthly[m].ad),backgroundColor:'rgba(20,184,166,.8)',borderRadius:3},
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top',labels:{font:{family:'Inter',size:11},boxWidth:10}}},
-      scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>v>=1e7?(v/1e7).toFixed(1)+'Cr':v>=1e5?(v/1e5).toFixed(1)+'L':v>=1e3?(v/1e3).toFixed(0)+'K':v},grid:{color:'rgba(0,0,0,.04)'}},x:{ticks:{font:{family:'Inter',size:10}}}}}
-  });
-
-  // Donut chart for current filtered rows
-  const tCol=rows.reduce((s,r)=>s+r[C.col],0);
+  if(chartBarI){chartBarI.destroy();chartBarI=null;}
+  chartBarI=new Chart(document.getElementById('chartBar').getContext('2d'),{type:'bar',data:{labels:allMo.map(moLabel3),datasets:[
+    {label:'Collection',data:allMo.map(m=>monthly[m].col),backgroundColor:'rgba(59,130,246,.8)',borderRadius:3},
+    {label:'Expenses',data:allMo.map(m=>monthly[m].exp),backgroundColor:'rgba(245,158,11,.8)',borderRadius:3},
+    {label:'Bank Dep.',data:allMo.map(m=>monthly[m].ad),backgroundColor:'rgba(20,184,166,.8)',borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top',labels:{font:{family:'Inter',size:11},boxWidth:10}}},scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>v>=1e5?(v/1e5).toFixed(1)+'L':v>=1e3?(v/1e3).toFixed(0)+'K':v},grid:{color:'rgba(0,0,0,.04)'}},x:{ticks:{font:{family:'Inter',size:10}}}}}});
   const tExp=rows.reduce((s,r)=>s+r[C.exp],0);
   const tDep=rows.reduce((s,r)=>s+r[C.ad],0);
-  const shortfallAbs=Math.abs(rows.filter(r=>r[C.calc]<0).reduce((s,r)=>s+r[C.calc],0));
-
-  if(chartDonutInst){chartDonutInst.destroy();chartDonutInst=null;}
-  const doCtx=document.getElementById('chartDonut').getContext('2d');
-  chartDonutInst=new Chart(doCtx,{
-    type:'doughnut',
-    data:{
-      labels:['Expenses','Deposited','Shortfall'],
-      datasets:[{data:[tExp,Math.max(0,tDep),shortfallAbs],backgroundColor:['#f59e0b','#14b8a6','#ef4444'],borderWidth:2,borderColor:'#fff'}]
-    },
-    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},boxWidth:10}}}}
-  });
+  const sfAbs=Math.abs(rows.filter(r=>r[C.calc]<0).reduce((s,r)=>s+r[C.calc],0));
+  if(chartDonutI){chartDonutI.destroy();chartDonutI=null;}
+  chartDonutI=new Chart(document.getElementById('chartDonut').getContext('2d'),{type:'doughnut',data:{labels:['Expenses','Deposited','Shortfall'],datasets:[{data:[tExp,Math.max(0,tDep),sfAbs],backgroundColor:['#f59e0b','#14b8a6','#ef4444'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},boxWidth:10}}}}});
 }
 
-// ═══ RECORDS TAB ═══
+// ═══ RECORDS ═══
+function populateDDs(rows){
+  const accts=[...new Set(rows.map(r=>r[C.acct]).filter(Boolean))].sort();
+  const staffs=[...new Set(rows.map(r=>r[C.staff]).filter(Boolean))].sort();
+  const fA=document.getElementById('f_acct'),fSt=document.getElementById('f_staff');
+  const pA=fA.value,pSt=fSt.value;
+  fA.innerHTML='<option value="">All Accounts</option>'+accts.map(a=>`<option value="${a}">${a}</option>`).join('');
+  fSt.innerHTML='<option value="">All Staff</option>'+staffs.map(s=>`<option value="${s}">${s}</option>`).join('');
+  if(pA&&accts.includes(pA))fA.value=pA;
+  if(pSt&&staffs.includes(pSt))fSt.value=pSt;
+}
 function getRecFilter(rows){
-  const fA=document.getElementById('f_acct').value;
-  const fSt=document.getElementById('f_staff').value;
-  const fS=document.getElementById('f_status').value;
-  const fSo=document.getElementById('f_sort').value;
+  const fA=document.getElementById('f_acct').value,fSt=document.getElementById('f_staff').value;
+  const fS=document.getElementById('f_status').value,fSo=document.getElementById('f_sort').value;
   let r=[...rows];
   if(fA)r=r.filter(x=>x[C.acct]===fA);
   if(fSt)r=r.filter(x=>x[C.staff]===fSt);
@@ -817,33 +592,22 @@ function getRecFilter(rows){
   else r.sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
   return r;
 }
-function populateDropdowns(rows){
-  const accts=[...new Set(rows.map(r=>r[C.acct]).filter(Boolean))].sort();
-  const staffs=[...new Set(rows.map(r=>r[C.staff]).filter(Boolean))].sort();
-  const fA=document.getElementById('f_acct');const fSt=document.getElementById('f_staff');
-  const prvA=fA.value,prvSt=fSt.value;
-  fA.innerHTML='<option value="">All Accounts</option>'+accts.map(a=>`<option value="${a}">${a}</option>`).join('');
-  fSt.innerHTML='<option value="">All Staff</option>'+staffs.map(s=>`<option value="${s}">${s}</option>`).join('');
-  if(prvA&&accts.includes(prvA))fA.value=prvA;
-  if(prvSt&&staffs.includes(prvSt))fSt.value=prvSt;
-}
 function renderRecords(rows){
-  populateDropdowns(rows);
+  populateDDs(rows);
   const r=getRecFilter(rows);
   document.getElementById('recInfo').innerHTML=`<strong>${r.length}</strong> record${r.length!==1?'s':''} · <strong style="color:var(--red)">${r.filter(x=>x[C.calc]<0).length}</strong> shortfalls · <strong style="color:var(--green)">${r.filter(x=>x[C.calc]>=0).length}</strong> surplus`;
   const tbl=document.getElementById('recBody');
-  if(!r.length){tbl.innerHTML='<tr class="empty-row"><td colspan="13">No records match the selected filters.</td></tr>';setRecFoot([]);return;}
+  if(!r.length){tbl.innerHTML='<tr class="empty-row"><td colspan="13">No records match the selected filters.</td></tr>';setFoot([]);return;}
   tbl.innerHTML=r.map((x,i)=>{
     const neg=x[C.calc]<0,app=isApproved(x);
-    const cls=app?'row-approved':neg?'row-neg':'row-pos';
+    const cls=app?'row-app':neg?'row-neg':'row-pos';
     const calcCls=neg?'c-red':x[C.calc]===0?'c-mute':'c-green';
     const adH=x[C.ad]===0?'<span class="c-red" style="font-size:11px;font-weight:700">⚠ ₹0</span>':inr(x[C.ad]);
-    const statBadge=app?'<span class="badge b-approved">✓ Approved</span>':neg?'<span class="badge b-pending">⚠ Shortfall</span>':'<span class="badge b-surplus">✓ Surplus</span>';
+    const stat=app?'<span class="badge b-approved">✓ Approved</span>':neg?'<span class="badge b-pending">⚠ Shortfall</span>':'<span class="badge b-surplus">✓ Surplus</span>';
     return`<tr class="${cls}">
       <td class="mute" style="font-size:11px">${i+1}</td>
       <td><span class="dchip">${x[C.dt]}</span>${x[C.note]?` <span title="${x[C.note]}" style="cursor:help">📋</span>`:''}</td>
-      <td class="r mono">${inr(x[C.col])}</td>
-      <td class="r mono">${inr(x[C.exp])}</td>
+      <td class="r mono">${inr(x[C.col])}</td><td class="r mono">${inr(x[C.exp])}</td>
       <td class="r mono">${inr(x[C.td])}</td>
       <td class="r mono">${x[C.ed]?inr(x[C.ed]):'<span class="mute">—</span>'}</td>
       <td class="r mono">${x[C.db]?inr(x[C.db]):'<span class="mute">—</span>'}</td>
@@ -852,12 +616,12 @@ function renderRecords(rows){
       <td style="font-size:12px">${x[C.acct]||'<span class="mute">—</span>'}</td>
       <td style="font-size:12px">${x[C.staff]==='Not Deposit'?'<span class="c-red" style="font-size:11px;font-weight:700">❌ Not Dep.</span>':(x[C.staff]||'<span class="mute">—</span>')}</td>
       <td style="font-size:12px">${x[C.chkby]||'<span class="mute">—</span>'}</td>
-      <td>${statBadge}</td>
+      <td>${stat}</td>
     </tr>`;
   }).join('');
-  setRecFoot(r);
+  setFoot(r);
 }
-function setRecFoot(r){
+function setFoot(r){
   document.getElementById('ft_col').textContent=inr(r.reduce((s,x)=>s+x[C.col],0));
   document.getElementById('ft_exp').textContent=inr(r.reduce((s,x)=>s+x[C.exp],0));
   document.getElementById('ft_td').textContent=inr(r.reduce((s,x)=>s+x[C.td],0));
@@ -867,49 +631,41 @@ function setRecFoot(r){
   const diff=r.reduce((s,x)=>s+x[C.calc],0);
   document.getElementById('ft_calc').innerHTML=`<span style="font-weight:800;color:${diff<0?'var(--red)':diff===0?'var(--fg-mute)':'var(--green)'}">${inr(diff,true)}</span>`;
 }
-function resetRecFilters(){
+function resetRec(){
   ['f_acct','f_staff','f_status'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_sort').value='drev';
-  renderRecords(getFilteredRows());
+  renderRecords(getFiltered());
 }
 
-// ═══ ACTION TAB ═══
+// ═══ ACTION ═══
 function renderAction(rows){
-  loadApproved();
   const sorted=[...rows].sort((a,b)=>dnum(b[C.dt])-dnum(a[C.dt]));
   const negRows=sorted.filter(r=>r[C.calc]<0);
   const posRows=sorted.filter(r=>r[C.calc]>=0);
   const negUnapp=negRows.filter(r=>!isApproved(r)).length;
   const negApp=negRows.filter(r=>isApproved(r)).length;
   const totalShortfall=negRows.reduce((s,r)=>s+r[C.calc],0);
-
   document.getElementById('acInfo').innerHTML=`
-    <span class="ac-s">Total entries: <strong>${sorted.length}</strong></span>
-    <span class="ac-s sep">|</span>
-    <span class="ac-s red">Shortfall entries: <strong>${negRows.length}</strong></span>
-    <span class="ac-s sep">|</span>
-    <span class="ac-s grn">Surplus entries: <strong>${posRows.length}</strong></span>
-    <span class="ac-s sep">|</span>
+    <span class="ac-s">Total: <strong>${sorted.length}</strong></span>
+    <span class="ac-sep ac-s">|</span>
+    <span class="ac-s rv">Shortfall entries: <strong>${negRows.length}</strong></span>
+    <span class="ac-sep ac-s">|</span>
+    <span class="ac-s gv">Surplus entries: <strong>${posRows.length}</strong></span>
+    <span class="ac-sep ac-s">|</span>
     <span class="ac-s">Approved: <strong>${negApp}</strong> · Pending: <strong style="color:var(--red)">${negUnapp}</strong></span>
-    <span class="ac-s sep" style="margin-left:auto">|</span>
-    <span class="ac-s">Total Shortfall: <strong style="color:var(--red)">${inr(totalShortfall,true)}</strong></span>
+    <span class="ac-sep ac-s" style="margin-left:auto">|</span>
+    <span class="ac-s">Shortfall: <strong style="color:var(--red)">${inr(totalShortfall,true)}</strong></span>
   `;
-
   const tbody=document.getElementById('acBody');
-  if(!sorted.length){tbody.innerHTML='<tr class="empty-row"><td colspan="13">No entries in this date range!</td></tr>';return;}
+  if(!sorted.length){tbody.innerHTML='<tr class="empty-row"><td colspan="13">No entries in this date range.</td></tr>';return;}
   const maxAbs=negRows.length?Math.abs(Math.min(...negRows.map(r=>r[C.calc]))):1;
-
   tbody.innerHTML=sorted.map((r,i)=>{
-    const app=isApproved(r);
-    const isNeg=r[C.calc]<0;
-    const pct=isNeg?Math.min(100,Math.round(Math.abs(r[C.calc])/maxAbs*100)):0;
-    const sv=sevInfo(r[C.calc]);
+    const app=isApproved(r),isNeg=r[C.calc]<0;
     if(!isNeg){
       return`<tr class="row-pos">
         <td class="mute" style="font-size:11px">${i+1}</td>
         <td><span class="dchip">${r[C.dt]}</span></td>
-        <td class="r mono">${inr(r[C.col])}</td>
-        <td class="r mono">${inr(r[C.exp])}</td>
+        <td class="r mono">${inr(r[C.col])}</td><td class="r mono">${inr(r[C.exp])}</td>
         <td class="r mono">${inr(r[C.td])}</td>
         <td class="r mono">${r[C.ed]?inr(r[C.ed]):'<span class="mute">—</span>'}</td>
         <td class="r mono">${inr(r[C.ad])}</td>
@@ -917,47 +673,44 @@ function renderAction(rows){
         <td><span class="badge b-surplus">✓ Surplus</span></td>
         <td style="font-size:12px">${r[C.acct]||'<span class="mute">—</span>'}</td>
         <td style="font-size:12px">${r[C.staff]||'<span class="mute">—</span>'}</td>
-        <td><span class="badge b-surplus" style="font-size:10px">✓ Surplus OK</span></td>
+        <td><span class="badge b-surplus" style="font-size:10px">OK</span></td>
         <td><a class="src-link" href="${srcLink(r)}" target="_blank">Row ${r[C.row]} ↗</a></td>
       </tr>`;
     }
-    return`<tr class="${app?'row-approved':'row-neg'}">
+    const pct=Math.min(100,Math.round(Math.abs(r[C.calc])/maxAbs*100));
+    const a=Math.abs(r[C.calc]);
+    let svCls='b-low',svCol='#eab308';
+    if(a>=5000){svCls='b-critical';svCol='var(--red)';}
+    else if(a>=2000){svCls='b-high';svCol='#ea580c';}
+    else if(a>=500){svCls='b-medium';svCol='#f97316';}
+    return`<tr class="${app?'row-app':'row-neg'}">
       <td class="mute" style="font-size:11px">${i+1}</td>
       <td><span class="dchip">${r[C.dt]}</span></td>
-      <td class="r mono">${inr(r[C.col])}</td>
-      <td class="r mono">${inr(r[C.exp])}</td>
+      <td class="r mono">${inr(r[C.col])}</td><td class="r mono">${inr(r[C.exp])}</td>
       <td class="r mono">${inr(r[C.td])}</td>
       <td class="r mono">${r[C.ed]?inr(r[C.ed]):'<span class="mute">—</span>'}</td>
       <td class="r mono">${r[C.ad]===0?'<span class="c-red" style="font-size:11px;font-weight:700">⚠ ₹0</span>':inr(r[C.ad])}</td>
       <td class="r mono" style="font-weight:800;color:${app?'var(--fg-mute)':'var(--red)'}">${inr(r[C.calc],true)}</td>
       <td>
         <div class="sev-wrap">
-          <span class="badge ${app?'b-approved':sv.cls}">${app?'✓ Approved':sv.lbl}</span>
-          ${!app?`<div class="sev-bar"><div class="sev-fill" style="width:${pct}%;background:${sv.col}"></div></div>`:''}
+          <span class="badge ${app?'b-approved':svCls}">${app?'✓ Approved':svCls.replace('b-','').charAt(0).toUpperCase()+svCls.replace('b-','').slice(1)}</span>
+          ${!app?`<div class="sev-bar"><div class="sev-fill" style="width:${pct}%;background:${svCol}"></div></div>`:''}
         </div>
       </td>
       <td style="font-size:12px">${r[C.acct]||'<span class="mute">—</span>'}</td>
       <td style="font-size:12px">${r[C.staff]==='Not Deposit'?'<span class="c-red" style="font-size:11px;font-weight:700">❌ Not Dep.</span>':(r[C.staff]||'<span class="mute">—</span>')}</td>
-      <td>
-        ${app
-          ?`<span class="badge b-approved" style="font-size:10px">✓ Verified</span>`
-          :`<button class="btn-approve" onclick="toggleApprove(${r[C.row]},this)">✓ Approve</button>`
-        }
-      </td>
+      <td>${app?`<span class="badge b-approved" style="font-size:10px">✓ Verified</span>`:`<button class="btn-approve" onclick="toggleApprove(${r[C.row]},this)">✓ Approve</button>`}</td>
       <td><a class="src-link" href="${srcLink(r)}" target="_blank">Row ${r[C.row]} ↗</a></td>
     </tr>`;
   }).join('');
 }
-
-// ═══ APPROVE ═══
-function toggleApprove(rowNum, btn){
+function toggleApprove(rowNum){
   loadApproved();
-  if(approvedRows[rowNum]){delete approvedRows[rowNum];}else{approvedRows[rowNum]=true;}
-  saveApproved();
-  renderAll();
+  if(approvedRows[rowNum])delete approvedRows[rowNum];else approvedRows[rowNum]=true;
+  saveApproved();renderAll();
 }
 
-// ═══ EXTRA DEPOSITS TAB ═══
+// ═══ EXTRA DEPOSITS ═══
 function openEDModal(){
   document.getElementById('ed_date').value=new Date().toISOString().slice(0,10);
   document.getElementById('ed_amount').value='';
@@ -976,9 +729,7 @@ function saveExtraDeposit(){
   if(!amount||amount<=0){alert('Please enter a valid amount greater than 0.');return;}
   if(!by){alert('Please enter the depositor\'s name.');return;}
   extraDeposits.push({id:Date.now()+'_'+Math.random().toString(36).slice(2,6),date,amount,by,note,addedAt:new Date().toISOString()});
-  saveExtra();
-  closeEDModal();
-  renderAll();
+  saveExtra();closeEDModal();renderAll();
 }
 function deleteExtra(id){
   const btn=document.querySelector(`.btn-del[data-xid="${id}"]`);
@@ -994,403 +745,203 @@ function deleteExtra(id){
 function renderExtra(){
   const extraInRange=getExtraInRange();
   const totalExtra=extraInRange.reduce((s,e)=>s+e.amount,0);
-  const totalShortfall=getFilteredRows().filter(r=>r[C.calc]<0).reduce((s,r)=>s+r[C.calc],0);
-  const adjShortfall=totalShortfall+totalExtra;
-
+  const totalShortfall=getFiltered().filter(r=>r[C.calc]<0).reduce((s,r)=>s+r[C.calc],0);
+  const adj=totalShortfall+totalExtra;
   document.getElementById('extraKpis').innerHTML=`
-    <div class="mini-kpi mk-purple">
-      <div class="mk-lbl">Total Extra Deposits (Period)</div>
-      <div class="mk-val">${inr(totalExtra)}</div>
-    </div>
-    <div class="mini-kpi mk-blue">
-      <div class="mk-lbl">Count (Period)</div>
-      <div class="mk-val">${extraInRange.length}</div>
-    </div>
-    <div class="mini-kpi ${adjShortfall<0?'':'mk-green'}" style="${adjShortfall<0?'border-left-color:var(--red)':''}">
-      <div class="mk-lbl">Adjusted Shortfall</div>
-      <div class="mk-val" style="color:${adjShortfall<0?'var(--red)':adjShortfall>0?'var(--green)':'var(--fg-mute)'}">${inr(adjShortfall,true)}</div>
-    </div>
+    <div class="mini-kpi mk-purple"><div class="mk-lbl">Total Extra (Period)</div><div class="mk-val">${inr(totalExtra)}</div></div>
+    <div class="mini-kpi mk-blue"><div class="mk-lbl">Count (Period)</div><div class="mk-val">${extraInRange.length}</div></div>
+    <div class="mini-kpi ${adj<0?'mk-red':'mk-green'}"><div class="mk-lbl">Adjusted Shortfall</div><div class="mk-val" style="color:${adj<0?'var(--red)':adj>0?'var(--green)':'var(--fg-mute)'}">${inr(adj,true)}</div></div>
   `;
-
-  // Group ALL extra deposits by month (not filtered)
   const groups={};
-  extraDeposits.forEach(e=>{
-    const mo=e.date.slice(0,7);
-    if(!groups[mo])groups[mo]=[];
-    groups[mo].push(e);
-  });
+  extraDeposits.forEach(e=>{const mo=e.date.slice(0,7);if(!groups[mo])groups[mo]=[];groups[mo].push(e);});
   const sortedMo=Object.keys(groups).sort().reverse();
-
   if(!sortedMo.length){
-    document.getElementById('extraList').innerHTML=`
-      <div class="empty-state">
-        <span class="ei">💳</span>
-        <strong>No extra deposits yet</strong>
-        Click "+ Add Extra Deposit" above to record a manual bank deposit entry.
-      </div>`;
+    document.getElementById('extraList').innerHTML=`<div class="empty-state"><span class="ei">💳</span><strong>No extra deposits yet</strong>Click "+ Add Extra Deposit" above to record a manual bank deposit.</div>`;
     return;
   }
   document.getElementById('extraList').innerHTML=sortedMo.map(mo=>{
     const entries=[...groups[mo]].sort((a,b)=>isoToNum(a.date)-isoToNum(b.date));
     const moTotal=entries.reduce((s,e)=>s+e.amount,0);
-    return`
-      <div class="month-grp">
-        <div class="month-grp-hdr">
-          <span class="mg-name">${moLabel(mo)}</span>
-          <span class="mg-total">${inr(moTotal)}</span>
-        </div>
-        <div class="tbl-wrap" style="border-radius:0 0 var(--r) var(--r)">
-          <table class="data-tbl extra-tbl">
-            <thead><tr>
-              <th style="width:30px">#</th>
-              <th>Deposit Date</th>
-              <th class="r">Amount</th>
-              <th>Deposited By</th>
-              <th>Note</th>
-              <th>Added On</th>
-              <th style="width:80px"></th>
-            </tr></thead>
-            <tbody>
-              ${entries.map((e,i)=>`
-                <tr>
-                  <td class="mute" style="font-size:11px">${i+1}</td>
-                  <td><span class="dchip">${formatISO(e.date)}</span></td>
-                  <td class="r mono c-green" style="font-weight:800">${inr(e.amount)}</td>
-                  <td style="font-weight:600">${e.by||'—'}</td>
-                  <td class="mute">${e.note||'—'}</td>
-                  <td class="mute" style="font-size:11px">${new Date(e.addedAt).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-                  <td><button class="btn-del" data-xid="${e.id}" onclick="deleteExtra('${e.id}')">Delete</button></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
+    return`<div class="month-grp"><div class="month-grp-hdr"><span class="mg-name">${moLabel(mo)}</span><span class="mg-total">${inr(moTotal)}</span></div>
+      <div class="tbl-wrap" style="border-radius:0 0 var(--r) var(--r)"><table class="data-tbl" style="min-width:600px">
+        <thead><tr><th style="width:30px">#</th><th>Deposit Date</th><th class="r">Amount</th><th>Deposited By</th><th>Note</th><th>Added On</th><th style="width:80px"></th></tr></thead>
+        <tbody>${entries.map((e,i)=>`<tr>
+          <td class="mute" style="font-size:11px">${i+1}</td>
+          <td><span class="dchip">${formatISO(e.date)}</span></td>
+          <td class="r mono c-green" style="font-weight:800">${inr(e.amount)}</td>
+          <td style="font-weight:600">${e.by||'—'}</td>
+          <td class="mute">${e.note||'—'}</td>
+          <td class="mute" style="font-size:11px">${new Date(e.addedAt).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+          <td><button class="btn-del" data-xid="${e.id}" onclick="deleteExtra('${e.id}')">Delete</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div></div>`;
   }).join('');
 }
 
-// ═══ ANALYTICS TAB ═══
+// ═══ ANALYTICS ═══
 function renderAnalytics(){
-  // Build monthly stats from ALL rows
   const stats={};
-  ROWS.forEach(r=>{
-    const k=moKey(r[C.dt]);if(!k)return;
-    if(!stats[k])stats[k]={col:0,exp:0,ad:0,td:0,entries:0,shortfall:0};
-    stats[k].col+=r[C.col];stats[k].exp+=r[C.exp];stats[k].ad+=r[C.ad];stats[k].td+=r[C.td];stats[k].entries++;
-    if(r[C.calc]<0)stats[k].shortfall+=r[C.calc];
-  });
-  // Add extra deposits per month
-  extraDeposits.forEach(e=>{
-    const k=e.date.slice(0,7);
-    if(stats[k])stats[k].extra=(stats[k].extra||0)+e.amount;
-  });
-
+  ROWS.forEach(r=>{const k=moKey(r[C.dt]);if(!k)return;if(!stats[k])stats[k]={col:0,exp:0,ad:0,td:0,entries:0,shortfall:0,extra:0};stats[k].col+=r[C.col];stats[k].exp+=r[C.exp];stats[k].ad+=r[C.ad];stats[k].td+=r[C.td];stats[k].entries++;if(r[C.calc]<0)stats[k].shortfall+=r[C.calc];});
+  extraDeposits.forEach(e=>{const k=e.date.slice(0,7);if(stats[k])stats[k].extra+=e.amount;});
   const sortedMo=Object.keys(stats).sort().reverse();
-
-  // Monthly chart
-  const chartMo=sortedMo.slice().reverse().slice(-10);
-  if(chartMonthlyInst){chartMonthlyInst.destroy();chartMonthlyInst=null;}
-  const mCtx=document.getElementById('chartMonthly').getContext('2d');
-  chartMonthlyInst=new Chart(mCtx,{
-    type:'bar',
-    data:{
-      labels:chartMo.map(moLabel3),
-      datasets:[
-        {label:'Collection',data:chartMo.map(m=>stats[m].col),backgroundColor:'rgba(59,130,246,.8)',borderRadius:3},
-        {label:'Expenses',data:chartMo.map(m=>stats[m].exp),backgroundColor:'rgba(245,158,11,.75)',borderRadius:3},
-        {label:'Bank Dep.',data:chartMo.map(m=>stats[m].ad),backgroundColor:'rgba(20,184,166,.8)',borderRadius:3},
-        {label:'Shortfall',data:chartMo.map(m=>Math.abs(stats[m].shortfall)),backgroundColor:'rgba(239,68,68,.75)',borderRadius:3},
-      ]
-    },
-    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top',labels:{font:{family:'Inter',size:11},boxWidth:10}}},
-      scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>v>=1e5?(v/1e5).toFixed(1)+'L':v>=1e3?(v/1e3).toFixed(0)+'K':v},grid:{color:'rgba(0,0,0,.04)'}},x:{ticks:{font:{family:'Inter',size:10}}}}}
-  });
-
+  const chartMo=[...sortedMo].reverse().slice(-10);
+  if(chartMonthlyI){chartMonthlyI.destroy();chartMonthlyI=null;}
+  chartMonthlyI=new Chart(document.getElementById('chartMonthly').getContext('2d'),{type:'bar',data:{labels:chartMo.map(moLabel3),datasets:[
+    {label:'Collection',data:chartMo.map(m=>stats[m].col),backgroundColor:'rgba(59,130,246,.8)',borderRadius:3},
+    {label:'Expenses',data:chartMo.map(m=>stats[m].exp),backgroundColor:'rgba(245,158,11,.75)',borderRadius:3},
+    {label:'Bank Dep.',data:chartMo.map(m=>stats[m].ad),backgroundColor:'rgba(20,184,166,.8)',borderRadius:3},
+    {label:'Shortfall',data:chartMo.map(m=>Math.abs(stats[m].shortfall)),backgroundColor:'rgba(239,68,68,.75)',borderRadius:3},
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top',labels:{font:{family:'Inter',size:11},boxWidth:10}}},scales:{y:{ticks:{font:{family:'Inter',size:10},callback:v=>v>=1e5?(v/1e5).toFixed(1)+'L':v>=1e3?(v/1e3).toFixed(0)+'K':v},grid:{color:'rgba(0,0,0,.04)'}},x:{ticks:{font:{family:'Inter',size:10}}}}}});
   document.getElementById('analyticsBody').innerHTML=sortedMo.map(mo=>{
-    const s=stats[mo];
-    const extra=s.extra||0;
-    const adj=s.shortfall+extra;
+    const s=stats[mo];const adj=s.shortfall+s.extra;
     return`<tr>
-      <td style="font-weight:700">${moLabel(mo)}</td>
-      <td class="r mono">${s.entries}</td>
-      <td class="r mono">${inr(s.col)}</td>
-      <td class="r mono">${inr(s.exp)}</td>
+      <td style="font-weight:700">${moLabel(mo)}</td><td class="r mono">${s.entries}</td>
+      <td class="r mono">${inr(s.col)}</td><td class="r mono">${inr(s.exp)}</td>
       <td class="r mono ${s.col-s.exp>=0?'c-green':'c-red'}">${inr(s.col-s.exp,true)}</td>
       <td class="r mono">${inr(s.ad)}</td>
       <td class="r mono ${s.shortfall<0?'c-red':'c-mute'}">${inr(s.shortfall,true)}</td>
-      <td class="r mono ${extra>0?'c-blue':'c-mute'}">${extra>0?inr(extra):'—'}</td>
+      <td class="r mono ${s.extra>0?'c-blue':'c-mute'}">${s.extra>0?inr(s.extra):'—'}</td>
       <td class="r mono ${adj<0?'c-red':adj>0?'c-green':'c-mute'}" style="font-weight:800">${inr(adj,true)}</td>
     </tr>`;
   }).join('');
 }
 
-// ═══ PDF EXPORT ═══
-function getMissingDates(rows){
+// ═══ PDF ═══
+function scol(calc){const a=Math.abs(calc);if(calc>=0)return[0,140,0];if(a<500)return[200,120,0];if(a<1000)return[220,100,0];return[200,0,0];}
+function getMissing(rows){
   if(!filterFrom||!filterTo)return[];
-  const existing=new Set(rows.map(r=>r[C.dt]));
-  const missing=[];let cur=filterFrom;
+  const ex=new Set(rows.map(r=>r[C.dt]));const miss=[];let cur=filterFrom;
   while(cur<=filterTo){
-    const ds=numToDate(cur);
-    if(!existing.has(ds))missing.push(ds);
-    const ss=String(cur);
-    const d=new Date(parseInt(ss.slice(0,4)),parseInt(ss.slice(4,6))-1,parseInt(ss.slice(6,8)));
-    d.setDate(d.getDate()+1);
-    cur=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+    const ds=numToDate(cur);if(!ex.has(ds))miss.push(ds);
+    const ss=String(cur);const d=new Date(parseInt(ss.slice(0,4)),parseInt(ss.slice(4,6))-1,parseInt(ss.slice(6,8)));
+    d.setDate(d.getDate()+1);cur=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
   }
-  return missing;
-}
-function shortfallColor(calc){
-  const a=Math.abs(calc);
-  if(calc>=0)return[0,140,0];
-  if(a<100)return[180,130,0];
-  if(a<=500)return[220,100,0];
-  if(a<1000)return[220,100,0];
-  return[200,0,0];
+  return miss;
 }
 function exportPDF(){
-  const rows=getFilteredRows();
-  if(!rows.length){alert('No data to export for the selected period.');return;}
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=doc.internal.pageSize.getWidth();
-  const pageH=doc.internal.pageSize.getHeight();
+  const rows=getFiltered();if(!rows.length){alert('No data to export.');return;}
+  const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(),pH=doc.internal.pageSize.getHeight();
   loadApproved();
-
   const highRows=rows.filter(r=>r[C.chkby]!=='Approved'&&!approvedRows[r[C.row]]).sort((a,b)=>dnum(a[C.dt])-dnum(b[C.dt]));
   const appRows=rows.filter(r=>r[C.chkby]==='Approved'||approvedRows[r[C.row]]===true).sort((a,b)=>dnum(a[C.dt])-dnum(b[C.dt]));
   const extraInRange=getExtraInRange().sort((a,b)=>isoToNum(a.date)-isoToNum(b.date));
-  const missing=getMissingDates(rows);
-
-  const tCol=rows.reduce((s,r)=>s+r[C.col],0);
-  const tExp=rows.reduce((s,r)=>s+r[C.exp],0);
-  const tDep=rows.reduce((s,r)=>s+r[C.ad],0);
-  const totalShortfall=rows.filter(r=>r[C.calc]<0).reduce((s,r)=>s+r[C.calc],0);
-  const totalExtra=extraInRange.reduce((s,e)=>s+e.amount,0);
-  const adjShortfall=totalShortfall+totalExtra;
-  const negCnt=highRows.filter(r=>r[C.calc]<0).length;
-  const posCnt=highRows.filter(r=>r[C.calc]>=0).length;
-
-  // ── HEADER ──
+  const miss=getMissing(rows);
+  const tCol=rows.reduce((s,r)=>s+r[C.col],0),tExp=rows.reduce((s,r)=>s+r[C.exp],0),tDep=rows.reduce((s,r)=>s+r[C.ad],0);
+  const tSF=rows.filter(r=>r[C.calc]<0).reduce((s,r)=>s+r[C.calc],0);
+  const tExtra=extraInRange.reduce((s,e)=>s+e.amount,0);
+  const adj=tSF+tExtra;
+  // Header
   doc.setFillColor(15,23,42);doc.rect(0,0,W,22,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(241,245,249);
   doc.text('SEWA GIFT PALACE — CASH FLOW REPORT',14,9);
-  const rangeStr=filterFrom&&filterTo?`Period: ${numToDate(filterFrom)} to ${numToDate(filterTo)}`:'All Time';
+  const rStr=filterFrom&&filterTo?`Period: ${numToDate(filterFrom)} to ${numToDate(filterTo)}`:'All Time';
   doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(148,163,184);
-  doc.text(rangeStr,14,14.5);
+  doc.text(rStr,14,14.5);
   doc.text('Generated: '+new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),14,19);
   doc.text('Total Entries: '+rows.length+' | Approved: '+appRows.length+' | Pending: '+highRows.length,100,14.5);
-
-  // ── KPI ROW ──
+  // KPI row
   doc.setFillColor(248,250,252);doc.rect(0,22,W,20,'F');
-  const kpis=[
-    ['Total Collection',pf(tCol)],
-    ['Total Expenses',pf(tExp)],
-    ['Bank Deposits',pf(tDep)],
-    ['Net Cash',pf(tCol-tExp,true)],
-    ['Total Shortfall',pf(totalShortfall,true)],
-    ['Extra Deposits',pf(totalExtra)],
-    ['Adjusted Shortfall',pf(adjShortfall,true)],
-  ];
-  let kx=14;const kw=26;
+  const kpis=[['Total Collection',pf(tCol)],['Total Expenses',pf(tExp)],['Bank Deposits',pf(tDep)],['Net Cash',pf(tCol-tExp,true)],['Total Shortfall',pf(tSF,true)],['Extra Deposits',pf(tExtra)],['Adjusted Shortfall',pf(adj,true)]];
+  let kx=14;
   kpis.forEach(([lbl,val],idx)=>{
-    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
-    doc.setTextColor(100,116,139);doc.text(lbl,kx,27.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(100,116,139);doc.text(lbl,kx,27.5);
     doc.setFont('helvetica','bold');doc.setFontSize(8.5);
-    if(idx===4&&totalShortfall<0)doc.setTextColor(185,28,28);
-    else if(idx===6&&adjShortfall<0)doc.setTextColor(220,38,38);
-    else if(idx===6&&adjShortfall>0)doc.setTextColor(21,128,61);
+    if(idx===4&&tSF<0)doc.setTextColor(185,28,28);
+    else if(idx===6&&adj<0)doc.setTextColor(220,38,38);
+    else if(idx===6&&adj>0)doc.setTextColor(21,128,61);
     else doc.setTextColor(15,23,42);
-    doc.text(val,kx,34);
-    kx+=kw;
+    doc.text(val,kx,34);kx+=26;
   });
   doc.setDrawColor(226,232,240);doc.line(0,42,W,42);
-
-  const colStyles={
-    0:{cellWidth:5,halign:'center'},1:{cellWidth:16,halign:'center'},2:{cellWidth:18,halign:'right'},
-    3:{cellWidth:15,halign:'right'},4:{cellWidth:20,halign:'right'},5:{cellWidth:17,halign:'right'},
-    6:{cellWidth:15,halign:'right'},7:{cellWidth:18,halign:'right'},8:{cellWidth:18,halign:'right'},
-    9:{cellWidth:16,halign:'left'},10:{cellWidth:14,halign:'left'}
-  };
-
-  const tblHead=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook','Bank Dep.','Shortfall','Acct No.','Dep. By']];
-  const toBodyRow=(r,i)=>[i+1,r[C.dt],pf(r[C.col]),pf(r[C.exp]),pf(r[C.td]),r[C.ed]?pf(r[C.ed]):'—',r[C.db]?pf(r[C.db]):'—',pf(r[C.ad]),pf(r[C.calc],true),r[C.acct]||'—',r[C.staff]||'—'];
-
-  // ── SECTION 1: ALL ENTRIES ──
+  const CS={0:{cellWidth:5,halign:'center'},1:{cellWidth:16,halign:'center'},2:{cellWidth:18,halign:'right'},3:{cellWidth:15,halign:'right'},4:{cellWidth:20,halign:'right'},5:{cellWidth:17,halign:'right'},6:{cellWidth:15,halign:'right'},7:{cellWidth:18,halign:'right'},8:{cellWidth:18,halign:'right'},9:{cellWidth:16,halign:'left'},10:{cellWidth:14,halign:'left'}};
+  const TH=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook','Bank Dep.','Shortfall','Acct No.','Dep. By']];
+  const toRow=(r,i)=>[i+1,r[C.dt],pf(r[C.col]),pf(r[C.exp]),pf(r[C.td]),r[C.ed]?pf(r[C.ed]):'—',r[C.db]?pf(r[C.db]):'—',pf(r[C.ad]),pf(r[C.calc],true),r[C.acct]||'—',r[C.staff]||'—'];
+  // Section 1
   doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(15,40,90);
   doc.text('All Daily Entries — Date-wise Report ('+highRows.length+')',14,48);
   doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
-  doc.text('Shortfall entries: '+negCnt+' (action required)   |   Surplus entries: '+posCnt+' (green)',14,52.5);
-
-  doc.autoTable({
-    startY:55,head:tblHead,body:highRows.map(toBodyRow),
-    headStyles:{fillColor:[15,40,90],textColor:255,fontStyle:'bold',fontSize:6},
-    bodyStyles:{fontSize:6.5},
-    alternateRowStyles:{fillColor:[245,247,252]},
-    columnStyles:colStyles,
-    margin:{left:14,right:14},
-    didParseCell:(data)=>{
-      if(data.section==='body'&&highRows[data.row]){
-        const r=highRows[data.row];
-        if(data.column.index===8){
-          const col=shortfallColor(r[C.calc]);
-          data.cell.styles.textColor=col;data.cell.styles.fontStyle='bold';
-        }
-        if(r[C.calc]>=0){data.cell.styles.textColor=[0,120,0];}
-      }
-    },
+  doc.text('Shortfall: '+highRows.filter(r=>r[C.calc]<0).length+' entries  |  Surplus: '+highRows.filter(r=>r[C.calc]>=0).length+' entries',14,52.5);
+  doc.autoTable({startY:55,head:TH,body:highRows.map(toRow),headStyles:{fillColor:[15,40,90],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5},alternateRowStyles:{fillColor:[245,247,252]},columnStyles:CS,margin:{left:14,right:14},
+    didParseCell:(data)=>{if(data.section==='body'&&highRows[data.row]){const r=highRows[data.row];if(data.column.index===8){const cl=scol(r[C.calc]);data.cell.styles.textColor=cl;data.cell.styles.fontStyle='bold';}if(r[C.calc]>=0)data.cell.styles.textColor=[0,120,0];}},
   });
-
-  // ── SECTION 2: APPROVED ──
+  // Section 2: Approved
   if(appRows.length){
-    let y2=doc.lastAutoTable.finalY+10;
-    if(y2>pageH-40){doc.addPage();y2=15;}
+    let y2=doc.lastAutoTable.finalY+10;if(y2>pH-40){doc.addPage();y2=15;}
     doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(14,116,144);
-    doc.text('Approved Entries — Verified & Closed ('+appRows.length+')',14,y2);
-    doc.autoTable({
-      startY:y2+5,head:tblHead,body:appRows.map(toBodyRow),
-      headStyles:{fillColor:[14,116,144],textColor:255,fontStyle:'bold',fontSize:6},
-      bodyStyles:{fontSize:6.5,textColor:[80,80,80]},
-      alternateRowStyles:{fillColor:[240,249,255]},
-      columnStyles:colStyles,margin:{left:14,right:14},
-      didParseCell:(data)=>{
-        if(data.section==='body'&&appRows[data.row]){
-          const r=appRows[data.row];
-          if(data.column.index===8){
-            const col=shortfallColor(r[C.calc]);
-            data.cell.styles.textColor=col;data.cell.styles.fontStyle='bold';
-          }
-        }
-      },
+    doc.text('Approved Entries ('+appRows.length+')',14,y2);
+    doc.autoTable({startY:y2+5,head:TH,body:appRows.map(toRow),headStyles:{fillColor:[14,116,144],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5,textColor:[80,80,80]},alternateRowStyles:{fillColor:[240,249,255]},columnStyles:CS,margin:{left:14,right:14},
+      didParseCell:(data)=>{if(data.section==='body'&&appRows[data.row]){const r=appRows[data.row];if(data.column.index===8){const cl=scol(r[C.calc]);data.cell.styles.textColor=cl;data.cell.styles.fontStyle='bold';}}},
     });
   }
-
-  // ── SECTION 3: MISSING DATES ──
-  if(missing.length){
-    let y3=doc.lastAutoTable?doc.lastAutoTable.finalY+10:70;
-    if(y3>pageH-40){doc.addPage();y3=15;}
+  // Section 3: Missing dates
+  if(miss.length){
+    let y3=doc.lastAutoTable?doc.lastAutoTable.finalY+10:70;if(y3>pH-40){doc.addPage();y3=15;}
     doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(146,64,14);
-    doc.text('Missing Dates — No Entry Found ('+missing.length+')',14,y3);
-    // Grid of dates
-    let mx=14,my=y3+7;const mw=20;
-    missing.forEach((d,i)=>{
-      doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(146,64,14);
-      doc.text(d,mx,my);mx+=mw;
-      if(mx>W-20){mx=14;my+=5;}
-    });
+    doc.text('Missing Dates ('+miss.length+')',14,y3);
+    let mx=14,my=y3+7;
+    miss.forEach(d=>{doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(146,64,14);doc.text(d,mx,my);mx+=22;if(mx>W-20){mx=14;my+=5;}});
   }
-
-  // ── SECTION 4: EXTRA DEPOSITS ──
+  // Section 4: Extra Deposits
   if(extraInRange.length){
     doc.addPage();
     doc.setFillColor(109,40,217);doc.rect(0,0,W,16,'F');
     doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(255,255,255);
     doc.text('Extra Bank Deposits',14,10.5);
-    doc.setFontSize(7);doc.setFont('helvetica','normal');
-    doc.text('Manual deposits recorded outside the daily cash flow',14,14);
-
-    doc.autoTable({
-      startY:20,
-      head:[['#','Deposit Date','Amount','Deposited By','Note']],
-      body:extraInRange.map((e,i)=>[i+1,formatISO(e.date),pf(e.amount),e.by,e.note||'—']),
-      headStyles:{fillColor:[109,40,217],textColor:255,fontStyle:'bold',fontSize:7},
-      bodyStyles:{fontSize:7.5},
-      alternateRowStyles:{fillColor:[245,243,255]},
-      columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:28,halign:'center'},2:{cellWidth:30,halign:'right'},3:{cellWidth:40},4:{cellWidth:60}},
-      margin:{left:14,right:14},
+    doc.autoTable({startY:20,head:[['#','Deposit Date','Amount','Deposited By','Note']],body:extraInRange.map((e,i)=>[i+1,formatISO(e.date),pf(e.amount),e.by,e.note||'—']),
+      headStyles:{fillColor:[109,40,217],textColor:255,fontStyle:'bold',fontSize:7},bodyStyles:{fontSize:7.5},alternateRowStyles:{fillColor:[245,243,255]},
+      columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:28,halign:'center'},2:{cellWidth:30,halign:'right'},3:{cellWidth:40},4:{cellWidth:60}},margin:{left:14,right:14},
       didParseCell:(data)=>{if(data.section==='body'&&data.column.index===2){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}},
     });
-
     const fy=doc.lastAutoTable.finalY+6;
-    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(109,40,217);
-    doc.text('Total Extra Deposits:',14,fy);
-    doc.setTextColor(21,128,61);doc.text(pf(totalExtra),80,fy);
-    if(totalShortfall<0){
-      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(80,80,80);
-      doc.text('Adjusted Shortfall after Extra Deposits:',14,fy+5);
-      doc.setFont('helvetica','bold');doc.setTextColor(adjShortfall<0?[185,28,28]:[21,128,61]);
-      doc.text(pf(adjShortfall,true),80,fy+5);
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(109,40,217);doc.text('Total Extra Deposits:',14,fy);
+    doc.setTextColor(21,128,61);doc.text(pf(tExtra),80,fy);
+    if(tSF<0){
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(80,80,80);doc.text('Adjusted Shortfall after Extra Deposits:',14,fy+5);
+      doc.setFont('helvetica','bold');
+      if(adj<0)doc.setTextColor(185,28,28);else doc.setTextColor(21,128,61);
+      doc.text(pf(adj,true),80,fy+5);
     }
   }
-
   // Page numbers
   const pgCnt=doc.internal.getNumberOfPages();
   for(let i=1;i<=pgCnt;i++){
     doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(148,163,184);
-    doc.text(`Page ${i} of ${pgCnt}`,W-15,pageH-5,{align:'right'});
-    doc.text('Sewa Gift Palace — Confidential',14,pageH-5);
+    doc.text(`Page ${i} of ${pgCnt}`,W-15,pH-5,{align:'right'});
+    doc.text('Sewa Gift Palace — Confidential',14,pH-5);
   }
-
-  const rangeTag=filterFrom&&filterTo?`_${numToDate(filterFrom).replace(/\//g,'-')}_to_${numToDate(filterTo).replace(/\//g,'-')}`:'';
-  doc.save(`SGP_CashFlow${rangeTag}.pdf`);
+  const tag=filterFrom&&filterTo?`_${numToDate(filterFrom).replace(/\//g,'-')}_to_${numToDate(filterTo).replace(/\//g,'-')}`:'';
+  doc.save(`SGP_CashFlow${tag}.pdf`);
 }
 
-// ═══ EXCEL EXPORT ═══
+// ═══ EXCEL ═══
 function exportExcel(){
-  const rows=getFilteredRows().sort((a,b)=>dnum(a[C.dt])-dnum(b[C.dt]));
+  const rows=getFiltered().sort((a,b)=>dnum(a[C.dt])-dnum(b[C.dt]));
   if(!rows.length){alert('No data to export.');return;}
   loadApproved();
   const wb=XLSX.utils.book_new();
-  // Sheet 1: All entries
-  const hdr=['Date','Cash Collection','Cash Expense','To Deposit','Extra Dep. (Sheet)','DayBook','Bank Deposit','Calculation','Account No.','Deposited By','Checked By','DayBook Dep.','Status'];
-  const data=[hdr,...rows.map(r=>[r[C.dt],r[C.col],r[C.exp],r[C.td],r[C.ed]||0,r[C.db]||0,r[C.ad],r[C.calc],r[C.acct]||'',r[C.staff]||'',r[C.chkby]||'',r[C.db]||0,isApproved(r)?'Approved':'Pending'])];
+  const hdr=['Date','Cash Collection','Cash Expense','To Deposit','Extra Dep. (Sheet)','DayBook','Bank Deposit','Calculation','Account No.','Deposited By','Checked By','Status'];
+  const data=[hdr,...rows.map(r=>[r[C.dt],r[C.col],r[C.exp],r[C.td],r[C.ed]||0,r[C.db]||0,r[C.ad],r[C.calc],r[C.acct]||'',r[C.staff]||'',r[C.chkby]||'',isApproved(r)?'Approved':'Pending'])];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),'All Entries');
-  // Sheet 2: Extra Deposits
   const extraInRange=getExtraInRange();
   if(extraInRange.length){
     const eHdr=['Deposit Date','Amount','Deposited By','Note','Added On'];
     const eData=[eHdr,...extraInRange.map(e=>[formatISO(e.date),e.amount,e.by,e.note||'',new Date(e.addedAt).toLocaleString('en-IN')])];
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(eData),'Extra Deposits');
   }
-  const rangeTag=filterFrom&&filterTo?`_${numToDate(filterFrom).replace(/\//g,'-')}_to_${numToDate(filterTo).replace(/\//g,'-')}`:'';
-  XLSX.writeFile(wb,`SGP_CashFlow${rangeTag}.xlsx`);
+  const tag=filterFrom&&filterTo?`_${numToDate(filterFrom).replace(/\//g,'-')}_to_${numToDate(filterTo).replace(/\//g,'-')}`:'';
+  XLSX.writeFile(wb,`SGP_CashFlow${tag}.xlsx`);
 }
 
-// ═══ SETUP ═══
-function doSetup(){
-  const sid=document.getElementById('setup_sid').value.trim();
-  const g=document.getElementById('setup_gid').value.trim();
-  const err=document.getElementById('setupErr');
-  if(!sid||!g){err.textContent='Please enter both Sheet ID and GID.';err.style.display='block';return;}
-  err.style.display='none';
-  sheetId=sid;gid=g;saveConfig();loadApproved();loadExtra();
-  document.getElementById('setupScreen').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  setQF('month',document.querySelector('[data-filter="month"]'));
-  fetchData();
-}
-function openCfgModal(){
-  document.getElementById('cfg_sid').value=sheetId;
-  document.getElementById('cfg_gid').value=gid;
-  document.getElementById('cfgModal').classList.remove('hidden');
-}
-function closeCfgModal(){document.getElementById('cfgModal').classList.add('hidden');}
-function saveCfg(){
-  const sid=document.getElementById('cfg_sid').value.trim();
-  const g=document.getElementById('cfg_gid').value.trim();
-  if(!sid||!g){alert('Please fill both fields.');return;}
-  sheetId=sid;gid=g;saveConfig();loadApproved();loadExtra();
-  closeCfgModal();fetchData();
-}
-
-// ═══ LOAD/SPINNER ═══
-function showLoad(show,txt='Loading…'){
-  document.getElementById('loadOverlay').classList.toggle('hidden',!show);
-  if(txt)document.getElementById('loadTxt').textContent=txt;
-}
+// ═══ MISC ═══
+function showLoad(show){document.getElementById('loadOverlay').classList.toggle('hidden',!show);}
 function dismissBanner(){bannerDismissed=true;document.getElementById('alertBan').classList.add('hidden');document.body.classList.remove('has-alert');}
 
 // ═══ INIT ═══
-(function init(){
-  loadConfig();
-  if(sheetId&&gid){
-    loadApproved();loadExtra();
-    document.getElementById('setupScreen').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
-    // Default to This Month
-    setQF('month',document.querySelector('[data-filter="month"]'));
-    fetchData();
-  }
+(function(){
+  loadApproved();loadExtra();
+  setQF('month',document.querySelector('.qf-btn:nth-child(4)'));
+  fetchData();
 })();
 </script>
 </body>
