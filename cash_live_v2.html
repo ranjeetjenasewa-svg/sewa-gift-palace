@@ -862,16 +862,39 @@ function exportPDF(){
   doc.text('All Daily Entries — Date-wise Report ('+highRows.length+')',14,48);
   doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
   doc.text('Shortfall: '+highRows.filter(r=>r[C.calc]<0).length+' entries  |  Surplus: '+highRows.filter(r=>r[C.calc]>=0).length+' entries',14,52.5);
-  doc.autoTable({startY:55,head:TH,body:highRows.map(toRow),headStyles:{fillColor:[15,40,90],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5},alternateRowStyles:{fillColor:[245,247,252]},columnStyles:CS,margin:{left:14,right:14},
-    didParseCell:(data)=>{if(data.section==='body'&&highRows[data.row]){const r=highRows[data.row];if(data.column.index===8){const cl=scol(r[C.calc]);data.cell.styles.textColor=cl;data.cell.styles.fontStyle='bold';}if(r[C.calc]>=0)data.cell.styles.textColor=[0,120,0];}},
+  doc.autoTable({startY:55,head:TH,body:highRows.map(toRow),headStyles:{fillColor:[15,40,90],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5},columnStyles:CS,margin:{left:14,right:14},
+    didParseCell:(data)=>{
+      if(data.section==='body'&&highRows[data.row]){
+        const r=highRows[data.row];
+        if(r[C.calc]<0){
+          data.cell.styles.fillColor=[254,226,226]; // light red bg
+          if(data.column.index===8){data.cell.styles.textColor=scol(r[C.calc]);data.cell.styles.fontStyle='bold';}
+        } else {
+          data.cell.styles.fillColor=[220,252,231]; // light green bg
+          if(data.column.index===8){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}
+        }
+      }
+    },
   });
   // Section 2: Approved
   if(appRows.length){
     let y2=doc.lastAutoTable.finalY+10;if(y2>pH-40){doc.addPage();y2=15;}
     doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(14,116,144);
     doc.text('Approved Entries ('+appRows.length+')',14,y2);
-    doc.autoTable({startY:y2+5,head:TH,body:appRows.map(toRow),headStyles:{fillColor:[14,116,144],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5,textColor:[80,80,80]},alternateRowStyles:{fillColor:[240,249,255]},columnStyles:CS,margin:{left:14,right:14},
-      didParseCell:(data)=>{if(data.section==='body'&&appRows[data.row]){const r=appRows[data.row];if(data.column.index===8){const cl=scol(r[C.calc]);data.cell.styles.textColor=cl;data.cell.styles.fontStyle='bold';}}},
+    doc.autoTable({startY:y2+5,head:TH,body:appRows.map(toRow),headStyles:{fillColor:[14,116,144],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5,textColor:[80,80,80]},columnStyles:CS,margin:{left:14,right:14},
+      didParseCell:(data)=>{
+        if(data.section==='body'&&appRows[data.row]){
+          const r=appRows[data.row];
+          if(r[C.calc]<0){
+            data.cell.styles.fillColor=[254,226,226];
+            if(data.column.index===8){data.cell.styles.textColor=scol(r[C.calc]);data.cell.styles.fontStyle='bold';}
+          } else {
+            data.cell.styles.fillColor=[220,252,231];
+            if(data.column.index===8){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}
+          }
+          data.cell.styles.textColor=data.cell.styles.textColor||[80,80,80];
+        }
+      },
     });
   }
   // Section 3: Missing dates
