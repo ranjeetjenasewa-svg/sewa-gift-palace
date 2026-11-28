@@ -823,8 +823,9 @@ function exportPDF(){
   const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   const W=doc.internal.pageSize.getWidth(),pH=doc.internal.pageSize.getHeight();
   loadApproved();
-  const highRows=rows.filter(r=>r[C.chkby]!=='Approved'&&!approvedRows[r[C.row]]).sort((a,b)=>dnum(a[C.dt])-dnum(b[C.dt]));
-  const appRows=rows.filter(r=>r[C.chkby]==='Approved'||approvedRows[r[C.row]]===true).sort((a,b)=>dnum(a[C.dt])-dnum(b[C.dt]));
+  const isChecked=r=>!!(r[C.chkby])||approvedRows[r[C.row]]===true;
+  const highRows=rows.filter(r=>!isChecked(r)).sort((a,b)=>dnum(a[C.dt])-dnum(b[C.dt]));
+  const appRows=rows.filter(r=>isChecked(r)).sort((a,b)=>dnum(a[C.dt])-dnum(b[C.dt]));
   const extraInRange=getExtraInRange().sort((a,b)=>isoToNum(a.date)-isoToNum(b.date));
   const miss=getMissing(rows);
   const tCol=rows.reduce((s,r)=>s+r[C.col],0),tExp=rows.reduce((s,r)=>s+r[C.exp],0),tDep=rows.reduce((s,r)=>s+r[C.ad],0);
@@ -839,7 +840,7 @@ function exportPDF(){
   doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(148,163,184);
   doc.text(rStr,14,14.5);
   doc.text('Generated: '+new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}),14,19);
-  doc.text('Total Entries: '+rows.length+' | Approved: '+appRows.length+' | Pending: '+highRows.length,100,14.5);
+  doc.text('Total Entries: '+rows.length+' | Verified: '+appRows.length+' | Pending: '+highRows.length,100,14.5);
   // KPI row
   doc.setFillColor(248,250,252);doc.rect(0,22,W,20,'F');
   const kpis=[['Total Collection',pf(tCol)],['Total Expenses',pf(tExp)],['Bank Deposits',pf(tDep)],['Net Cash',pf(tCol-tExp,true)],['Total Shortfall',pf(tSF,true)],['Extra Deposits',pf(tExtra)],['Adjusted Shortfall',pf(adj,true)]];
@@ -855,8 +856,11 @@ function exportPDF(){
   });
   doc.setDrawColor(226,232,240);doc.line(0,42,W,42);
   const CS={0:{cellWidth:5,halign:'center'},1:{cellWidth:16,halign:'center'},2:{cellWidth:18,halign:'right'},3:{cellWidth:15,halign:'right'},4:{cellWidth:20,halign:'right'},5:{cellWidth:17,halign:'right'},6:{cellWidth:15,halign:'right'},7:{cellWidth:18,halign:'right'},8:{cellWidth:18,halign:'right'},9:{cellWidth:16,halign:'left'},10:{cellWidth:14,halign:'left'}};
+  const CS_APP={0:{cellWidth:5,halign:'center'},1:{cellWidth:15,halign:'center'},2:{cellWidth:17,halign:'right'},3:{cellWidth:14,halign:'right'},4:{cellWidth:18,halign:'right'},5:{cellWidth:14,halign:'right'},6:{cellWidth:13,halign:'right'},7:{cellWidth:16,halign:'right'},8:{cellWidth:16,halign:'right'},9:{cellWidth:14,halign:'left'},10:{cellWidth:13,halign:'left'},11:{cellWidth:17,halign:'center'}};
   const TH=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook','Bank Dep.','Shortfall','Acct No.','Dep. By']];
+  const TH_APP=[['#','Date','Cash Col.','Cash Exp.','To Deposit','Extra Dep.','DayBook','Bank Dep.','Shortfall','Acct No.','Dep. By','Checked By']];
   const toRow=(r,i)=>[i+1,r[C.dt],pf(r[C.col]),pf(r[C.exp]),pf(r[C.td]),r[C.ed]?pf(r[C.ed]):'—',r[C.db]?pf(r[C.db]):'—',pf(r[C.ad]),pf(r[C.calc],true),r[C.acct]||'—',r[C.staff]||'—'];
+  const toRowApp=(r,i)=>[i+1,r[C.dt],pf(r[C.col]),pf(r[C.exp]),pf(r[C.td]),r[C.ed]?pf(r[C.ed]):'—',r[C.db]?pf(r[C.db]):'—',pf(r[C.ad]),pf(r[C.calc],true),r[C.acct]||'—',r[C.staff]||'—',r[C.chkby]||'✓ Approved'];
   // Section 1
   doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(15,40,90);
   doc.text('All Daily Entries — Date-wise Report ('+highRows.length+')',14,48);
@@ -880,8 +884,10 @@ function exportPDF(){
   if(appRows.length){
     let y2=doc.lastAutoTable.finalY+10;if(y2>pH-40){doc.addPage();y2=15;}
     doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(14,116,144);
-    doc.text('Approved Entries ('+appRows.length+')',14,y2);
-    doc.autoTable({startY:y2+5,head:TH,body:appRows.map(toRow),headStyles:{fillColor:[14,116,144],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5,textColor:[80,80,80]},columnStyles:CS,margin:{left:14,right:14},
+    doc.text('Verified / Approved Entries ('+appRows.length+')',14,y2);
+    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+    doc.text('Shortfall: '+appRows.filter(r=>r[C.calc]<0).length+' entries  |  Surplus: '+appRows.filter(r=>r[C.calc]>=0).length+' entries',14,y2+4.5);
+    doc.autoTable({startY:y2+8,head:TH_APP,body:appRows.map(toRowApp),headStyles:{fillColor:[14,116,144],textColor:255,fontStyle:'bold',fontSize:6},bodyStyles:{fontSize:6.5,textColor:[60,60,60]},columnStyles:CS_APP,margin:{left:14,right:14},
       didParseCell:(data)=>{
         if(data.section==='body'&&appRows[data.row]){
           const r=appRows[data.row];
@@ -892,7 +898,7 @@ function exportPDF(){
             data.cell.styles.fillColor=[220,252,231];
             if(data.column.index===8){data.cell.styles.textColor=[21,128,61];data.cell.styles.fontStyle='bold';}
           }
-          data.cell.styles.textColor=data.cell.styles.textColor||[80,80,80];
+          if(data.column.index===11){data.cell.styles.textColor=[14,116,144];data.cell.styles.fontStyle='bold';}
         }
       },
     });
